@@ -1,0 +1,35 @@
+# Blueprint de Render: la web es un sitio estático (Vite). La base de datos, el login y la función de IA viven en Supabase.
+services:
+  - type: web
+    runtime: static
+    name: creatuagencia-maestria
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      # Públicas por diseño (las ve el navegador). Se piden al crear el servicio: Settings → API del proyecto Supabase.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+    routes:
+      # Aplicación de una sola página: cualquier ruta (/login, /roadmap/…) debe servir index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      # Los archivos de /assets llevan hash en el nombre: pueden cachearse para siempre
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

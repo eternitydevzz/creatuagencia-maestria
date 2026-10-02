@@ -1,0 +1,61 @@
+import { useState } from 'react'
+import { Navigate } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { Spinner } from '@/components/ui/bits'
+
+export default function Login() {
+  const { session, needsPassword } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
+
+  if (session && needsPassword) return <Navigate to="/reset-password" replace />
+  if (session) return <Navigate to="/" replace />
+
+  const redirectTo = `${window.location.origin}/reset-password`
+  const wrap = async (fn: () => Promise<string | void>) => {
+    setBusy(true); setError(''); setInfo('')
+    try { const msg = await fn(); if (msg) setInfo(msg) } catch (e) { setError(e instanceof Error ? e.message : 'Algo ha fallado') } finally { setBusy(false) }
+  }
+  const signIn = (e: React.FormEvent) => { e.preventDefault(); void wrap(async () => {
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    if (error) throw new Error(error.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : error.message)
+  }) }
+  const magic = () => void wrap(async () => {
+    if (!email.trim()) throw new Error('Escribe tu email primero.')
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
+    if (error) throw new Error('No se pudo enviar el enlace. Comprueba que tu email es el de tu invitación.')
+    return 'Si tu email está dado de alta, te hemos enviado un enlace de acceso.'
+  })
+  const forgot = () => void wrap(async () => {
+    if (!email.trim()) throw new Error('Escribe tu email primero.')
+    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+    return 'Si tu email está dado de alta, te hemos enviado un enlace para crear una contraseña nueva.'
+  })
+
+  return (
+    <div className="grid min-h-screen place-items-center px-4 py-10">
+      <div className="card w-full max-w-md overflow-hidden">
+        <img src="/brand/portada-acceso.webp" alt="MaestrIA — Creación de Agencias IA" className="aspect-video w-full object-cover" />
+        <div className="space-y-5 p-6">
+          <div className="text-center"><h1 className="text-2xl font-bold">Bienvenido a MaestrIA</h1><p className="mt-1 text-sm text-muted">Acceso solo para alumnos del programa. Usa el email con el que te invitamos.</p></div>
+          <form onSubmit={signIn} className="space-y-4">
+            <label className="block text-sm font-semibold">Correo electrónico<input type="email" required autoComplete="email" className="field mt-1.5 font-normal" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+            <label className="block text-sm font-semibold">Contraseña<input type="password" required autoComplete="current-password" className="field mt-1.5 font-normal" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+            {error && <p role="alert" className="text-sm text-[#ff8f8f]">{error}</p>}
+            {info && <p role="status" className="text-sm text-accent-glow">{info}</p>}
+            <button className="btn w-full" type="submit" disabled={busy}>{busy ? <Spinner /> : null}Entrar<ArrowRight className="h-4 w-4" /></button>
+          </form>
+          <div className="flex flex-col items-center gap-1 text-sm text-muted">
+            <button type="button" className="underline underline-offset-4 hover:text-white" onClick={magic} disabled={busy}>Enviarme un enlace de acceso por email</button>
+            <button type="button" className="underline underline-offset-4 hover:text-white" onClick={forgot} disabled={busy}>Olvidé mi contraseña</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

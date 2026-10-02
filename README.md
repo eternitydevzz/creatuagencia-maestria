@@ -1,0 +1,85 @@
+# MaestrIA · Constructor de Agencia IA
+
+Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). Entrega tres cosas, y cada pregunta del
+**Mapa de Ruta** sirve a una de ellas:
+
+1. Problemas que resuelves · 2. Tu agencia y tu nicho · 3. Tu cliente en números (leads, conversión, ticket, modo de precios)
+4. **Cliente ideal** · 5. **Oferta** (usa el cliente ideal) · 6. **Landing** de venta premium (usa los dos anteriores)
+
+## Cómo está organizado
+
+- `src/lib/gamification.ts` define los pasos del mapa (nombre, icono, cabecera) y cuándo está hecho cada uno; `RoadmapPage.tsx` enlaza cada paso con su pantalla y no compila si falta alguna.
+- `supabase/functions/_shared/` se comparte entre la Edge Function y el navegador (alias `@shared`): el catálogo de problemas y la **huella** de las respuestas.
+- Cada entregable guarda en `_meta` la huella de las respuestas con las que se generó. Si el alumno las cambia después, la interfaz avisa de que está **desactualizado**.
+- El alumno solo puede escribir sus respuestas (permisos por columna en `roadmaps`); lo que genera la IA lo escribe solo el servidor.
+- Una generación en curso por proyecto y tipo (índice único): un segundo clic no cobra dos veces. Si la función muere a medias, la siguiente generación libera la colgada y devuelve sus créditos.
+
+## Arquitectura
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 18 + TypeScript + Vite + Tailwind + React Query (`src/`) |
+| Auth y datos | Supabase: Auth (solo invitación), Postgres con seguridad por filas (`supabase/migrations/`) |
+| IA | Edge Function `generate` (`supabase/functions/generate/`) → API de Anthropic. **La clave nunca llega al navegador** |
+| Hosting | Render (web estática, `render.yaml`) + Supabase (base de datos, login y función de IA) |
+
+**Cómo funciona la IA:** el navegador solo manda `{tipo, proyecto, parámetros}`. La función comprueba la sesión, lee el proyecto del alumno
+(con su seguridad por filas), construye el prompt en el servidor (`prompts.ts`), cobra créditos de forma atómica, llama a Claude, guarda el
+resultado en el proyecto y, si algo falla, **devuelve los créditos**.
+
+### Créditos (coste por generación) — `supabase/functions/generate/index.ts` → `KINDS`
+
+| Créditos | Generaciones |
+|---|---|
+| 1 | problema personalizado, sugerir nichos |
+| 2 | cliente ideal |
+| 3 | oferta, landing |
+
+Cada alumno recibe **30 créditos** al darse de alta (`app_settings.initial_credits`): el mapa completo cuesta unos 10, así que
+da para regenerar cada entregable varias veces. Se ajustan con `scripts/invite.mjs`.
+
+## Desarrollo local
+
+Requisitos: Node 20+, pnpm, Docker.
+
+```bash
+pnpm install
+pnpm db:start                     # Supabase local (imprime URL y claves)
+cp .env.example .env.local        # pega VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
+cp supabase/.env.example supabase/.env.local   # pon tu ANTHROPIC_API_KEY real
+pnpm fn:serve                     # sirve la función de IA
+pnpm dev                          # http://localhost:5173
+```
+
+> Los puertos de Supabase local en este repo son 554xx (para no chocar con otros proyectos). Ver `supabase/config.toml`.
+
+Crear un alumno de prueba con contraseña (solo local):
+```bash
+SUPABASE_URL=http://127.0.0.1:55421 SUPABASE_SERVICE_ROLE_KEY=<clave secreta local> \
+  node scripts/invite.mjs create alumno@test.com "Contraseña-Larga-1" --credits 30
+```
+
+### Pruebas
+`pnpm mock` levanta una API de Anthropic **simulada** (y en `supabase/.env.local` de ejemplo se apunta a ella con
+`ANTHROPIC_BASE_URL=http://host.docker.internal:8787`). Con ella:
+```bash
+SUPABASE_URL=… SUPABASE_ANON_KEY=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/e2e.mjs
+```
+Ejecuta 53 comprobaciones: créditos, seguridad entre alumnos, validaciones, reembolso si la IA falla, límite de ritmo, registro bloqueado, doble clic, respuestas de la IA con forma errónea, generaciones colgadas…
+Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
+
+## Puesta en producción
+
+1. **Supabase**: crea un proyecto en supabase.com → `supabase link --project-ref <ref>` → `supabase db push`.
+   En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
+   En *Authentication → Providers → Email*: deja activo el email y **desactiva "Allow new users to sign up"** (acceso solo por invitación).
+   Configura un SMTP propio (Resend, Postmark…) para que lleguen las invitaciones.
+2. **Clave de IA**: `supabase secrets set ANTHROPIC_API_KEY=sk-ant-... ALLOWED_ORIGIN=https://tu-dominio` y despliega: `supabase functions deploy generate`.
+3. **Web (Render)**: *New → Blueprint* y elige este repo: Render lee `render.yaml` (sitio estático, reglas de reescritura de la SPA y cabeceras). Al crearlo te pide
+   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (Settings → API del proyecto Supabase; la clave anónima es pública por diseño). Cada `git push` a `main` redespliega.
+   Con la URL de Render ya puedes cerrar el paso 1 (Site URL y Redirect URLs) y el paso 2 (`ALLOWED_ORIGIN`).
+4. **Alumnos**: `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/invite.mjs csv alumnos.csv` (columnas `email,nombre,creditos`).
+   `SITE_URL=https://tu-dominio` es obligatorio (a ese dominio llegan desde el email). Recibirán un email para crear su contraseña. Más créditos: `node scripts/invite.mjs grant ana@correo.com 20 "bonus"`.
+
+**Seguridad:** `SUPABASE_SERVICE_ROLE_KEY` y `ANTHROPIC_API_KEY` son secretos: no van en el frontend, en Render ni en git.
+Antes de abrir a alumnos, fija un límite de gasto mensual en la consola de Anthropic.

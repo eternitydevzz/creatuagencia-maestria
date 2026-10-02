@@ -1,0 +1,49 @@
+{
+  "name": "maestria-app",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "fn:serve": "supabase functions serve --env-file supabase/.env.local",
+    "invite": "node scripts/invite.mjs",
+    "mock": "node scripts/mock-anthropic.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@tanstack/react-query": "^5.59.0",
+    "canvas-confetti": "^1.9.3",
+    "lucide-react": "^0.454.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.6.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "supabase": "^2.118.0",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "ws": "^8.22.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "supabase"
+    ]
+  }
+}
