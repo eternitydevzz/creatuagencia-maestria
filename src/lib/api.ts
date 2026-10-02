@@ -18,14 +18,18 @@ const MESSAGES: Record<string, string> = {
   refused: 'La IA no pudo atender esta petición. Reformúlala e inténtalo de nuevo.',
   already_running: 'Ya se está generando esto. Espera a que termine.',
   invalid_model_output: 'La IA no devolvió un resultado válido. No se ha descontado ningún crédito: inténtalo de nuevo.',
+  timeout: 'La IA ha tardado demasiado. Se te han devuelto los créditos: inténtalo de nuevo.',
   unauthorized: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
 }
+const GENERIC = 'Algo ha fallado. Inténtalo de nuevo.'
 
-/** Llama a la Edge Function `generate`. Los prompts se construyen en el servidor; aquí solo viajan parámetros. */
+/** Llama a la Edge Function `generate`. Los prompts se construyen en el servidor; aquí solo viajan parámetros.
+ *  Los errores previos a la generación llegan como HTTP de error; los que ocurren durante ella (la función ya había empezado a
+ *  responder con un latido) llegan como un 200 cuyo cuerpo trae `error`. */
 export async function generate<T = unknown>(kind: GenerationKind, roadmapId: string, params: Record<string, unknown> = {}): Promise<GenerationResult<T>> {
   const { data, error } = await supabase.functions.invoke('generate', { body: { kind, roadmap_id: roadmapId, params } })
   if (error) {
-    let code = 'internal_error'; let message = 'Algo ha fallado. Inténtalo de nuevo.'; let creditsLeft: number | undefined
+    let code = 'internal_error'; let message = GENERIC; let creditsLeft: number | undefined
     const res = (error as { context?: Response }).context
     if (res && typeof res.json === 'function') {
       try {
@@ -33,8 +37,15 @@ export async function generate<T = unknown>(kind: GenerationKind, roadmapId: str
         code = body.error ?? code; creditsLeft = body.credits_left
         message = MESSAGES[code] ?? body.message ?? message
       } catch { /* cuerpo no JSON */ }
+    } else {
+      message = 'Se interrumpió la conexión con la IA. Revisa tus créditos y vuelve a intentarlo.'
     }
     throw new GenerationError(code, message, creditsLeft)
   }
+  if (data && typeof data === 'object' && 'error' in data) {
+    const d = data as { error: string; message?: string; credits_left?: number }
+    throw new GenerationError(d.error, MESSAGES[d.error] ?? d.message ?? GENERIC, d.credits_left)
+  }
+  if (!data || typeof data !== 'object' || !('parsed' in data)) throw new GenerationError('internal_error', GENERIC)
   return data as GenerationResult<T>
 }

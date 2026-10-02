@@ -28,7 +28,8 @@ async function call(c, kind, roadmap_id, params = {}) {
   // Salvo en la prueba del límite, "envejecemos" las generaciones previas para que no cuenten en la ventana de 1 minuto
   if (!THROTTLE && c._uid) await admin.from('generations').update({ created_at: new Date(Date.now() - 3600e3).toISOString() }).eq('user_id', c._uid).gte('created_at', new Date(Date.now() - 120e3).toISOString())
   const { data, error } = await c.functions.invoke('generate', { body: { kind, roadmap_id, params } })
-  if (!error) return { status: 200, body: data }
+  // Los fallos durante la generación llegan como 200 con { error, status } en el cuerpo (la función ya estaba enviando latidos)
+  if (!error) return data?.error ? { status: data.status, body: data } : { status: 200, body: data }
   const res = error.context; let body = {}; try { body = await res.json() } catch { /* */ }
   return { status: res?.status ?? 0, body }
 }
@@ -163,6 +164,21 @@ r = await call(D.c, 'ideal_client', rmD.id)
 ok('JSON con forma equivocada también al reintentar → 502 invalid_model_output', r.status === 502 && r.body.error === 'invalid_model_output', JSON.stringify(r))
 ok('  y se devuelven los créditos', (await credits(D.id)) === before2)
 await fetch(`${MOCK}/__bad?n=0`)
+
+// Latido: mientras la IA trabaja, la respuesta ya está abierta y manda saltos de línea; el JSON llega al final
+await fetch(`${MOCK}/__slow?n=1&ms=3500`)
+const { data: { session: sD } } = await D.c.auth.getSession()
+const rawRes = await fetch(`${URL_}/functions/v1/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${sD.access_token}` }, body: JSON.stringify({ kind: 'new_niches', roadmap_id: rmD.id, params: {} }) })
+const rawText = await rawRes.text()
+ok('Mientras la IA trabaja se envían latidos (saltos de línea) y el JSON llega al final', rawRes.status === 200 && /^\n{2,}\{/.test(rawText) && JSON.parse(rawText).parsed?.length === 3, JSON.stringify(rawText.slice(0, 60)))
+
+// Tiempo límite propio: se corta limpio, con los créditos devueltos, antes de que la plataforma mate la función
+const beforeTimeout = await credits(D.id)
+await fetch(`${MOCK}/__slow?n=1&ms=12000`)
+r = await call(D.c, 'ideal_client', rmD.id)
+ok('Si la IA tarda más del tiempo máximo → 504 timeout', r.status === 504 && r.body.error === 'timeout', JSON.stringify(r))
+ok('  y se devuelven los créditos al instante', (await credits(D.id)) === beforeTimeout, `saldo ${await credits(D.id)} vs ${beforeTimeout}`)
+await new Promise((res) => setTimeout(res, 7000)) // deja que el simulador suelte su respuesta tardía
 
 // Una generación que se quedó "en curso" (la función murió a medias) no bloquea ni cuesta: la siguiente la libera y devuelve sus créditos
 const before3 = await credits(D.id)

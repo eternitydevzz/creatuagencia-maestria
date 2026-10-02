@@ -12,6 +12,11 @@ import * as P from './prompts.ts'
 const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-opus-5-5'
 const USE_FALLBACKS = (Deno.env.get('ANTHROPIC_FALLBACKS') ?? 'on') !== 'off'
 const RATE_LIMIT_PER_MINUTE = Number(Deno.env.get('RATE_LIMIT_PER_MINUTE') ?? 10)
+// Tiempo máximo de una generación. Debe quedar por debajo del límite de la función en tu plan de Supabase (150 s en Free, 400 s en Pro):
+// así falla de forma limpia, con los créditos devueltos, en vez de que la plataforma corte la función a medias.
+const TIMEOUT_MS = Number(Deno.env.get('GENERATION_TIMEOUT_SECONDS') ?? 140) * 1000
+// Cada cuántos segundos se envía un latido al navegador mientras Claude trabaja (Supabase corta las conexiones mudas a los 60 s)
+const HEARTBEAT_MS = Number(Deno.env.get('HEARTBEAT_SECONDS') ?? 8) * 1000
 
 type Effort = 'low' | 'medium' | 'high'
 interface KindDef { cost: number; effort: Effort; maxTokens: number; valid: (v: unknown) => boolean }
@@ -56,7 +61,7 @@ const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '
 
 interface Completion { text: string; inputTokens: number; outputTokens: number; requestId?: string }
 
-async function complete(def: KindDef, system: string, messages: Array<{ role: 'user' | 'assistant'; content: string }>): Promise<Completion> {
+async function complete(def: KindDef, system: string, messages: Array<{ role: 'user' | 'assistant'; content: string }>, signal: AbortSignal): Promise<Completion> {
   const base = {
     model: MODEL,
     max_tokens: def.maxTokens,
@@ -68,9 +73,9 @@ async function complete(def: KindDef, system: string, messages: Array<{ role: 'u
     // Streaming: max_tokens altos y respuestas largas superarían el timeout de una petición normal.
     const stream = withFallbacks
       // deno-lint-ignore no-explicit-any
-      ? (anthropic.beta.messages as any).stream({ ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' })
+      ? (anthropic.beta.messages as any).stream({ ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }, { signal })
       // deno-lint-ignore no-explicit-any
-      : (anthropic.messages as any).stream(base)
+      : (anthropic.messages as any).stream(base, { signal })
     return await stream.finalMessage()
   }
   let msg
@@ -113,6 +118,9 @@ function ctxFromRoadmap(r: any): P.Ctx {
 }
 
 // ---------------------------------------------------------------- handler
+// Dos fases. Antes de llamar a Claude (sesión, validación, cobro) los errores son respuestas HTTP normales. La generación en sí
+// tarda de decenas de segundos a un par de minutos, así que se responde ya con 200 y se manda un latido mientras trabaja; el
+// resultado (o el error, con `status`) llega al final como JSON. Los espacios iniciales no afectan al JSON.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
@@ -127,6 +135,30 @@ Deno.serve(async (req) => {
   let generationId: string | null = null
   let charged = 0
   let userId = ''
+  const deadline = Date.now() + TIMEOUT_MS
+
+  /** Convierte cualquier fallo en respuesta y, si ya se había cobrado, devuelve los créditos al alumno. */
+  const failure = async (e: unknown): Promise<{ status: number; payload: Record<string, unknown> }> => {
+    let status = 500
+    let code = 'internal_error'
+    let message = 'Error inesperado'
+    if (e instanceof HttpError) { status = e.status; code = e.code; message = e.message }
+    else if (Date.now() >= deadline - 1000) { status = 504; code = 'timeout'; message = 'La IA ha tardado demasiado' }
+    else if (e instanceof Anthropic.RateLimitError) { status = 429; code = 'ai_busy'; message = 'La IA está saturada. Inténtalo en un momento.' }
+    else if (e instanceof Anthropic.APIError) { status = 502; code = 'ai_error'; message = 'La IA no respondió correctamente. Inténtalo de nuevo.' }
+    else if (e instanceof SyntaxError) { status = 400; code = 'invalid_json'; message = 'Petición mal formada' }
+    console.error('[generate]', code, e instanceof Error ? e.message : e)
+
+    let creditsLeft: number | undefined
+    if (charged > 0 && userId) {
+      const { data } = await admin.rpc('refund_credits', { p_user: userId, p_amount: charged, p_reason: `reembolso: ${code}`, p_generation: generationId })
+      if (typeof data === 'number') creditsLeft = data
+      charged = 0
+    }
+    if (generationId) await admin.from('generations').update({ status: 'failed', error: `${code}: ${message}`.slice(0, 500), finished_at: new Date().toISOString() }).eq('id', generationId)
+    return { status, payload: { error: code, message, credits_left: creditsLeft } }
+  }
+
   try {
     if (!Deno.env.get('ANTHROPIC_API_KEY')) throw new HttpError(503, 'ai_not_configured', 'La IA no está configurada en el servidor')
 
@@ -137,11 +169,11 @@ Deno.serve(async (req) => {
     const raw = await req.text()
     if (raw.length > 120_000) throw new HttpError(413, 'payload_too_large')
     const body = JSON.parse(raw || '{}')
-    const kind = str(body.kind, 40, 'kind', 1)
+    const kind = str(body.kind, 40, 'kind')
     const def = KINDS[kind]
     if (!def) throw new HttpError(400, 'unknown_kind')
     const params = (body.params && typeof body.params === 'object') ? body.params : {}
-    const roadmapId = str(body.roadmap_id, 64, 'roadmap_id', 1)
+    const roadmapId = str(body.roadmap_id, 64, 'roadmap_id')
 
     // El proyecto se lee con el token del alumno: la seguridad por filas garantiza que es suyo.
     const { data: roadmap, error: rErr } = await userDb.from('roadmaps').select('*').eq('id', roadmapId).maybeSingle()
@@ -187,63 +219,77 @@ Deno.serve(async (req) => {
     charged = def.cost
     const creditsLeft = balance as number
 
-    // ---- llamada a Claude: la respuesta debe ser JSON con la forma que pide la interfaz; si no, un reintento ----
-    const parse = (text: string): { ok: true; value: unknown } | { ok: false } => {
-      try { const value = extractJson(text); return def.valid(value) ? { ok: true, value } : { ok: false } } catch { return { ok: false } }
-    }
-    let out = await complete(def, system, messages)
-    let parsed = parse(out.text)
-    if (!parsed.ok) {
-      const retry = await complete(def, system, [
-        ...messages,
-        { role: 'assistant', content: out.text.slice(0, 20_000) || '(vacío)' },
-        { role: 'user', content: 'Tu respuesta no era JSON válido o no tenía la estructura pedida. Devuelve de nuevo el resultado completo como JSON válido con la estructura EXACTA indicada, sin texto adicional.' },
-      ])
-      out = { ...retry, inputTokens: out.inputTokens + retry.inputTokens, outputTokens: out.outputTokens + retry.outputTokens }
-      parsed = parse(out.text)
-      if (!parsed.ok) throw new HttpError(502, 'invalid_model_output', 'La IA devolvió un formato inesperado')
-    }
-    const result = parsed.value
+    // ---- el trabajo largo: Claude + guardar el resultado ----
+    const work = async (): Promise<{ status: number; payload: Record<string, unknown> }> => {
+      try {
+        // Cada llamada a Claude se corta cuando se agota el tiempo total (la generación y su posible reintento comparten el mismo reloj)
+        const left = () => AbortSignal.timeout(Math.max(1000, deadline - Date.now()))
+        const parse = (text: string): { ok: true; value: unknown } | { ok: false } => {
+          try { const value = extractJson(text); return def.valid(value) ? { ok: true, value } : { ok: false } } catch { return { ok: false } }
+        }
+        // La respuesta debe ser JSON con la forma que pide la interfaz; si no, un reintento
+        let out = await complete(def, system, messages, left())
+        let parsed = parse(out.text)
+        if (!parsed.ok) {
+          const retry = await complete(def, system, [
+            ...messages,
+            { role: 'assistant', content: out.text.slice(0, 20_000) || '(vacío)' },
+            { role: 'user', content: 'Tu respuesta no era JSON válido o no tenía la estructura pedida. Devuelve de nuevo el resultado completo como JSON válido con la estructura EXACTA indicada, sin texto adicional.' },
+          ], left())
+          out = { ...retry, inputTokens: out.inputTokens + retry.inputTokens, outputTokens: out.outputTokens + retry.outputTokens }
+          parsed = parse(out.text)
+          if (!parsed.ok) throw new HttpError(502, 'invalid_model_output', 'La IA devolvió un formato inesperado')
+        }
+        const result = parsed.value
 
-    // ---- guardar el resultado en el proyecto, con la huella de las respuestas con las que se generó ----
+        // ---- guardar el resultado en el proyecto, con la huella de las respuestas con las que se generó ----
+        // deno-lint-ignore no-explicit-any
+        const rm = roadmap as any
+        const meta = (extra: Partial<DeliverableMeta> = {}): DeliverableMeta => ({
+          generated_at: new Date().toISOString(), inputs: inputsSignature(rm, kind !== 'ideal_client'), ...extra,
+        })
+        const patch: Record<string, unknown> = {}
+        switch (kind) {
+          case 'ideal_client': patch.ideal_client = { ...(result as object), _meta: meta() }; break
+          case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
+          case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
+        }
+        if (Object.keys(patch).length) {
+          const { error: uErr } = await admin.from('roadmaps').update(patch).eq('id', roadmapId).eq('user_id', userId)
+          if (uErr) throw new HttpError(500, 'db_error', uErr.message)
+        }
+
+        await admin.from('generations').update({
+          status: 'succeeded', input_tokens: out.inputTokens, output_tokens: out.outputTokens, request_id: out.requestId ?? null, finished_at: new Date().toISOString(),
+        }).eq('id', generationId)
+
+        return { status: 200, payload: { generation_id: generationId, kind, parsed: result, credits_left: creditsLeft } }
+      } catch (e) {
+        return await failure(e)
+      }
+    }
+
+    // El trabajo sigue aunque el alumno cierre la pestaña a medias (waitUntil lo mantiene vivo): se guarda y, si falla, se reembolsa.
+    const job = work()
     // deno-lint-ignore no-explicit-any
-    const rm = roadmap as any
-    const meta = (extra: Partial<DeliverableMeta> = {}): DeliverableMeta => ({
-      generated_at: new Date().toISOString(), inputs: inputsSignature(rm, kind !== 'ideal_client'), ...extra,
+    ;(globalThis as any).EdgeRuntime?.waitUntil?.(job)
+
+    const enc = new TextEncoder()
+    let closed = false
+    const stream = new ReadableStream({
+      async start(ctrl) {
+        const send = (text: string) => { if (!closed) { try { ctrl.enqueue(enc.encode(text)) } catch { closed = true } } }
+        const beat = setInterval(() => send('\n'), HEARTBEAT_MS)
+        const { status, payload } = await job
+        clearInterval(beat)
+        send(JSON.stringify(status === 200 ? payload : { ...payload, status }))
+        if (!closed) { closed = true; try { ctrl.close() } catch { /* ya cerrado */ } }
+      },
+      cancel() { closed = true }, // el alumno se fue: el trabajo continúa y queda guardado
     })
-    const patch: Record<string, unknown> = {}
-    switch (kind) {
-      case 'ideal_client': patch.ideal_client = { ...(result as object), _meta: meta() }; break
-      case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
-      case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
-    }
-    if (Object.keys(patch).length) {
-      const { error: uErr } = await admin.from('roadmaps').update(patch).eq('id', roadmapId).eq('user_id', userId)
-      if (uErr) throw new HttpError(500, 'db_error', uErr.message)
-    }
-
-    await admin.from('generations').update({
-      status: 'succeeded', input_tokens: out.inputTokens, output_tokens: out.outputTokens, request_id: out.requestId ?? null, finished_at: new Date().toISOString(),
-    }).eq('id', generationId)
-
-    return json({ generation_id: generationId, kind, parsed: result, credits_left: creditsLeft })
+    return new Response(stream, { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (e) {
-    // Cualquier fallo tras el cobro devuelve los créditos al alumno.
-    let status = 500
-    let code = 'internal_error'
-    let message = 'Error inesperado'
-    if (e instanceof HttpError) { status = e.status; code = e.code; message = e.message }
-    else if (e instanceof Anthropic.RateLimitError) { status = 429; code = 'ai_busy'; message = 'La IA está saturada. Inténtalo en un momento.' }
-    else if (e instanceof Anthropic.APIError) { status = 502; code = 'ai_error'; message = 'La IA no respondió correctamente. Inténtalo de nuevo.' }
-    else if (e instanceof SyntaxError) { status = 400; code = 'invalid_json'; message = 'Petición mal formada' }
-    console.error('[generate]', code, e instanceof Error ? e.message : e)
-
-    let creditsLeft: number | undefined
-    if (charged > 0 && userId) {
-      const { data } = await admin.rpc('refund_credits', { p_user: userId, p_amount: charged, p_reason: `reembolso: ${code}`, p_generation: generationId })
-      if (typeof data === 'number') creditsLeft = data
-    }
-    if (generationId) await admin.from('generations').update({ status: 'failed', error: `${code}: ${message}`.slice(0, 500), finished_at: new Date().toISOString() }).eq('id', generationId)
-    return json({ error: code, message, credits_left: creditsLeft }, status)
+    const { status, payload } = await failure(e)
+    return json(payload, status)
   }
 })
