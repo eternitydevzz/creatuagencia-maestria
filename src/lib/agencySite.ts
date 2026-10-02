@@ -63,12 +63,17 @@ export function renderAgencySite(s: AgencySite, contact: AgencyContact, agency: 
   const oferta = () => {
     const o = s.oferta
     if (!o) return ''
+    // La etiqueta es una frase corta; si la IA escribió un párrafo, va como texto bajo el precio en vez de romper la etiqueta
+    const short = (o.escasez ?? '').trim().length <= 60
+    const badge = short && o.escasez ? o.escasez : 'Plazas limitadas cada mes'
+    const urgency = [short ? '' : o.escasez, o.urgencia].filter(Boolean).join(' ')
     return `<section id="oferta"><div class="wrap center"><span class="kicker">La oferta</span><h2>${esc(o.titulo)}</h2><div class="offer-wrap"><div class="offer">
-  <span class="offer-badge">${esc(o.escasez || 'Plazas limitadas cada mes')}</span>
+  <span class="offer-badge">${esc(badge)}</span>
   <h3>${esc(o.nombre)}</h3>
   ${checklist(o.incluye)}
   ${list(o.bonos).length ? `<div class="bonus"><span class="bonus-t">Incluido sin coste</span>${checklist(o.bonos, 'bonus-list')}</div>` : ''}
   <div class="price-row">${o.precio_anclaje ? `<span class="anchor">Valor ${esc(o.precio_anclaje)}</span>` : ''}<span class="price">${esc(o.precio)}</span></div>
+  ${urgency ? `<p class="urgency">${esc(urgency)}</p>` : ''}
   ${o.garantia ? `<p class="guarantee">${ICON.check}${esc(o.garantia)}</p>` : ''}
   ${btn(o.cta || s.hero?.cta)}
 </div></div></div></section>`
@@ -181,6 +186,7 @@ export function renderAgencySite(s: AgencySite, contact: AgencyContact, agency: 
   .price-row { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin:0 0 6px }
   .anchor { color:var(--muted-2); text-decoration:line-through; font-size:1.05rem }
   .price { font-size:2.1rem; font-weight:800; color:#fff }
+  .urgency { color:#ffd88a; font-size:.9rem; margin:6px 0 4px }
   .guarantee { display:flex; align-items:flex-start; gap:8px; color:var(--muted); font-size:.88rem; margin:8px 0 24px } .guarantee svg { flex:none; color:var(--good); margin-top:3px }
 
   .guarantee-box { display:flex; gap:20px; align-items:flex-start; max-width:820px; margin:0 auto; padding:32px; border-radius:var(--radius); border:1px solid rgba(126,231,135,.22); background:linear-gradient(180deg,rgba(126,231,135,.06),rgba(126,231,135,.01)) }

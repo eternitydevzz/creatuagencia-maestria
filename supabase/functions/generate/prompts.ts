@@ -216,7 +216,7 @@ Devuelve JSON con esta estructura EXACTA:
   "comparativa": { "titulo": "", "columnas": ["Sin sistema", "Contratar a alguien", "Con ${agencyOf(c)}"], "filas": [{ "aspecto": "", "valores": ["", "", ""] }] },
   "como_funciona": { "titulo": "", "pasos": [{ "titulo": "", "texto": "", "plazo": "p. ej. 'Día 1'" }] },
   "para_quien": { "titulo": "", "si": ["(3-4)"], "no": ["(3)"] },
-  "oferta": { "titulo": "", "nombre": "", "incluye": ["(4-6) cada uno en una línea"], "precio": "", "precio_anclaje": "valor total percibido", "garantia": "", "bonos": ["(2-3)"], "escasez": "plazas o condición de lanzamiento real", "cta": "" },
+  "oferta": { "titulo": "", "nombre": "", "incluye": ["(4-6) cada uno en una línea"], "precio": "", "precio_anclaje": "valor total percibido", "garantia": "", "bonos": ["(2-3)"], "escasez": "ETIQUETA de máx. 8 palabras, p. ej. 'Solo 2 clínicas nuevas por semana'", "urgencia": "1-2 frases con la condición real detrás de la escasez (plazas, precio de lanzamiento)", "cta": "" },
   "resultados": { "titulo": "", "nota": "aclaración de que son estimaciones del sector", "cifras": [{ "cifra": "", "texto": "" }] },
   "garantia": { "titulo": "", "texto": "2-3 frases con las condiciones exactas" },
   "nota_fundador": { "titulo": "", "texto": "", "firma": "El equipo de ${agencyOf(c)}" },

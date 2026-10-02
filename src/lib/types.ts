@@ -26,7 +26,7 @@ export interface AgencySite {
   comparativa?: { titulo?: string; columnas?: string[]; filas?: Array<{ aspecto?: string; valores?: string[] }> }
   como_funciona?: { titulo?: string; pasos?: Array<{ titulo?: string; texto?: string; plazo?: string }> }
   para_quien?: { titulo?: string; si?: string[]; no?: string[] }
-  oferta?: { titulo?: string; nombre?: string; incluye?: string[]; precio?: string; precio_anclaje?: string; garantia?: string; bonos?: string[]; escasez?: string; cta?: string }
+  oferta?: { titulo?: string; nombre?: string; incluye?: string[]; precio?: string; precio_anclaje?: string; garantia?: string; bonos?: string[]; escasez?: string; urgencia?: string; cta?: string }
   resultados?: { titulo?: string; nota?: string; cifras?: Array<{ cifra?: string; texto?: string }> }
   garantia?: { titulo?: string; texto?: string }
   nota_fundador?: { titulo?: string; texto?: string; firma?: string }
