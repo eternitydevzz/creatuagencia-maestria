@@ -21,6 +21,7 @@ const MESSAGES: Record<string, string> = {
   timeout: 'La IA ha tardado demasiado. Se te han devuelto los créditos: inténtalo de nuevo.',
   unauthorized: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
   agent_not_found: 'No se encuentra este agente. Recarga la página.',
+  consent_required: 'Para vincular un número tienes que aceptar el aviso sobre tus clientes.',
 }
 const GENERIC = 'Algo ha fallado. Inténtalo de nuevo.'
 
@@ -72,7 +73,7 @@ export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Prom
 }
 
 /** Vincular un número de WhatsApp a un agente (Edge Function `wa-connect`). */
-export async function waConnect<T = Record<string, unknown>>(body: { action: 'start'; agent_id: string } | { action: 'status' | 'qr' | 'disconnect'; connection_id: string }): Promise<T> {
+export async function waConnect<T = Record<string, unknown>>(body: { action: 'start'; agent_id: string; accepted: boolean } | { action: 'status' | 'qr' | 'disconnect'; connection_id: string }): Promise<T> {
   const { data, error } = await supabase.functions.invoke('wa-connect', { body })
   if (error) {
     let code = 'internal_error'; let message = GENERIC

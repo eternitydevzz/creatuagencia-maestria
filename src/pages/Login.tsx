@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -55,6 +55,7 @@ export default function Login() {
             <button type="button" className="underline underline-offset-4 hover:text-white" onClick={magic} disabled={busy}>Enviarme un enlace de acceso por email</button>
             <button type="button" className="underline underline-offset-4 hover:text-white" onClick={forgot} disabled={busy}>Olvidé mi contraseña</button>
           </div>
+          <p className="text-center text-xs text-muted">Al entrar aceptas los <Link to="/terminos" className="underline hover:text-white">términos</Link> y la <Link to="/privacidad" className="underline hover:text-white">política de privacidad</Link>.</p>
         </div>
       </div>
     </div>

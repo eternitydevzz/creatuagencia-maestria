@@ -79,12 +79,12 @@ export default function S10Whatsapp({ roadmap, refresh }: SectionProps) {
             <Stat icon={MessageSquare} value={convs?.length ?? 0} label="Conversaciones" />
             <Stat icon={Send} value={repliesToday} label="Respuestas hoy" />
           </div>
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-            <section aria-label="Citas recibidas">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+            <section aria-label="Citas recibidas" className="min-w-0">
               <h3 className="mb-3 flex items-center gap-2 text-lg font-bold"><CalendarCheck className="h-5 w-5 text-accent-hi" />Citas recibidas</h3>
               <Agenda bookings={bookings ?? []} />
             </section>
-            <section aria-label="Conversaciones">
+            <section aria-label="Conversaciones" className="min-w-0">
               <h3 className="mb-3 flex items-center gap-2 text-lg font-bold"><MessageSquare className="h-5 w-5 text-accent-hi" />Conversaciones</h3>
               {convs?.length ? <ul className="stagger space-y-2">{convs.map((c) => <Conversation key={c.id} conv={c} preview={previews?.[c.id]} />)}</ul>
                 : <Empty icon={MessageSquare}>Cuando alguien escriba al número, la conversación aparecerá aquí.</Empty>}
@@ -132,8 +132,8 @@ function BookingCard({ b }: { b: Booking }) {
   const fresh = Date.now() - new Date(b.created_at).getTime() < 24 * 3_600_000
   const digits = (b.phone ?? '').replace(/\D/g, '')
   return (
-    <li className="card card-lift flex gap-4 p-3.5">
-      <div className="grid w-[86px] flex-none place-items-center rounded-2xl py-3 text-center text-white" style={{ background: 'linear-gradient(145deg, #0a7cff, #0b3fa8)', boxShadow: '0 8px 20px rgba(0,112,248,.35), inset 0 1px 0 rgba(255,255,255,.25)' }}>
+    <li className="card card-lift flex min-w-0 gap-3 p-3.5 sm:gap-4">
+      <div className="grid w-[76px] flex-none place-items-center rounded-2xl py-3 sm:w-[86px] text-center text-white" style={{ background: 'linear-gradient(145deg, #0a7cff, #0b3fa8)', boxShadow: '0 8px 20px rgba(0,112,248,.35), inset 0 1px 0 rgba(255,255,255,.25)' }}>
         {day || time ? (
           <>
             <span className="text-[10.5px] font-semibold uppercase tracking-wider opacity-85">{day ?? 'Cita'}</span>
@@ -166,8 +166,9 @@ function BookingCard({ b }: { b: Booking }) {
 function AgentRow({ agent, conn, onChanged }: { agent: Agent; conn?: WaConnection; onChanged: () => Promise<void> }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [accepted, setAccepted] = useState(false)
   const fail = (e: unknown) => toast(e instanceof GenerationError ? e.message : 'Algo ha fallado. Inténtalo de nuevo.', 'error')
-  const start = async () => { setBusy(true); try { await waConnect({ action: 'start', agent_id: agent.id }); await onChanged() } catch (e) { fail(e) } finally { setBusy(false) } }
+  const start = async () => { setBusy(true); try { await waConnect({ action: 'start', agent_id: agent.id, accepted: true }); await onChanged() } catch (e) { fail(e) } finally { setBusy(false) } }
   const stop = async () => {
     if (!conn || !window.confirm('¿Desvincular este número? El agente dejará de contestar y se borrarán sus conversaciones y citas.')) return
     setBusy(true); try { await waConnect({ action: 'disconnect', connection_id: conn.id }); await onChanged() } catch (e) { fail(e) } finally { setBusy(false) }
@@ -185,7 +186,7 @@ function AgentRow({ agent, conn, onChanged }: { agent: Agent; conn?: WaConnectio
           <p className="truncate font-semibold text-white">{agent.business_name}</p>
           <p className="truncate text-xs text-muted">{agent.source === 'niche' ? 'Tu agente de ejemplo' : 'Demo de cliente'} · {agent.config.secretaria.nombre}</p>
         </div>
-        {!conn && <button type="button" className="btn" onClick={() => void start()} disabled={busy}>{busy ? <Spinner /> : <Smartphone className="h-4 w-4" />}Vincular WhatsApp</button>}
+        {!conn && <button type="button" className="btn" onClick={() => void start()} disabled={busy || !accepted}>{busy ? <Spinner /> : <Smartphone className="h-4 w-4" />}Vincular WhatsApp</button>}
         {conn?.status === 'working' && (
           <>
             <span className="pill !border-[#00a884]/50 !bg-[#00a884]/10 !text-[#7fe7cd]"><span className="h-2 w-2 animate-pulse rounded-full bg-[#00a884]" />Conectado{conn.phone ? ` · ${conn.phone}` : ''}</span>
@@ -200,6 +201,12 @@ function AgentRow({ agent, conn, onChanged }: { agent: Agent; conn?: WaConnectio
           </>
         )}
       </div>
+      {!conn && (
+        <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-muted">
+          <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#0070f8]" />
+          <span>Me comprometo a informar a quienes escriban a este número de que hablan con un asistente virtual y de que sus mensajes se guardan, según la <a href="/privacidad" target="_blank" rel="noreferrer" className="underline hover:text-white">política de privacidad</a> y los <a href="/terminos" target="_blank" rel="noreferrer" className="underline hover:text-white">términos</a>.</span>
+        </label>
+      )}
       {conn?.status === 'working' && <p className="mt-3 text-xs text-muted">Si contestas tú desde el móvil en una conversación, el agente se calla unas horas en ella.</p>}
       {pending && <QrPanel conn={conn} onChanged={onChanged} onCancel={() => void stop()} />}
     </div>

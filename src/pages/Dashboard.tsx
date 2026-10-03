@@ -16,9 +16,9 @@ const GAINS: Array<{ icon: LucideIcon; title: string; text: string }> = [
 
 function Tile({ icon: Icon, label, value, hint }: { icon: LucideIcon; label: string; value: string; hint?: string }) {
   return (
-    <div className="card flex items-center gap-3.5 p-4">
+    <div className="card flex items-center gap-3 p-3.5 sm:gap-3.5 sm:p-4">
       <span className="tile-icon grid h-11 w-11"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
-      <div className="min-w-0"><p className="text-2xl font-bold leading-none text-white">{value}</p><p className="mt-1 truncate text-xs text-muted">{label}{hint ? ` · ${hint}` : ''}</p></div>
+      <div className="min-w-0"><p className="truncate text-xl font-bold leading-none text-white sm:text-2xl">{value}</p><p className="mt-1 text-xs leading-tight text-muted">{label}{hint ? ` · ${hint}` : ''}</p></div>
     </div>
   )
 }

@@ -51,12 +51,15 @@ Deno.serve(async (req) => {
         return json({ connection: { id: existing.id, status: existing.status, phone: existing.phone } })
       }
 
+      // Antes de vincular un número nuevo, el alumno acepta informar a sus clientes (queda constancia con la fecha)
+      if (body.accepted !== true) throw new HttpError(400, 'consent_required', 'Para vincular un número tienes que aceptar el aviso sobre tus clientes.')
+
       const { count } = await admin.from('whatsapp_connections').select('id', { count: 'exact', head: true }).eq('user_id', userId)
       if ((count ?? 0) >= MAX_CONNECTIONS) throw new HttpError(409, 'connection_limit', `Máximo ${MAX_CONNECTIONS} números por cuenta. Desconecta uno para vincular otro.`)
 
       const session = `wa_${crypto.randomUUID().replaceAll('-', '')}`
       const { data: row, error } = await admin.from('whatsapp_connections')
-        .insert({ user_id: userId, roadmap_id: agent.roadmap_id, agent_id: agent.id, session }).select('id, status, phone').single()
+        .insert({ user_id: userId, roadmap_id: agent.roadmap_id, agent_id: agent.id, session, consent_at: new Date().toISOString() }).select('id, status, phone').single()
       if (error || !row) throw new HttpError(500, 'db_error', error?.message)
       try {
         const r = await waha('/api/sessions', { body: { name: session, start: true, config: sessionConfig() } })

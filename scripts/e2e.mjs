@@ -342,12 +342,15 @@ const agW = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).si
 await call(W.c, 'demo_agent', rmW.id, { manual: { nombre: 'Taller Los Pinos', rubro: 'taller mecánico' } })
 const demoW = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).eq('source', 'demo').single()).data
 
-ok('wa-connect sin sesión → 401', (await waInvoke(client(), { action: 'start', agent_id: agW.id })).status === 401)
-ok('No se puede vincular el agente de otro alumno → 404', (await waInvoke(X.c, { action: 'start', agent_id: agW.id })).status === 404)
-let st = await waInvoke(W.c, { action: 'start', agent_id: agW.id })
+ok('wa-connect sin sesión → 401', (await waInvoke(client(), { action: 'start', agent_id: agW.id, accepted: true })).status === 401)
+ok('No se puede vincular el agente de otro alumno → 404', (await waInvoke(X.c, { action: 'start', agent_id: agW.id, accepted: true })).status === 404)
+const noConsent = await waInvoke(W.c, { action: 'start', agent_id: agW.id })
+ok('Vincular sin aceptar el aviso sobre los clientes → 400 consent_required y no crea nada', noConsent.status === 400 && noConsent.body.error === 'consent_required' && ((await admin.from('whatsapp_connections').select('id').eq('agent_id', agW.id)).data ?? []).length === 0, JSON.stringify(noConsent))
+let st = await waInvoke(W.c, { action: 'start', agent_id: agW.id, accepted: true })
 const conn = (await admin.from('whatsapp_connections').select('*').eq('agent_id', agW.id).single()).data
 ok('Vincular crea la conexión con un nombre de sesión no adivinable', st.status === 200 && /^wa_[0-9a-f]{32}$/.test(conn?.session ?? ''), JSON.stringify(st))
-ok('  repetirlo no duplica la conexión', (await waInvoke(W.c, { action: 'start', agent_id: agW.id })).body.connection?.id === conn.id && (await admin.from('whatsapp_connections').select('id').eq('agent_id', agW.id)).data.length === 1)
+ok('  queda constancia de cuándo aceptó el aviso', !!conn?.consent_at)
+ok('  repetirlo no duplica la conexión', (await waInvoke(W.c, { action: 'start', agent_id: agW.id, accepted: true })).body.connection?.id === conn.id && (await admin.from('whatsapp_connections').select('id').eq('agent_id', agW.id)).data.length === 1)
 const qr = await waInvoke(W.c, { action: 'qr', connection_id: conn.id })
 ok('El QR llega como imagen (data URL)', qr.status === 200 && /^data:image\/png;base64,/.test(qr.body.qr ?? ''), JSON.stringify(qr).slice(0, 120))
 ok('Otro alumno NO puede pedir el QR ni el estado de mi número → 404', (await waInvoke(X.c, { action: 'qr', connection_id: conn.id })).status === 404 && (await waInvoke(X.c, { action: 'status', connection_id: conn.id })).status === 404)
@@ -356,10 +359,10 @@ ok('Mientras no se escanea, el estado es scan_qr', st.body.status === 'scan_qr',
 await fetch(`${WA_MOCK}/__status?session=${conn.session}&status=WORKING`, { method: 'POST' })
 st = await waInvoke(W.c, { action: 'status', connection_id: conn.id })
 ok('Tras escanear: working y el teléfono vinculado', st.body.status === 'working' && st.body.phone === '+34600111222', JSON.stringify(st))
-ok('Un segundo agente se puede vincular (límite 2 por cuenta)', (await waInvoke(W.c, { action: 'start', agent_id: demoW.id })).status === 200)
+ok('Un segundo agente se puede vincular (límite 2 por cuenta)', (await waInvoke(W.c, { action: 'start', agent_id: demoW.id, accepted: true })).status === 200)
 await admin.from('agents').insert({ user_id: W.id, roadmap_id: rmW.id, source: 'demo', business_name: 'Tercero', config: { negocio: { nombre: 'T', rubro: 'x' }, servicios: [], secretaria: { nombre: 'A', tono: 't', saludo: 'h' } } })
 const third = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).eq('business_name', 'Tercero').single()).data
-ok('Un tercer número → 409 connection_limit', (await waInvoke(W.c, { action: 'start', agent_id: third.id })).status === 409)
+ok('Un tercer número → 409 connection_limit', (await waInvoke(W.c, { action: 'start', agent_id: third.id, accepted: true })).status === 409)
 
 console.log('   · seguridad del webhook')
 const chat1 = '34611222333@c.us'

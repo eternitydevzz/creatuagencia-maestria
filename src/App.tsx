@@ -8,6 +8,7 @@ import Dashboard from '@/pages/Dashboard'
 import Projects from '@/pages/Projects'
 import Settings from '@/pages/Settings'
 import RoadmapPage from '@/pages/RoadmapPage'
+import { Privacy, Terms } from '@/pages/Legal'
 
 function Protected({ children }: { children: React.ReactNode }) {
   const { session, loading, needsPassword } = useAuth()
@@ -21,6 +22,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/privacidad" element={<Privacy />} />
+      <Route path="/terminos" element={<Terms />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/projects" element={<Protected><Projects /></Protected>} />
