@@ -7,3 +7,6 @@ supabase/.branches
 supabase/.temp
 *.log
 *.tsbuildinfo
+
+# material de referencia (no subir)
+webinar*.md

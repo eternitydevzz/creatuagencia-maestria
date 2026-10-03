@@ -53,6 +53,8 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
   // current_section viene de la base de datos: se acota por si el mapa tiene menos pasos que cuando se guardó
   useEffect(() => { if (roadmap && section === null) setSection(Math.min(SECTIONS.length, Math.max(1, roadmap.current_section))) }, [roadmap, section])
   useEffect(() => { if (!loading && !roadmap) onMissing() }, [loading, roadmap, onMissing])
+  // En móvil la lista de pasos es una fila con scroll: se lleva el paso activo al centro
+  useEffect(() => { document.querySelector('.step[aria-current="step"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }) }, [section, roadmap === null])
 
   const done = roadmap ? completedCount(progressOf(roadmap)) : 0
   useEffect(() => {
@@ -85,34 +87,34 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
   return (
     <div ref={top} className="scroll-mt-24">
       {/* Barra del proyecto, a todo el ancho */}
-      <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-white/10 pb-4">
-        <img src="/brand/logo-icono.png" alt="" className="h-9 w-9 rounded-lg" />
-        <div className="min-w-0"><p className="truncate text-base font-bold text-white">{roadmap.project_name}</p><p className={`text-xs ${saveFailed ? 'text-[#ffb3b3]' : 'text-muted'}`}>{saveFailed ? 'No se pudo guardar. Reintentando…' : saving ? 'Guardando…' : 'Guardado automáticamente'}</p></div>
-        <div className="ml-auto flex w-full items-center gap-3 sm:w-96">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del roadmap">
-            <div className="h-full rounded-full bg-accent-hi transition-all duration-500" style={{ width: `${pct}%` }} />
+      <div className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-4 border-b border-white/10 pb-5">
+        <img src="/brand/logo-icono.png" alt="" className="h-11 w-11 rounded-xl" />
+        <div className="min-w-0 flex-1"><p className="truncate text-xl font-bold text-white sm:text-2xl">{roadmap.project_name}</p><p className={`text-xs ${saveFailed ? 'text-[#ffb3b3]' : 'text-muted'}`}>{saveFailed ? 'No se pudo guardar. Reintentando…' : saving ? 'Guardando…' : 'Guardado automáticamente'}</p></div>
+        <div className="flex w-full items-center gap-4 sm:w-96">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del roadmap">
+            <div className="h-full rounded-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <span className="w-10 text-right text-sm font-bold text-white">{pct}%</span>
-          <span className="w-14 text-right font-mono text-xs text-muted">{done} de {SECTIONS.length}</span>
+          <div className="text-right"><p className="text-3xl font-bold leading-none text-white">{pct}%</p><p className="mt-1 font-mono text-xs text-muted">{done} de {SECTIONS.length}</p></div>
         </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <nav aria-label="Secciones del roadmap" className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-28 lg:w-64 lg:flex-none lg:flex-col lg:gap-1 lg:overflow-visible">
-          <p className="eyebrow mb-2 hidden px-3 lg:block">Secciones</p>
-          {SECTIONS.map((s) => {
-            const active = s.id === current.id
-            const ok = isSectionDone(progress, s.id)
-            const Icon = s.icon
-            return (
-              <button key={s.id} type="button" onClick={() => go(s.id)} aria-current={active ? 'step' : undefined} className="nav-item">
-                <span className="tile-icon-sm relative"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                  {ok && <span aria-hidden className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-accent-hi text-bg"><Check className="h-2 w-2" strokeWidth={4} /></span>}
-                </span>
-                <span>{s.title}{ok && <span className="sr-only"> (completada)</span>}</span>
-              </button>
-            )
-          })}
+        <nav aria-label="Pasos del roadmap" className="lg:sticky lg:top-28 lg:w-64 lg:flex-none">
+          <p className="eyebrow mb-3 hidden px-3 lg:block">Tu ruta</p>
+          <ol className="step-list">
+            {SECTIONS.map((s) => {
+              const active = s.id === current.id
+              const ok = isSectionDone(progress, s.id)
+              return (
+                <li key={s.id} className="step-item" data-done={ok}>
+                  <button type="button" onClick={() => go(s.id)} aria-current={active ? 'step' : undefined} data-state={active ? 'active' : ok ? 'done' : 'todo'} className="step">
+                    <span className="step-node" aria-hidden>{ok ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : s.id}</span>
+                    <span>{s.title}{ok && <span className="sr-only"> (completada)</span>}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
         </nav>
 
         <div className="min-w-0 flex-1">
