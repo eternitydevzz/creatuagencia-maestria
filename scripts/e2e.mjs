@@ -97,6 +97,7 @@ for (const k of ['offers', 'proposal', 'sales_kit', 'action_plan', 'demo_prompt'
 ok('Los tipos eliminados (kit, plan, demos, scripts…) responden 400', true)
 
 const log = () => fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+ok('La oferta y la landing reciben los precios de referencia calculados (los mismos que ve el alumno)', log().some((q) => /^Diseña la OFERTA/.test(q.first_chars) && q.price_ref) && log().some((q) => /textos de la landing/.test(q.first_chars) && q.price_ref))
 ok('La oferta se escribe con el cliente ideal como contexto', log().some((q) => /^Diseña la OFERTA/.test(q.first_chars) && q.ideal_ctx))
 ok('La landing se escribe con el cliente ideal y la oferta como contexto', log().some((q) => /textos de la landing/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
 

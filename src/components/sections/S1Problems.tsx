@@ -38,12 +38,12 @@ export default function S1Problems({ roadmap, update, refresh }: SectionProps) {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-3 text-sm">
-        <div className="flex gap-1.5" aria-hidden>{Array.from({ length: MAX }, (_, i) => <span key={i} className={`grid h-8 w-8 place-items-center rounded-lg border-[1.5px] font-mono text-xs ${i < selected.length ? 'border-accent-glow bg-accent/40 text-white' : 'border-line text-muted'}`}>{i + 1}</span>)}</div>
-        <span className="text-muted">{selected.length}/{MAX} problemas seleccionados</span>
+      <div className="mb-5 flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
+        <div className="flex gap-2" aria-hidden>{Array.from({ length: MAX }, (_, i) => <span key={i} className={`grid h-9 w-9 place-items-center rounded-xl border-2 font-mono text-xs font-bold transition ${i < selected.length ? 'scale-105 border-accent-hi bg-accent text-white shadow-[0_0_16px_rgba(0,112,248,.55)]' : 'border-white/15 text-muted'}`}>{i + 1}</span>)}</div>
+        <span className="text-muted"><b className="text-white">{selected.length} de {MAX}</b> problemas elegidos{selected.length === 0 ? ': empieza por los que más duelen a tu cliente' : selected.length >= MAX ? ': ya tienes el máximo' : ''}</span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="stagger grid gap-3 sm:grid-cols-2">
         {[...PROBLEMS.map((p) => ({ id: p.id, title: p.title, tagline: p.tagline })), ...customIds.map((id) => ({ id, title: problemLabel(id, custom), tagline: custom[id]?.description ?? 'Problema personalizado' }))].map((p) => {
           const on = selected.includes(p.id)
           const locked = !on && selected.length >= MAX
@@ -51,10 +51,10 @@ export default function S1Problems({ roadmap, update, refresh }: SectionProps) {
           return (
             <div key={p.id} className="relative">
               <button type="button" onClick={() => toggle(p.id)} disabled={locked} aria-pressed={on}
-                className={`card group relative flex w-full items-center gap-4 p-4 text-left ${isCustom ? 'pr-12' : ''} ${on ? '!border-accent-hi !bg-accent/10' : 'hover:bg-white/[0.06]'} ${locked ? 'opacity-40' : ''}`}>
-                <span className={`tile-icon-sm !h-10 !w-10 ${on ? '!text-accent-hi' : ''}`}>{(() => { const I = problemIcon(p.id); return <I className="h-5 w-5" strokeWidth={1.75} /> })()}</span>
+                className={`card card-lift group relative flex w-full items-center gap-4 p-4 text-left ${isCustom ? 'pr-12' : ''} ${on ? '!border-accent-hi !bg-accent/10 shadow-[0_10px_30px_rgba(0,112,248,.25)]' : ''} ${locked ? 'pointer-events-none opacity-40' : ''}`}>
+                <span className={on ? 'tile-hero !h-11 !w-11' : 'tile-icon grid h-11 w-11'}>{(() => { const I = problemIcon(p.id); return <I className="h-5 w-5" strokeWidth={1.75} /> })()}</span>
                 <span className="min-w-0"><span className="block text-sm font-semibold text-white">{p.title}</span><span className="text-xs text-muted">{p.tagline}</span></span>
-                {on && <span aria-hidden className="absolute right-3 top-3 grid h-4 w-4 place-items-center rounded-full bg-accent-hi text-[10px] font-bold text-bg">✓</span>}
+                {on && <span aria-hidden className="absolute right-3 top-3 grid h-5 w-5 animate-pop-in place-items-center rounded-full bg-accent-hi text-[11px] font-bold text-bg">✓</span>}
               </button>
               {isCustom && (
                 <button type="button" aria-label={`Quitar «${p.title}»`} className="absolute bottom-3 right-3 rounded-md p-0.5 text-muted hover:text-white"

@@ -8,7 +8,7 @@ export interface Profile {
   id: string; email: string; full_name: string | null
   role: 'student' | 'admin'; credits: number; created_at: string
 }
-export interface Metrics { leads?: number; conversion?: number; ticket?: number }
+export interface Metrics { leads?: number; conversion?: number; ticket?: number; ad_spend?: number }
 export interface Pricing { mode?: 'aggressive' | 'premium' }
 
 /** Valor JSON genérico: el cliente ideal y la oferta se pintan de forma genérica (ver lib/tree.ts). */

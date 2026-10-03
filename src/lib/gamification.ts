@@ -1,4 +1,4 @@
-import { Bot, Building2, Calculator, Gem, Globe, MessageCircle, Smartphone, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
+import { Bot, Building2, Calculator, Gem, Lightbulb, Globe, MessageCircle, Smartphone, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
 import type { Progress, Roadmap } from './types'
 
 interface SectionDef { id: number; title: string; icon: LucideIcon; heading: string; description: string }
@@ -7,8 +7,9 @@ interface SectionDef { id: number; title: string; icon: LucideIcon; heading: str
  *  Aquí está todo lo de cada paso (nombre, icono, cabecera); la pantalla de cada uno se enlaza en RoadmapPage con el mismo id. */
 export const SECTIONS = [
   { id: 1, title: 'Problemas que resuelves', icon: Target, heading: 'Detectar problemas', description: '¿Qué problemas del embudo vas a resolver a tus clientes con IA? Elige hasta 4: definen tu oferta.' },
+  { id: 11, title: 'Soluciones con IA', icon: Lightbulb, heading: 'Convierte tus problemas en soluciones', description: 'Esto es lo que vendes, y así se lo cuentas al empresario. Cada problema que elegiste, con lo que incluye la solución y el cambio que consigue.' },
   { id: 2, title: 'Tu nicho', icon: Users, heading: 'Tu agencia y tu nicho', description: 'A quién le vas a vender. Cuanto más concreto sea el nicho, más fácil es escribir una oferta y una web que conviertan.' },
-  { id: 3, title: 'Tu cliente en números', icon: Calculator, heading: 'Tu cliente en números', description: 'Los números de un negocio típico de tu nicho. Con ellos la IA calcula cuánto pierde tu cliente y pone un precio que tenga sentido. Si no los sabes, pon una estimación.' },
+  { id: 3, title: 'Precios', icon: Calculator, heading: 'Cuánto puedes cobrar', description: 'Mueve los números de un negocio típico de tu nicho y el precio sale solo: qué cobrar por cada servicio y cuánto te deja. Si no los sabes, pon una estimación.' },
   { id: 4, title: 'Cliente ideal', icon: UserCheck, heading: 'Tu cliente ideal', description: 'Quién es exactamente, qué le duele en sus palabras, cuánto pierde y dónde encontrarlo. Es la base de tu oferta y de tu landing.' },
   { id: 5, title: 'Tu oferta', icon: Gem, heading: 'Tu oferta irresistible', description: 'Promesa, mecanismo, precio anclado en lo que pierde tu cliente, garantía y una oferta piloto para conseguir tus primeros clientes sin casos de éxito.' },
   { id: 6, title: 'Tu landing', icon: Globe, heading: 'Tu landing de venta', description: 'Una web premium con tu oferta, lista para publicar. Los botones llevan a tu WhatsApp o a tu email.' },
@@ -19,6 +20,9 @@ export const SECTIONS = [
 ] as const satisfies ReadonlyArray<SectionDef>
 
 export type SectionId = (typeof SECTIONS)[number]['id']
+
+/** Número de paso que ve el alumno (posición en la lista). El `id` es estable para no tocar datos ya guardados; el orden lo manda la lista. */
+export const stepNo = (id: number) => SECTIONS.findIndex((s) => s.id === id) + 1
 
 const filled = (o: object | null | undefined) => !!o && Object.keys(o).length > 0
 
@@ -33,6 +37,7 @@ export const progressOf = (r: Roadmap): Progress => ({
 export function isSectionDone(p: Progress, id: number): boolean {
   switch (id) {
     case 1: return p.selected_problems.length > 0
+    case 11: return p.selected_problems.length > 0 && p.visited_sections.includes(11) // verlas = haber pasado por el paso
     case 2: return p.selected_nichos.length > 0
     case 3: return (p.business_metrics.leads ?? 0) > 0 && (p.business_metrics.ticket ?? 0) > 0
     case 4: return p.has_ideal

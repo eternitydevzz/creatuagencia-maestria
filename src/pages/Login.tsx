@@ -38,8 +38,9 @@ export default function Login() {
   })
 
   return (
-    <div className="grid min-h-screen place-items-center px-4 py-10">
-      <div className="card w-full max-w-md overflow-hidden">
+    <div className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10">
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 blur-3xl" style={{ background: 'radial-gradient(circle, rgba(0,112,248,.45), transparent 65%)' }} />
+      <div className="card relative w-full max-w-md animate-pop-in overflow-hidden shadow-[0_30px_90px_rgba(0,40,140,.55)]">
         <img src="/brand/portada-acceso.webp" alt="MaestrIA — Creación de Agencias IA" className="aspect-video w-full object-cover" />
         <div className="space-y-5 p-6">
           <div className="text-center"><h1 className="text-2xl font-bold">Bienvenido a MaestrIA</h1><p className="mt-1 text-sm text-muted">Acceso solo para alumnos del programa. Usa el email con el que te invitamos.</p></div>

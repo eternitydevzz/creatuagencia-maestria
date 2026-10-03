@@ -1,15 +1,15 @@
 # MaestrIA · Constructor de Agencia IA
 
-Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 10 pasos y entrega
+Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 11 pasos y entrega
 tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virtual de WhatsApp para enseñar a los clientes:
 
-1. Problemas que resuelves · 2. Tu agencia y tu nicho · 3. Tu cliente en números (leads, conversión, ticket, modo de precios)
-4. **Cliente ideal** · 5. **Oferta** (usa el cliente ideal) · 6. **Landing** de venta premium (usa los dos anteriores)
-7. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 8. **Probar el agente**: simulador de WhatsApp para hablar con ella · 9. **Demo para clientes**: pega la web de un negocio (o escribe sus datos) y sale su propia secretaria · 10. **Conectar WhatsApp** (beta): vincula un número por QR y el agente contesta de verdad
+1. Problemas que resuelves · 2. **Soluciones con IA** (cada problema convertido en la solución que vendes) · 3. Tu agencia y tu nicho · 4. **Precios**: deslizadores con las consultas, la inversión en anuncios y el ticket de un negocio típico, y la tabla de lo que puedes cobrar (`_shared/pricing.ts`, la misma que usa la oferta)
+5. **Cliente ideal** · 6. **Oferta** (usa el cliente ideal y los precios de referencia) · 7. **Landing** de venta premium (usa los dos anteriores)
+8. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 9. **Probar el agente**: simulador de WhatsApp para hablar con ella · 10. **Demo para clientes**: pega la web de un negocio (o escribe sus datos) y sale su propia secretaria · 11. **Conectar WhatsApp** (beta): vincula un número por QR y el agente contesta de verdad
 
 ## Cómo está organizado
 
-- `src/lib/gamification.ts` define los pasos del mapa (nombre, icono, cabecera) y cuándo está hecho cada uno; `RoadmapPage.tsx` enlaza cada paso con su pantalla y no compila si falta alguna.
+- `src/lib/gamification.ts` define los pasos del mapa (el `id` de cada paso es estable para no tocar datos ya guardados; el orden en pantalla lo manda la lista) (nombre, icono, cabecera) y cuándo está hecho cada uno; `RoadmapPage.tsx` enlaza cada paso con su pantalla y no compila si falta alguna.
 - `supabase/functions/_shared/` se comparte entre la Edge Function y el navegador (alias `@shared`): el catálogo de problemas y la **huella** de las respuestas.
 - Cada entregable guarda en `_meta` la huella de las respuestas con las que se generó. Si el alumno las cambia después, la interfaz avisa de que está **desactualizado**.
 - El alumno solo puede escribir sus respuestas (permisos por columna en `roadmaps`); lo que genera la IA lo escribe solo el servidor.

@@ -8,7 +8,7 @@ export function Tree({ v, k, depth = 0 }: { v: Json | undefined; k?: string; dep
     return <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{k && <span className="font-semibold text-white">{label(k)}: </span>}{String(v)}</p>
   }
   const heading = k ? (depth <= 1
-    ? <h3 className="text-lg font-bold text-white">{label(k)}</h3>
+    ? <h3 className="border-l-4 border-accent-hi pl-3 text-lg font-bold text-white">{label(k)}</h3>
     : <h4 className="font-bold text-white">{label(k)}</h4>) : null
   if (Array.isArray(v)) {
     if (v.every((x) => !isObject(x))) {

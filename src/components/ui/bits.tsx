@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Copy, Loader2, Sparkles, type LucideIcon } from 'lucide-react'
 import { useToast } from '@/hooks/useToast'
 
@@ -91,4 +91,24 @@ const STATUS = {
 export function StatusBadge({ status }: { status: keyof typeof STATUS }) {
   const s = STATUS[status] ?? STATUS.draft
   return <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${s.cls}`}>{s.label}</span>
+}
+
+/** Número que se desliza hasta su nuevo valor (se queda quieto si el sistema pide menos movimiento). */
+export function AnimatedNumber({ value, format = (n: number) => String(Math.round(n)), ms = 450 }: { value: number; format?: (n: number) => string; ms?: number }) {
+  const [shown, setShown] = useState(value)
+  const from = useRef(value)
+  useEffect(() => {
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce || from.current === value) { from.current = value; setShown(value); return }
+    const start = from.current, t0 = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - p, 3)
+      setShown(start + (value - start) * e)
+      if (p < 1) raf = requestAnimationFrame(tick); else from.current = value
+    }
+    raf = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(raf); from.current = value }
+  }, [value, ms])
+  return <>{format(shown)}</>
 }

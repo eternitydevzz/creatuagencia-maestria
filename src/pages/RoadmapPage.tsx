@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti'
 import { play } from '@/lib/sound'
 import { useRoadmap, useRoadmaps } from '@/hooks/useData'
 import type { SectionProps } from '@/hooks/useGenerate'
-import { SECTIONS, completedCount, isSectionDone, progressOf, type SectionId } from '@/lib/gamification'
+import { SECTIONS, completedCount, isSectionDone, progressOf, stepNo, type SectionId } from '@/lib/gamification'
 import { SectionHeader, Spinner } from '@/components/ui/bits'
 import NewProjectModal from '@/components/NewProjectModal'
 import S1Problems from '@/components/sections/S1Problems'
@@ -18,9 +18,10 @@ import S7Agent from '@/components/sections/S7Agent'
 import S8TryAgent from '@/components/sections/S8TryAgent'
 import S9Demos from '@/components/sections/S9Demos'
 import S10Whatsapp from '@/components/sections/S10Whatsapp'
+import S11Solutions from '@/components/sections/S11Solutions'
 
 // Tipado con SectionId: si se añade un paso a SECTIONS y falta su pantalla aquí, no compila.
-const VIEWS: Record<SectionId, ComponentType<SectionProps>> = { 1: S1Problems, 2: S2Niche, 3: S3Numbers, 4: S4IdealClient, 5: S5Offer, 6: S6Landing, 7: S7Agent, 8: S8TryAgent, 9: S9Demos, 10: S10Whatsapp }
+const VIEWS: Record<SectionId, ComponentType<SectionProps>> = { 1: S1Problems, 2: S2Niche, 3: S3Numbers, 4: S4IdealClient, 5: S5Offer, 6: S6Landing, 7: S7Agent, 8: S8TryAgent, 9: S9Demos, 10: S10Whatsapp, 11: S11Solutions }
 
 function Center({ children }: { children: React.ReactNode }) { return <div className="grid min-h-[60vh] place-items-center">{children}</div> }
 
@@ -56,7 +57,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
   const top = useRef<HTMLDivElement>(null)
 
   // current_section viene de la base de datos: se acota por si el mapa tiene menos pasos que cuando se guardó
-  useEffect(() => { if (roadmap && section === null) setSection(Math.min(SECTIONS.length, Math.max(1, roadmap.current_section))) }, [roadmap, section])
+  useEffect(() => { if (roadmap && section === null) setSection(SECTIONS.some((s) => s.id === roadmap.current_section) ? roadmap.current_section : SECTIONS[0].id) }, [roadmap, section])
   useEffect(() => { if (!loading && !roadmap) onMissing() }, [loading, roadmap, onMissing])
   // En móvil la lista de pasos es una fila con scroll: se lleva el paso activo al centro
   useEffect(() => { document.querySelector('.step[aria-current="step"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }) }, [section, roadmap === null])
@@ -74,8 +75,8 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
 
   if (loading || !roadmap || section === null) return <Center><Spinner className="h-8 w-8 text-accent-hi" /></Center>
 
-  const go = (n: number) => {
-    const target = Math.min(SECTIONS.length, Math.max(1, n))
+  const go = (id: number) => {
+    const target = SECTIONS.some((s) => s.id === id) ? id : SECTIONS[0].id
     setSection(target)
     update({
       current_section: target,
@@ -87,6 +88,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
   const progress = progressOf(roadmap)
   const pct = Math.round((done / SECTIONS.length) * 100)
   const current = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
+  const pos = SECTIONS.indexOf(current)
   const View = VIEWS[current.id]
   const props: SectionProps = { roadmap, update, refresh }
 
@@ -114,7 +116,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
               return (
                 <li key={s.id} className="step-item" data-done={ok}>
                   <button type="button" onClick={() => go(s.id)} aria-current={active ? 'step' : undefined} data-state={active ? 'active' : ok ? 'done' : 'todo'} className="step">
-                    <span className="step-node" aria-hidden>{ok ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : s.id}</span>
+                    <span className="step-node" aria-hidden>{ok ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : stepNo(s.id)}</span>
                     <span>{s.title}{ok && <span className="sr-only"> (completada)</span>}</span>
                   </button>
                 </li>
@@ -125,12 +127,12 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
 
         <div className="min-w-0 flex-1">
           <div key={current.id} className="section-shell animate-step-in">
-            <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} eyebrow={`Paso ${current.id} de ${SECTIONS.length}`} />
+            <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} eyebrow={`Paso ${stepNo(current.id)} de ${SECTIONS.length}`} />
             <View {...props} />
           </div>
           <div className="mt-6 flex justify-between gap-3">
-            <button className="btn-ghost" onClick={() => go(section - 1)} disabled={section === 1}><ArrowLeft className="h-4 w-4" />Anterior</button>
-            {section < SECTIONS.length ? <button className="btn-ghost" onClick={() => go(section + 1)}>Siguiente<ArrowRight className="h-4 w-4" /></button> : <span className="pill">Has llegado al final del mapa 🎉</span>}
+            <button className="btn-ghost" onClick={() => go(SECTIONS[pos - 1].id)} disabled={pos === 0}><ArrowLeft className="h-4 w-4" />Anterior</button>
+            {pos < SECTIONS.length - 1 ? <button className="btn" onClick={() => go(SECTIONS[pos + 1].id)}>Siguiente: {SECTIONS[pos + 1].title}<ArrowRight className="h-4 w-4" /></button> : <span className="pill">{done === SECTIONS.length ? 'Has completado el mapa 🎉' : 'Último paso del mapa'}</span>}
           </div>
         </div>
       </div>

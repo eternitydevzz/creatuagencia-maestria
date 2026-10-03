@@ -35,7 +35,7 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div><h1 className="text-3xl font-bold">Ajustes</h1><p className="mt-1 text-muted">Gestiona tu cuenta y preferencias</p></div>
+      <div><p className="eyebrow">Tu cuenta</p><h1 className="text-3xl font-bold">Ajustes</h1><p className="mt-1 text-muted">Gestiona tu cuenta y preferencias</p></div>
 
       <div role="tablist" aria-label="Ajustes" className="inline-flex gap-1 rounded-2xl border border-line bg-black/30 p-1">
         {tabs.map(({ id, label, icon: Icon }) => (
@@ -47,7 +47,7 @@ export default function Settings() {
       </div>
 
       {tab === 'profile' ? (
-        <section className="card space-y-6 p-6" aria-labelledby="perfil">
+        <section className="hero-panel space-y-6 rounded-2xl border border-white/10 p-6" aria-labelledby="perfil">
           <h2 id="perfil" className="flex items-center gap-2 text-lg font-bold text-accent-glow"><User className="h-5 w-5" />Información personal</h2>
           <div className="flex items-center gap-5">
             <Avatar name={profile?.full_name ?? profile?.email} className="h-20 w-20 text-2xl" />
@@ -67,8 +67,8 @@ export default function Settings() {
           </div>
         </section>
       ) : (
-        <section className="card space-y-4 p-6" aria-labelledby="creditos">
-          <div className="flex items-end justify-between"><h2 id="creditos" className="flex items-center gap-2 text-lg font-bold text-accent-glow"><Coins className="h-5 w-5" />Créditos de IA</h2><div className="text-right"><span className="text-4xl font-bold text-white">{profile?.credits ?? '…'}</span><span className="ml-1 text-sm text-muted">disponibles</span></div></div>
+        <section className="hero-panel space-y-4 rounded-2xl border border-white/10 p-6" aria-labelledby="creditos">
+          <div className="flex items-end justify-between"><h2 id="creditos" className="flex items-center gap-2 text-lg font-bold text-accent-glow"><Coins className="h-5 w-5" />Créditos de IA</h2><div className="text-right"><span className="text-5xl font-bold text-white">{profile?.credits ?? '…'}</span><span className="ml-1 text-sm text-muted">disponibles</span></div></div>
           <p className="text-sm text-muted">Cada generación con IA consume créditos; el coste aparece en cada botón. Si una generación falla, se te devuelven automáticamente. ¿Necesitas más? Escribe a tu equipo de MaestrIA.</p>
           <div className="overflow-hidden rounded-xl border border-line">
             <table className="w-full text-sm"><thead className="bg-white/[0.04] text-left text-xs text-muted"><tr><th className="px-3 py-2 font-semibold">Movimiento</th><th className="px-3 py-2 text-right font-semibold">Créditos</th><th className="px-3 py-2 text-right font-semibold">Saldo</th></tr></thead>

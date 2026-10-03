@@ -5,13 +5,14 @@ import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { staleness } from '@/lib/freshness'
 import { str, treeToText } from '@/lib/tree'
 import type { JsonObject } from '@/lib/types'
+import { stepNo } from '@/lib/gamification'
 
 export default function S5Offer({ roadmap, refresh }: SectionProps) {
   const { run, isBusy } = useGenerate(roadmap.id, refresh)
   const o = roadmap.agency_offer
   const offer = (o.oferta ?? {}) as JsonObject
   const price = (offer.precio ?? {}) as JsonObject
-  const missing = Object.keys(roadmap.ideal_client).length === 0 && 'Primero genera tu cliente ideal (paso 4): la oferta se construye sobre él.'
+  const missing = Object.keys(roadmap.ideal_client).length === 0 && `Primero genera tu cliente ideal (paso ${stepNo(4)}): la oferta se construye sobre él.`
 
   return (
     <Deliverable missing={missing} stale={staleness(roadmap).offer} done={Object.keys(offer).length > 0} busy={isBusy('agency_offer')} cost={3} label="Generar mi oferta"

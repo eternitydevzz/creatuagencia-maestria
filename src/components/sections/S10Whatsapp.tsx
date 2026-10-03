@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/useToast'
 import { GenerationError, waConnect } from '@/lib/api'
 import { play } from '@/lib/sound'
 import type { Agent, Booking, WaConnection, WaConversation, WaMessage } from '@/lib/types'
+import { stepNo } from '@/lib/gamification'
 
 const when = (iso: string) => new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -52,7 +53,7 @@ export default function S10Whatsapp({ roadmap, refresh }: SectionProps) {
 
   if (l1 || l2 || l3) return <Skeleton rows={3} />
   const agents = [niche, ...(demos ?? [])].filter((a): a is Agent => !!a)
-  if (!agents.length) return <Empty icon={Smartphone}>Primero crea tu agente (paso 7) o una demo para un cliente (paso 9): aquí le conectas un número de WhatsApp.</Empty>
+  if (!agents.length) return <Empty icon={Smartphone}>Primero crea tu agente (paso {stepNo(7)}) o una demo para un cliente (paso {stepNo(9)}): aquí le conectas un número de WhatsApp.</Empty>
 
   const today = new Date().toISOString().slice(0, 10)
   const repliesToday = (conns ?? []).reduce((n, c) => n + (c.replies_day === today ? c.replies_today : 0), 0)

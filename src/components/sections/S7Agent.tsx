@@ -9,6 +9,7 @@ import { useAgent } from '@/hooks/useData'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { agentStaleness } from '@/lib/freshness'
 import type { JsonObject } from '@/lib/types'
+import { stepNo } from '@/lib/gamification'
 
 const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   { icon: Zap, title: 'Responde en segundos', text: 'A las 3 de la madrugada igual que a las 10 de la mañana.' },
@@ -22,7 +23,7 @@ export default function S7Agent({ roadmap, refresh }: SectionProps) {
   const reload = useCallback(async () => { await refresh(); await qc.invalidateQueries({ queryKey: ['agent', roadmap.id] }) }, [refresh, qc, roadmap.id])
   const { run, isBusy } = useGenerate(roadmap.id, reload)
   const cfg = agent?.config
-  const missing = roadmap.selected_nichos.length === 0 && 'Primero elige tu nicho (paso 2): el agente se crea para un negocio típico de ese nicho.'
+  const missing = roadmap.selected_nichos.length === 0 && `Primero elige tu nicho (paso ${stepNo(2)}): el agente se crea para un negocio típico de ese nicho.`
 
   if (isLoading) return <Skeleton rows={3} />
 
@@ -39,7 +40,7 @@ export default function S7Agent({ roadmap, refresh }: SectionProps) {
       </div>
 
       <Deliverable missing={missing} stale={agent ? agentStaleness(roadmap, agent) : null} done={!!agent} busy={isBusy('agent')} cost={1} label="Crear mi agente"
-        pending="La IA inventa un negocio típico de tu nicho y le da una secretaria que ya sabe atender. Después la pruebas en el paso 8."
+        pending={`La IA inventa un negocio típico de tu nicho y le da una secretaria que ya sabe atender. Después la pruebas en el paso ${stepNo(8)}.`}
         onGenerate={() => void run('agent')}
         actions={cfg && <CopyButton text={buildAgentPrompt(cfg, nowText(cfg.negocio.zona_horaria))} label="Copiar instrucciones" />}>
         {cfg && (

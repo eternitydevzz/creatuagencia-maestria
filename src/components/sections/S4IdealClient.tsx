@@ -5,13 +5,14 @@ import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { staleness } from '@/lib/freshness'
 import { str, treeToText } from '@/lib/tree'
 import type { JsonObject } from '@/lib/types'
+import { stepNo } from '@/lib/gamification'
 
 export default function S4IdealClient({ roadmap, refresh }: SectionProps) {
   const { run, isBusy } = useGenerate(roadmap.id, refresh)
   const c = roadmap.ideal_client
   const { resumen, coste_del_problema, avatar, ...rest } = c // lo destacado va arriba; el resto, en el detalle
   const person = avatar as JsonObject | undefined
-  const missing = !roadmap.selected_problems.length ? 'Elige al menos un problema en el paso 1.' : !roadmap.selected_nichos.length ? 'Elige tu nicho en el paso 2.' : false
+  const missing = !roadmap.selected_problems.length ? `Elige al menos un problema en el paso ${stepNo(1)}.` : !roadmap.selected_nichos.length ? `Elige tu nicho en el paso ${stepNo(2)}.` : false
 
   return (
     <Deliverable missing={missing} stale={staleness(roadmap).ideal} done={Object.keys(c).length > 0} busy={isBusy('ideal_client')} cost={2} label="Generar mi cliente ideal"

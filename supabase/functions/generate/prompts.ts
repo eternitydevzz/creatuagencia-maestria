@@ -2,13 +2,14 @@
 // el navegador nunca envía texto de prompt, solo parámetros acotados (evita que se use la clave como proxy libre).
 // El producto entrega tres cosas: cliente ideal → oferta → landing. Cada una usa la anterior como contexto.
 import { type CustomProblem, describeProblem } from '../_shared/catalog.ts'
+import { DEFAULTS, priceTable } from '../_shared/pricing.ts'
 
 export interface Ctx {
   agencyName?: string
   nichos: string[]
   problems: string[]
   custom: Record<string, CustomProblem>
-  metrics: { leads?: number; conversion?: number; ticket?: number }
+  metrics: { leads?: number; conversion?: number; ticket?: number; ad_spend?: number }
   pricing: Record<string, unknown>
   idealClient?: Record<string, unknown>   // paso "Cliente ideal"
   agencyOffer?: Record<string, unknown>   // paso "Oferta"
@@ -22,8 +23,13 @@ const filled = (o?: Record<string, unknown>) => !!o && Object.keys(o).length > 0
 
 const metricsLine = (c: Ctx) => {
   const m = c.metrics
-  const parts = [m.leads != null && `${m.leads} consultas o leads al mes`, m.conversion != null && `${m.conversion} % de conversión`, m.ticket != null && `ticket medio de ${m.ticket} €`].filter(Boolean)
+  const parts = [m.leads != null && `${m.leads} consultas o leads al mes`, m.ad_spend != null && `${m.ad_spend} € al mes en anuncios`, m.conversion != null && `${m.conversion} % de conversión`, m.ticket != null && `ticket medio de ${m.ticket} €`].filter(Boolean)
   return parts.length ? parts.join(', ') : 'no indicados (usa supuestos realistas del nicho y márcalos como estimación)'
+}
+/** Precios de referencia (los mismos que ve el alumno en el paso de precios): la oferta y la landing parten de ellos y no los contradicen. */
+const priceRef = (c: Ctx) => {
+  const t = priceTable({ leads: c.metrics.leads ?? DEFAULTS.leads, adSpend: c.metrics.ad_spend ?? DEFAULTS.adSpend, ticket: c.metrics.ticket ?? DEFAULTS.ticket, mode: c.pricing.mode === 'premium' ? 'premium' : 'aggressive' })
+  return t.lines.map((l) => `${l.name}: ${l.setup} € de puesta en marcha${l.monthly ? ` + ${l.monthly} €/mes` : ''}`).join(' · ') + ` · Pack completo (landing + agente + seguimiento + anuncios): ${t.pack.setup} € + ${t.pack.monthly} €/mes`
 }
 const priceMode = (c: Ctx) => c.pricing.mode === 'premium'
   ? 'premium: precios altos, pocos clientes, filtra a los que no pueden pagar'
@@ -34,7 +40,8 @@ const baseContext = (c: Ctx) => `- Agencia: ${agencyOf(c)}
 - Problemas que resuelve y su solución con IA:
 ${problemList(c)}
 - Números del negocio típico del cliente: ${metricsLine(c)}
-- Modo de precios elegido: ${priceMode(c)}`
+- Modo de precios elegido: ${priceMode(c)}
+- Precios de referencia calculados para este negocio (parte de ellos para fijar los de la oferta; ajústalos solo con una razón clara): ${priceRef(c)}`
 
 const idealClientBlock = (c: Ctx) => filled(c.idealClient)
   ? `\n- CLIENTE IDEAL YA DEFINIDO (úsalo: su vocabulario, sus dolores, su coste del problema):\n${JSON.stringify(c.idealClient).slice(0, 6000)}`
