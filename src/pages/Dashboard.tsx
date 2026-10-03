@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Bot, Check, Coins, Gem, Globe, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Bot, Check, Eye, Coins, Gem, Globe, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
 import { SECTIONS, completedCount, computeXp, isSectionDone, levelFor } from '@/lib/gamification'
-import { ProgressRing, Skeleton, StatusBadge } from '@/components/ui/bits'
+import { ProgressRing, Skeleton, Spinner, StatusBadge } from '@/components/ui/bits'
+import { loadSample } from '@/lib/api'
+import { useToast } from '@/hooks/useToast'
+import { useQueryClient } from '@tanstack/react-query'
 import NewProjectModal from '@/components/NewProjectModal'
 import type { RoadmapSummary } from '@/lib/types'
 
@@ -50,6 +53,13 @@ export default function Dashboard() {
   const { data: roadmaps, isLoading } = useRoadmaps()
   const { data: gens } = useGenerationCount()
   const [creating, setCreating] = useState(false)
+  const [loadingSample, setLoadingSample] = useState(false)
+  const nav = useNavigate(); const toast = useToast(); const qc = useQueryClient()
+  const openSample = async () => {
+    setLoadingSample(true)
+    try { const id = await loadSample(); await qc.invalidateQueries({ queryKey: ['roadmaps'] }); nav(`/roadmap/${id}`) }
+    catch (e) { toast(e instanceof Error ? e.message : 'No se pudo cargar el ejemplo.', 'error') } finally { setLoadingSample(false) }
+  }
   const first = (profile?.full_name ?? '').split(' ')[0]
   const latest = roadmaps?.[0]
   const xp = computeXp(roadmaps ?? [], gens ?? 0)
@@ -74,9 +84,12 @@ export default function Dashboard() {
                   : <>Vas por el paso <b className="text-white">{next.id}: {next.title}</b> de «{latest.project_name}».</>}
             </p>
           </div>
-          {latest
-            ? <Link to={`/roadmap/${latest.id}`} className="btn px-6 py-3 text-base">{finished ? 'Abrir mi proyecto' : 'Continuar'}<ArrowRight className="h-4 w-4" /></Link>
-            : <button className="btn px-6 py-3 text-base" onClick={() => setCreating(true)}><Plus className="h-4 w-4" />Crear mi primer proyecto</button>}
+          <div className="flex flex-wrap gap-3">
+            {latest
+              ? <Link to={`/roadmap/${latest.id}`} className="btn px-6 py-3 text-base">{finished ? 'Abrir mi proyecto' : 'Continuar'}<ArrowRight className="h-4 w-4" /></Link>
+              : <button className="btn px-6 py-3 text-base" onClick={() => setCreating(true)}><Plus className="h-4 w-4" />Crear mi primer proyecto</button>}
+            <button type="button" className="btn-ghost px-5 py-3 text-base" onClick={() => void openSample()} disabled={loadingSample} title="Un proyecto terminado de una clínica dental, para ver cómo queda cada paso">{loadingSample ? <Spinner /> : <Eye className="h-4 w-4" />}Ver un ejemplo terminado</button>
+          </div>
         </div>
         {latest && <PathStrip project={latest} next={next.id} />}
       </section>

@@ -1,0 +1,17 @@
+name: Keepalive
+# El plan gratuito de Supabase pausa los proyectos tras una semana sin actividad. Este latido (una llamada a una función que solo
+# devuelve la hora) lo evita. La clave anon es pública por diseño: también va dentro del JavaScript de la web.
+on:
+  schedule:
+    - cron: '17 6 */2 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST 'https://sniinyzcwdfgvnctshuj.supabase.co/rest/v1/rpc/ping' \
+            -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuaWlueXpjd2RmZ3ZuY3RzaHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTQ1NjAsImV4cCI6MjEwNjQ5MDU2MH0.xp9Gfcd8jj9eD34nxculxuGgxKjaZ0bneIcYbBCMPy0' -H 'Content-Type: application/json' -d '{}')
+          echo "Supabase respondió $code"
+          test "$code" = "200"

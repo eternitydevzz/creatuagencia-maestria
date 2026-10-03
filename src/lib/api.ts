@@ -105,3 +105,10 @@ export async function adminStudents<T = Record<string, unknown>>(body:
   }
   return data as T
 }
+
+/** Crea (o recupera) el proyecto de ejemplo terminado en la cuenta del alumno. */
+export async function loadSample(): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('load-sample', { body: {} })
+  if (error || !data?.roadmap_id) throw new GenerationError('internal_error', 'No se pudo cargar el ejemplo. Inténtalo de nuevo.')
+  return data.roadmap_id as string
+}

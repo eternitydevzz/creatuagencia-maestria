@@ -501,6 +501,23 @@ ok('Eliminar un alumno borra su cuenta, perfil, proyectos, agentes y conexiones'
 ok('  desvincula su WhatsApp en el servidor (la sesión desaparece)', (await fetch(`${WA_MOCK}/api/sessions/${sess}`, { headers: { 'x-api-key': 'test-key' } })).status === 404)
 ok('  y ya no puede entrar', !!(await client().auth.signInWithPassword({ email: newEmail, password: rs.body.student.password })).error)
 
+
+console.log('\n— Proyecto de ejemplo terminado (sin gastar créditos)')
+const sample = async (c) => { const { data, error } = await c.functions.invoke('load-sample', { body: {} }); if (!error) return { status: 200, body: data }; let b = {}; try { b = await error.context.json() } catch { /* */ } return { status: error.context?.status ?? 0, body: b } }
+const S1 = await makeUser('sofia'), S2 = await makeUser('saul')
+const cs0 = await credits(S1.id)
+ok('Sin sesión → 401', (await sample(client())).status === 401)
+const sm = await sample(S1.c)
+const { data: smRow } = await admin.from('roadmaps').select('*').eq('id', sm.body.roadmap_id ?? '00000000-0000-0000-0000-000000000000').maybeSingle()
+ok('Cargar el ejemplo crea un proyecto completo (cliente ideal, oferta, landing)', sm.status === 200 && sm.body.created === true && !!smRow?.ideal_client?.resumen && !!smRow?.agency_offer?.oferta?.nombre && !!smRow?.agency_site?.hero?.titulo, JSON.stringify(sm).slice(0, 150))
+ok('  con su agente de WhatsApp', ((await admin.from('agents').select('id, config').eq('roadmap_id', smRow.id).eq('source', 'niche')).data ?? []).length === 1)
+ok('  sin tocar los créditos', (await credits(S1.id)) === cs0)
+ok('  los entregables traen su huella y no salen como desactualizados', !!smRow.ideal_client._meta?.inputs && smRow.agency_offer._meta?.ideal_at === smRow.ideal_client._meta.generated_at && smRow.agency_site._meta?.offer_at === smRow.agency_offer._meta.generated_at)
+const sm2 = await sample(S1.c)
+ok('Pedirlo otra vez devuelve el mismo proyecto, no uno nuevo', sm2.body.roadmap_id === sm.body.roadmap_id && sm2.body.created === false && ((await admin.from('roadmaps').select('id').eq('user_id', S1.id)).data ?? []).length === 1)
+const sm3 = await sample(S2.c)
+ok('Cada alumno tiene su propia copia (otro id) y no ve la del otro', sm3.body.roadmap_id !== sm.body.roadmap_id && ((await S2.c.from('roadmaps').select('id').eq('id', sm.body.roadmap_id)).data ?? []).length === 0)
+
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
 const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]

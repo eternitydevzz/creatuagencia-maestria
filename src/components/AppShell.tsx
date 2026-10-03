@@ -31,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1 md:overflow-visible" aria-label="Principal">
             {[...links, ...(profile?.role === 'admin' ? [{ to: '/admin', label: 'Alumnos', icon: Users, end: false }] : [])].map(({ to, label, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-none items-center gap-2 rounded-xl px-2.5 py-2 lg:px-3 text-sm font-semibold transition ${isActive ? 'border border-accent/40 bg-accent/15 text-white' : 'border border-transparent text-muted hover:text-white'}`}>
-                <Icon className="h-4 w-4" />{label}
+                <Icon className="hidden h-4 w-4 min-[1500px]:block" />{label}
               </NavLink>
             ))}
           </nav>
