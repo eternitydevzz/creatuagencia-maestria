@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuth'
-import type { EditablePatch, Profile, Roadmap, RoadmapSummary } from '@/lib/types'
+import type { Agent, EditablePatch, Profile, Roadmap, RoadmapSummary } from '@/lib/types'
 
 export function useProfile() {
   const { session } = useAuth()
@@ -19,8 +19,8 @@ export function useProfile() {
 
 // Las listas (cabecera, dashboard, proyectos) solo necesitan saber qué pasos lleva hecho cada proyecto:
 // de los entregables (que pesan decenas de KB) se pide únicamente un campo para saber si existen.
-const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo'
-type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site'> & { ideal: string | null; offer: string | null; site: string | null }
+const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,visited_sections,agents(id,source)'
+type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_agent'> & { ideal: string | null; offer: string | null; site: string | null; agents: Array<{ source: string }> }
 
 export function useRoadmaps() {
   const { session } = useAuth()
@@ -30,7 +30,19 @@ export function useRoadmaps() {
     queryFn: async (): Promise<RoadmapSummary[]> => {
       const { data, error } = await supabase.from('roadmaps').select(SUMMARY_COLUMNS).order('updated_at', { ascending: false }).returns<SummaryRow[]>()
       if (error) throw error
-      return data.map(({ ideal, offer, site, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site }))
+      return data.map(({ ideal, offer, site, agents, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_agent: agents.some((a) => a.source === 'niche') }))
+    },
+  })
+}
+
+/** El agente de ejemplo del nicho de un proyecto (null si aún no se ha creado). */
+export function useAgent(roadmapId: string) {
+  return useQuery({
+    queryKey: ['agent', roadmapId],
+    queryFn: async (): Promise<Agent | null> => {
+      const { data, error } = await supabase.from('agents').select('*').eq('roadmap_id', roadmapId).eq('source', 'niche').maybeSingle()
+      if (error) throw error
+      return data as Agent | null
     },
   })
 }
@@ -64,7 +76,7 @@ export function useRoadmap(id: string | undefined) {
 
   const load = useCallback(async () => {
     if (!id) return
-    const { data, error } = await supabase.from('roadmaps').select('*').eq('id', id).maybeSingle()
+    const { data, error } = await supabase.from('roadmaps').select('*, agents(id, source)').eq('id', id).maybeSingle()
     if (error) console.error('[roadmap] error al cargar', error)
     // Lo que el alumno haya escrito mientras tanto y aún no esté guardado se conserva encima de lo recién cargado.
     setRoadmap(data ? ({ ...data, ...pending.current } as Roadmap) : null)

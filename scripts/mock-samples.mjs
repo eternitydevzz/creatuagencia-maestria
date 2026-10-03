@@ -206,3 +206,25 @@ export const SITE = {
   cta_final: { titulo: 'Mira cómo contestaría a tus clientes', texto: 'Te preparamos una demo con tus horarios y tarifas y te la enseñamos en 15 minutos.', cta: 'Quiero ver mi demo' },
   footer: 'Asistentes de IA para gimnasios boutique y boxes.',
 }
+
+export const AGENT = {
+  negocio: { nombre: 'Studio Pulso', rubro: 'gimnasio boutique de entrenamiento en grupo', descripcion: 'Clases reducidas de fuerza y HIIT con entrenador, máximo 10 personas por sesión.', ubicacion: 'Calle Alcalá 142, Madrid', horario: 'L-V 7:00-21:30, S 9:00-14:00', telefono: '612 345 678', web: 'studiopulso.example', zona_horaria: 'Europe/Madrid' },
+  servicios: [
+    { nombre: 'Clase de prueba', descripcion: 'Una sesión para conocer el método', precio: 'Gratis', duracion: '50 min' },
+    { nombre: 'Bono mensual ilimitado', descripcion: 'Clases ilimitadas de lunes a sábado', precio: '89 €/mes', duracion: '' },
+    { nombre: 'Bono 8 clases', descripcion: 'Ocho clases al mes', precio: '65 €/mes', duracion: '50 min' },
+    { nombre: 'Entrenamiento personal', descripcion: 'Sesión individual con plan a medida', precio: '40 €', duracion: '60 min' },
+    { nombre: 'Valoración inicial', descripcion: 'Medición y objetivos', precio: '25 €', duracion: '30 min' },
+    { nombre: 'Bono parejas', descripcion: 'Dos personas, clases ilimitadas', precio: '149 €/mes', duracion: '' },
+  ],
+  secretaria: { nombre: 'Lucía', tono: 'cercano y motivador', saludo: '¡Hola! Soy Lucía, de Studio Pulso. ¿Te cuento cómo funcionan las clases o quieres reservar una de prueba?' },
+  politicas: ['Las clases se pueden cancelar hasta 4 horas antes sin coste.', 'Se paga por domiciliación o tarjeta el día 1 de cada mes.', 'No hay permanencia en ningún bono.'],
+  faq: [
+    { pregunta: '¿Hace falta experiencia?', respuesta: 'No. El entrenador adapta cada ejercicio a tu nivel.' },
+    { pregunta: '¿Hay duchas?', respuesta: 'Sí, vestuarios con duchas y taquillas.' },
+    { pregunta: '¿Puedo congelar el bono?', respuesta: 'Sí, hasta 30 días al año avisando con una semana.' },
+    { pregunta: '¿Cuántas personas hay por clase?', respuesta: 'Máximo 10, para que el entrenador te corrija.' },
+    { pregunta: '¿Dónde aparco?', respuesta: 'Hay un parking público a 50 metros.' },
+  ],
+  datos_cita: ['nombre', 'teléfono', 'día y hora preferidos'],
+}

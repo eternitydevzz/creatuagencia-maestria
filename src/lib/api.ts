@@ -20,6 +20,7 @@ const MESSAGES: Record<string, string> = {
   invalid_model_output: 'La IA no devolvió un resultado válido. No se ha descontado ningún crédito: inténtalo de nuevo.',
   timeout: 'La IA ha tardado demasiado. Se te han devuelto los créditos: inténtalo de nuevo.',
   unauthorized: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
+  agent_not_found: 'No se encuentra este agente. Recarga la página.',
 }
 const GENERIC = 'Algo ha fallado. Inténtalo de nuevo.'
 
@@ -48,4 +49,22 @@ export async function generate<T = unknown>(kind: GenerationKind, roadmapId: str
   }
   if (!data || typeof data !== 'object' || !('parsed' in data)) throw new GenerationError('internal_error', GENERIC)
   return data as GenerationResult<T>
+}
+
+export interface ChatTurn { role: 'user' | 'assistant'; content: string }
+
+/** Una respuesta de la secretaria virtual (Edge Function `agent-chat`). La conversación viaja completa; las instrucciones
+ *  se construyen en el servidor a partir de la ficha del agente. No cuesta créditos. */
+export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('agent-chat', { body: { agent_id: agentId, messages } })
+  if (error) {
+    let code = 'internal_error'; let message = GENERIC
+    const res = (error as { context?: Response }).context
+    if (res && typeof res.json === 'function') {
+      try { const body = await res.json(); code = body.error ?? code; message = MESSAGES[code] ?? body.message ?? message } catch { /* cuerpo no JSON */ }
+    } else message = 'Se interrumpió la conexión. Inténtalo de nuevo.'
+    throw new GenerationError(code, message)
+  }
+  if (!data || typeof data.reply !== 'string') throw new GenerationError('internal_error', GENERIC)
+  return data.reply
 }

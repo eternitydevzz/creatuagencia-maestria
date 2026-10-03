@@ -1,7 +1,8 @@
 import type { CustomProblem } from '@shared/catalog'
 import type { DeliverableMeta } from '@shared/signature'
+import type { AgentConfig } from '@shared/agent'
 
-export type { DeliverableMeta }
+export type { DeliverableMeta, AgentConfig }
 
 export interface Profile {
   id: string; email: string; full_name: string | null
@@ -42,12 +43,19 @@ export interface Roadmap {
   selected_nichos: string[]; business_metrics: Metrics; pricing_settings: Pricing
   ideal_client: JsonObject; agency_offer: JsonObject; agency_site: AgencySite; agency_contact: AgencyContact
   current_section: number; visited_sections: number[]; created_at: string; updated_at: string
+  /** Agentes del proyecto (solo id y origen): sirve para saber si el paso del agente está hecho. */
+  agents?: Array<{ id: string; source: Agent['source'] }>
+}
+
+/** Secretaria virtual de un negocio (ficha + datos); las instrucciones del chat se construyen a partir de `config`. */
+export interface Agent {
+  id: string; roadmap_id: string; source: 'niche' | 'demo'; business_name: string; config: AgentConfig; created_at: string; updated_at: string
 }
 
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */
 export interface Progress {
   selected_problems: string[]; selected_nichos: string[]; business_metrics: Metrics
-  has_ideal: boolean; has_offer: boolean; has_site: boolean
+  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; visited_sections: number[]
 }
 export interface RoadmapSummary extends Progress {
   id: string; project_name: string; agency_name: string | null; status: Roadmap['status']; updated_at: string
@@ -58,4 +66,4 @@ export type EditablePatch = Partial<Pick<Roadmap,
   'agency_name' | 'selected_problems' | 'custom_problem_descriptions' | 'selected_nichos' | 'business_metrics' |
   'pricing_settings' | 'agency_contact' | 'current_section' | 'visited_sections' | 'status' | 'project_name'>>
 
-export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site'
+export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agent'

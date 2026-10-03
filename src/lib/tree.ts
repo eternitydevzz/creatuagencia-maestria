@@ -18,10 +18,15 @@ const LABELS: Record<string, string> = {
   oferta_piloto: 'Oferta piloto (primeros clientes)', que_incluye: 'Qué incluye', duracion: 'Duración', paso_a_principal: 'Paso a la oferta principal',
   como_proponerla: 'Cómo proponerla', escalera: 'Escalera de ofertas', nivel: 'Nivel', numeros_agencia: 'Números de tu agencia',
   coste_entrega_mensual: 'Coste de entrega al mes', margen_por_cliente: 'Margen por cliente', clientes_para_5000_mes: 'Clientes para 5.000 €/mes',
+  // agente
+  negocio: 'Negocio de ejemplo', rubro: 'Rubro', descripcion: 'Descripción', ubicacion: 'Dirección', horario: 'Horario', telefono: 'Teléfono',
+  web: 'Web', zona_horaria: 'Zona horaria', servicios: 'Servicios y precios', secretaria: 'La secretaria', tono: 'Tono', saludo: 'Saludo',
+  politicas: 'Políticas', faq: 'Preguntas frecuentes', pregunta: 'Pregunta', datos_cita: 'Datos que pide para agendar',
 }
 // Postgres (jsonb) guarda las claves en su propio orden, así que el orden de lectura se fija aquí.
 // Las claves que no aparezcan van al final, en el orden en que llegan. Las que empiezan por _ (metadatos internos) no se muestran.
 const ORDER = [
+  'negocio', 'rubro', 'descripcion', 'ubicacion', 'horario', 'telefono', 'web', 'zona_horaria', 'servicios', 'secretaria', 'tono', 'saludo', 'politicas', 'faq', 'pregunta', 'datos_cita',
   'resumen', 'avatar', 'oferta', 'nivel', 'nombre', 'dia_a_dia', 'promesa', 'mecanismo',
   'perfil', 'quien', 'tamano_negocio', 'facturacion', 'como_capta_hoy', 'nivel_digital', 'herramientas',
   'coste_del_problema', 'dolores', 'deseos', 'su_lenguaje', 'momentos_de_compra',

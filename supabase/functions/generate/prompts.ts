@@ -226,3 +226,30 @@ Devuelve JSON con esta estructura EXACTA:
 }
 "problema.puntos": 3 · "solucion.beneficios": 4 · "comparativa.filas": 5 (coste al mes, horario de atención, tiempo de respuesta, seguimiento a los que no compran, qué pasa en temporada alta) · "como_funciona.pasos": 3 · "resultados.cifras": 3 · "faq": 5, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
 }
+
+export function agentConfig(c: Ctx): string {
+  return `Crea el AGENTE DE DEMOSTRACIÓN de "${agencyOf(c)}": una secretaria virtual de WhatsApp para un negocio típico de este nicho: ${niche0(c)}. El alumno se la enseñará a empresarios del nicho para que vean cómo atiende a SUS clientes, así que el negocio de ejemplo tiene que parecerles real.
+
+CONTEXTO
+${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
+
+QUÉ DEBES INVENTAR (un negocio de ejemplo creíble)
+- Nombre del negocio inventado y verosímil para el nicho. Nada de marcas reales.
+- Servicios reales del sector (6-8) con precio y duración típicos en España. Ancla los precios al ticket medio indicado si lo hay.
+- Horario realista, dirección ficticia con ciudad española, teléfono ficticio con formato 6XX XXX XXX.
+- 3-4 políticas que un cliente pregunta de verdad (cancelaciones, formas de pago, urgencias, primera visita…).
+- 5-6 preguntas frecuentes del nicho con su respuesta, usando el vocabulario del cliente ideal.
+- Nombre de la secretaria (un nombre corriente en España), tono acorde al sector (clínica: cercano y tranquilo; taller: directo y claro…) y un saludo de WhatsApp de 1-2 frases que se presenta y pregunta en qué puede ayudar.
+- Qué datos pide para agendar (3-5, en orden).
+
+Devuelve JSON con esta estructura EXACTA:
+{
+  "negocio": { "nombre": "", "rubro": "p. ej. clínica dental", "descripcion": "1-2 frases", "ubicacion": "", "horario": "con días y horas exactas, p. ej. 'L-V 9:00-20:00, S 10:00-14:00'", "telefono": "", "web": "", "zona_horaria": "Europe/Madrid" },
+  "servicios": [{ "nombre": "", "descripcion": "1 frase", "precio": "p. ej. '60 €'", "duracion": "p. ej. '30 min'" }],
+  "secretaria": { "nombre": "", "tono": "3-6 palabras", "saludo": "" },
+  "politicas": ["(3-4)"],
+  "faq": [{ "pregunta": "", "respuesta": "" }],
+  "datos_cita": ["(3-5) en el orden en que se piden"]
+}
+"servicios": 6-8 · "faq": 5-6. ${jsonOnly}`
+}

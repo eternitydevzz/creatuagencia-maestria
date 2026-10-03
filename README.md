@@ -1,10 +1,11 @@
 # MaestrIA · Constructor de Agencia IA
 
-Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). Entrega tres cosas, y cada pregunta del
-**Mapa de Ruta** sirve a una de ellas:
+Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 8 pasos y entrega
+tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virtual de WhatsApp para enseñar a los clientes:
 
 1. Problemas que resuelves · 2. Tu agencia y tu nicho · 3. Tu cliente en números (leads, conversión, ticket, modo de precios)
 4. **Cliente ideal** · 5. **Oferta** (usa el cliente ideal) · 6. **Landing** de venta premium (usa los dos anteriores)
+7. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 8. **Probar el agente**: simulador de WhatsApp para hablar con ella
 
 ## Cómo está organizado
 
@@ -34,9 +35,18 @@ resultado en el proyecto y, si algo falla, **devuelve los créditos**.
 | 1 | problema personalizado, sugerir nichos |
 | 2 | cliente ideal |
 | 3 | oferta, landing |
+| 1 | agente (ficha del negocio de ejemplo) |
+
+El chat con el agente (paso 8) no cuesta créditos: usa un modelo pequeño (`AGENT_MODEL`, Haiku por defecto) y está limitado por ritmo
+(`AGENT_CHAT_PER_MINUTE`, `AGENT_CHAT_PER_HOUR`) y por tamaño de conversación (40 mensajes).
 
 Cada alumno recibe **30 créditos** al darse de alta (`app_settings.initial_credits`): el mapa completo cuesta unos 10, así que
 da para regenerar cada entregable varias veces. Se ajustan con `scripts/invite.mjs`.
+
+### Agentes: cómo funcionan
+- La ficha del negocio (servicios, precios, horario, políticas, preguntas frecuentes, nombre y tono de la secretaria) se genera con `generate` (tipo `agent`) y se guarda en la tabla `agents`.
+- Las **instrucciones del chat** no se guardan: `supabase/functions/_shared/agent.ts` las construye a partir de la ficha (la Edge Function `agent-chat` las usa para responder y el navegador las muestra para copiarlas).
+- `agent-chat` es sin estado: el navegador envía la conversación y recibe la siguiente respuesta. Las conversaciones no se guardan.
 
 ## Desarrollo local
 
@@ -65,7 +75,7 @@ SUPABASE_URL=http://127.0.0.1:55421 SUPABASE_SERVICE_ROLE_KEY=<clave secreta loc
 ```bash
 SUPABASE_URL=… SUPABASE_ANON_KEY=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/e2e.mjs
 ```
-Ejecuta 56 comprobaciones: créditos, seguridad entre alumnos, validaciones, reembolso si la IA falla, límite de ritmo, registro bloqueado, doble clic, respuestas de la IA con forma errónea, generaciones colgadas…
+Ejecuta unas 80 comprobaciones: créditos, seguridad entre alumnos, validaciones, reembolso si la IA falla, límite de ritmo, registro bloqueado, doble clic, respuestas de la IA con forma errónea, generaciones colgadas…
 Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 
 ## Puesta en producción
@@ -74,7 +84,7 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
    En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
    En *Authentication → Providers → Email*: deja activo el email y **desactiva "Allow new users to sign up"** (acceso solo por invitación).
    Configura un SMTP propio (Resend, Postmark…) para que lleguen las invitaciones.
-2. **Clave de IA**: en el panel de Supabase (*Edge Functions → Secrets*) crea `ANTHROPIC_API_KEY` y `ALLOWED_ORIGIN=https://tu-dominio` (mejor desde el panel que desde la terminal: la clave no queda en el historial). Después despliega: `supabase functions deploy generate`.
+2. **Clave de IA**: en el panel de Supabase (*Edge Functions → Secrets*) crea `ANTHROPIC_API_KEY` y `ALLOWED_ORIGIN=https://tu-dominio` (mejor desde el panel que desde la terminal: la clave no queda en el historial). Después despliega: `supabase functions deploy generate && supabase functions deploy agent-chat`.
    La función responde con un latido mientras Claude trabaja y se corta a los `GENERATION_TIMEOUT_SECONDS` (140 por defecto; el límite de la función es 150 s en Free y 400 s en Pro). Si la IA tarda más, el alumno ve un error y se le devuelven los créditos.
 3. **Web (Render)**: *New → Blueprint* y elige este repo: Render lee `render.yaml` (sitio estático, reglas de reescritura de la SPA y cabeceras). Al crearlo te pide
    `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (Settings → API del proyecto Supabase; la clave anónima es pública por diseño). Cada `git push` a `main` redespliega.

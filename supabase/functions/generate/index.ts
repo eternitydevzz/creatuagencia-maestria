@@ -10,6 +10,8 @@ import * as P from './prompts.ts'
 
 // ---------------------------------------------------------------- configuración
 const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-opus-5-5'
+// Los agentes de atención usan un modelo rápido y barato: son fichas cortas, y el chat posterior (agent-chat) usa el mismo
+const AGENT_MODEL = Deno.env.get('AGENT_MODEL') ?? 'claude-haiku-4-5-20251001'
 const USE_FALLBACKS = (Deno.env.get('ANTHROPIC_FALLBACKS') ?? 'on') !== 'off'
 const RATE_LIMIT_PER_MINUTE = Number(Deno.env.get('RATE_LIMIT_PER_MINUTE') ?? 10)
 // Tiempo máximo de una generación. Debe quedar por debajo del límite de la función en tu plan de Supabase (150 s en Free, 400 s en Pro):
@@ -19,7 +21,8 @@ const TIMEOUT_MS = Number(Deno.env.get('GENERATION_TIMEOUT_SECONDS') ?? 140) * 1
 const HEARTBEAT_MS = Number(Deno.env.get('HEARTBEAT_SECONDS') ?? 8) * 1000
 
 type Effort = 'low' | 'medium' | 'high'
-interface KindDef { cost: number; effort: Effort; maxTokens: number; valid: (v: unknown) => boolean }
+// `model` distinto del principal → sin effort ni fallbacks (son parámetros del modelo grande)
+interface KindDef { cost: number; effort?: Effort; model?: string; maxTokens: number; valid: (v: unknown) => boolean }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const hasText = (v: unknown) => typeof v === 'string' && v.trim().length > 0
@@ -33,6 +36,11 @@ const KINDS: Record<string, KindDef> = {
   ideal_client: { cost: 2, effort: 'medium', maxTokens: 16000, valid: (v) => isObj(v) && hasText(v.resumen) && isObj(v.perfil) && Array.isArray(v.dolores) },
   agency_offer: { cost: 3, effort: 'medium', maxTokens: 20000, valid: (v) => isObj(v) && isObj(v.oferta) && hasText(v.oferta.nombre) && isObj(v.oferta.precio) },
   agency_site: { cost: 3, effort: 'medium', maxTokens: 20000, valid: (v) => isObj(v) && isObj(v.hero) && hasText(v.hero.titulo) },
+  agent: {
+    cost: 1, model: AGENT_MODEL, maxTokens: 6000,
+    valid: (v) => isObj(v) && isObj(v.negocio) && hasText(v.negocio.nombre) && hasText(v.negocio.rubro) && Array.isArray(v.servicios) && v.servicios.length >= 1
+      && v.servicios.every((x) => isObj(x) && hasText(x.nombre)) && isObj(v.secretaria) && hasText(v.secretaria.nombre) && hasText(v.secretaria.saludo),
+  },
 }
 
 class HttpError extends Error {
@@ -63,11 +71,11 @@ interface Completion { text: string; inputTokens: number; outputTokens: number; 
 
 async function complete(def: KindDef, system: string, messages: Array<{ role: 'user' | 'assistant'; content: string }>, signal: AbortSignal): Promise<Completion> {
   const base = {
-    model: MODEL,
+    model: def.model ?? MODEL,
     max_tokens: def.maxTokens,
     system,
     messages,
-    output_config: { effort: def.effort },
+    ...(def.effort ? { output_config: { effort: def.effort } } : {}),
   }
   const run = async (withFallbacks: boolean) => {
     // Streaming: max_tokens altos y respuestas largas superarían el timeout de una petición normal.
@@ -78,12 +86,13 @@ async function complete(def: KindDef, system: string, messages: Array<{ role: 'u
       : (anthropic.messages as any).stream(base, { signal })
     return await stream.finalMessage()
   }
+  const fallbacks = USE_FALLBACKS && !def.model
   let msg
   try {
-    msg = await run(USE_FALLBACKS)
+    msg = await run(fallbacks)
   } catch (e) {
     // Si la plataforma rechazara el parámetro de fallback, reintentamos una vez sin él.
-    if (USE_FALLBACKS && e instanceof Anthropic.BadRequestError && /fallback|beta/i.test(e.message)) msg = await run(false)
+    if (fallbacks && e instanceof Anthropic.BadRequestError && /fallback|beta/i.test(e.message)) msg = await run(false)
     else throw e
   }
   if (msg.stop_reason === 'refusal') throw new HttpError(422, 'refused', 'El modelo no pudo atender esta petición')
@@ -192,6 +201,7 @@ Deno.serve(async (req) => {
       case 'ideal_client': prompt = P.idealClient(ctx); break
       case 'agency_offer': prompt = P.agencyOffer(ctx); break
       case 'agency_site': prompt = P.agencySite(ctx); break
+      case 'agent': prompt = P.agentConfig(ctx); break
     }
     const system = P.SYSTEM
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [{ role: 'user', content: prompt }]
@@ -206,7 +216,7 @@ Deno.serve(async (req) => {
 
     // Un índice único (roadmap_id, kind) sobre las generaciones en curso impide cobrar dos veces lo mismo a la vez.
     const { data: gen, error: gErr } = await admin.from('generations')
-      .insert({ user_id: userId, roadmap_id: roadmapId, kind, credits_cost: def.cost, model: MODEL }).select('id').single()
+      .insert({ user_id: userId, roadmap_id: roadmapId, kind, credits_cost: def.cost, model: def.model ?? MODEL }).select('id').single()
     if (gErr?.code === '23505') throw new HttpError(409, 'already_running', 'Ya se está generando esto')
     if (gErr || !gen) throw new HttpError(500, 'db_error', gErr?.message)
     generationId = gen.id
@@ -253,6 +263,16 @@ Deno.serve(async (req) => {
           case 'ideal_client': patch.ideal_client = { ...(result as object), _meta: meta() }; break
           case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
           case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
+        }
+        if (kind === 'agent') {
+          // Un agente de ejemplo por proyecto: se actualiza el que haya o se crea
+          const cfg = { ...(result as Record<string, unknown>), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null, offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }
+          const businessName = String((result as { negocio: { nombre: string } }).negocio.nombre).slice(0, 120)
+          const { data: existing } = await admin.from('agents').select('id').eq('roadmap_id', roadmapId).eq('source', 'niche').maybeSingle()
+          const { error: aErr } = existing
+            ? await admin.from('agents').update({ business_name: businessName, config: cfg }).eq('id', existing.id)
+            : await admin.from('agents').insert({ user_id: userId, roadmap_id: roadmapId, source: 'niche', business_name: businessName, config: cfg })
+          if (aErr) throw new HttpError(500, 'db_error', aErr.message)
         }
         if (Object.keys(patch).length) {
           const { error: uErr } = await admin.from('roadmaps').update(patch).eq('id', roadmapId).eq('user_id', userId)

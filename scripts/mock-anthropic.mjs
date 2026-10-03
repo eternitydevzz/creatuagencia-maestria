@@ -2,7 +2,7 @@
 // Devuelve respuestas de ejemplo según el prompt y registra cada petición en /tmp/mock-anthropic-requests.jsonl.
 import http from 'node:http'
 import fs from 'node:fs'
-import { IDEAL, OFFER, SITE } from './mock-samples.mjs'
+import { AGENT, IDEAL, OFFER, SITE } from './mock-samples.mjs'
 
 const LOG = '/tmp/mock-anthropic-requests.jsonl'
 const PORT = Number(process.env.PORT ?? 8787)
@@ -22,7 +22,22 @@ function reply(prompt) {
   if (/Define el CLIENTE IDEAL de/.test(p)) return J(IDEAL)
   if (/Diseña la OFERTA de/.test(p)) return J(OFFER)
   if (/textos de la landing de venta/.test(p)) return J(SITE)
+  if (/AGENTE DE DEMOSTRACIÓN/.test(p)) return J(AGENT)
   return 'Respuesta de ejemplo del servidor simulado.'
+}
+
+// Respuesta de la secretaria (agent-chat): se reconoce por el system prompt. Varias burbujas separadas por línea en blanco.
+function chatReply(system, messages) {
+  const name = /Eres ([^,]+),/.exec(system)?.[1] ?? 'la secretaria'
+  const last = String(messages.at(-1)?.content ?? '')
+  if (/cuesta|precio/i.test(last)) return 'El bono mensual ilimitado son 89 €/mes, sin permanencia.\n\n¿Quieres que te reserve una clase de prueba gratis?'
+  if (/olvida|instrucciones/i.test(last)) return 'Prefiero seguir ayudándote con Studio Pulso. ¿Te cuento los bonos?'
+  return `¡Hola! Soy ${name}, de Studio Pulso.\n\n¿Te cuento cómo funcionan las clases o quieres reservar una de prueba?`
+}
+
+function plain(res, text, model) {
+  res.writeHead(200, { 'Content-Type': 'application/json', 'request-id': 'req_mock_' + Date.now() })
+  res.end(J({ id: 'msg_mock', type: 'message', role: 'assistant', model, content: [{ type: 'text', text }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 120, output_tokens: Math.ceil(text.length / 4) } }))
 }
 
 function sse(res, text, model) {
@@ -47,14 +62,15 @@ http.createServer((req, res) => {
   req.on('end', () => {
     if (!url.pathname.startsWith('/v1/messages')) { res.writeHead(404).end(); return }
     let b = {}; try { b = JSON.parse(body) } catch { /* vacío */ }
-    fs.appendFileSync(LOG, J({ path: req.url, model: b.model, max_tokens: b.max_tokens, stream: b.stream, output_config: b.output_config, fallbacks: b.fallbacks, betas: req.headers['anthropic-beta'], thinking: b.thinking, tool_choice: b.tool_choice, temperature: b.temperature, n_messages: b.messages?.length, first_chars: String(b.messages?.[0]?.content).slice(0, 90), ideal_ctx: /CLIENTE IDEAL YA DEFINIDO/.test(String(b.messages?.[0]?.content)), offer_ctx: /OFERTA YA DEFINIDA/.test(String(b.messages?.[0]?.content)), has_meta: /_meta|"inputs"/.test(String(b.messages?.[0]?.content)) }) + '\n')
+    fs.appendFileSync(LOG, J({ path: req.url, model: b.model, max_tokens: b.max_tokens, stream: b.stream, output_config: b.output_config, fallbacks: b.fallbacks, betas: req.headers['anthropic-beta'], thinking: b.thinking, tool_choice: b.tool_choice, temperature: b.temperature, n_messages: b.messages?.length, system_head: String(b.system).slice(0, 400), first_chars: String(b.messages?.[0]?.content).slice(0, 90), ideal_ctx: /CLIENTE IDEAL YA DEFINIDO/.test(String(b.messages?.[0]?.content)), offer_ctx: /OFERTA YA DEFINIDA/.test(String(b.messages?.[0]?.content)), has_meta: /_meta|"inputs"/.test(String(b.messages?.[0]?.content)) }) + '\n')
     if (FAIL_NEXT.count > 0) { FAIL_NEXT.count--; res.writeHead(529, { 'Content-Type': 'application/json' }).end(J({ type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } })); return }
     // El reintento por JSON inválido añade mensajes al final: la petición se identifica por el primero
     const last = b.messages?.[0]?.content
     const prompt = typeof last === 'string' ? last : J(last)
-    let text = reply(prompt)
-    if (BAD_NEXT.count > 0) { BAD_NEXT.count--; text = J({ error: 'forma equivocada' }) }
+    const isChat = /secretaria virtual de/.test(String(b.system))
+    let text = isChat ? chatReply(String(b.system), b.messages ?? []) : reply(prompt)
+    if (!isChat && BAD_NEXT.count > 0) { BAD_NEXT.count--; text = J({ error: 'forma equivocada' }) }
     const delay = SLOW_NEXT.count > 0 ? (SLOW_NEXT.count--, SLOW_NEXT.ms) : 0
-    setTimeout(() => sse(res, text, b.model ?? 'mock'), delay)
+    setTimeout(() => (b.stream ? sse(res, text, b.model ?? 'mock') : plain(res, text, b.model ?? 'mock')), delay)
   })
 }).listen(PORT, '0.0.0.0', () => console.log(`mock anthropic en :${PORT}`))
