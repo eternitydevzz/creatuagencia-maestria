@@ -9,6 +9,7 @@ import Projects from '@/pages/Projects'
 import Settings from '@/pages/Settings'
 import RoadmapPage from '@/pages/RoadmapPage'
 import { Privacy, Terms } from '@/pages/Legal'
+import Admin from '@/pages/Admin'
 
 function Protected({ children }: { children: React.ReactNode }) {
   const { session, loading, needsPassword } = useAuth()
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/roadmap" element={<Protected><RoadmapPage /></Protected>} />
       <Route path="/roadmap/:id" element={<Protected><RoadmapPage /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
+      <Route path="/admin" element={<Protected><Admin /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -442,6 +442,65 @@ ok('Desconectar elimina la conexión y todo lo que colgaba de ella (conversacion
 const gone = await fetch(`${WA_MOCK}/api/sessions/${conn.session}`, { headers: { 'x-api-key': 'test-key' } })
 ok('  y la sesión desaparece del servidor de WhatsApp', gone.status === 404)
 
+
+console.log('\n— Administración de alumnos (solo cuentas admin)')
+const adm = async (c, body) => {
+  const { data, error } = await c.functions.invoke('admin-students', { body })
+  if (!error) return { status: 200, body: data }
+  let b = {}; try { b = await error.context.json() } catch { /* */ }
+  return { status: error.context?.status ?? 0, body: b }
+}
+const ADM = await makeUser('root'), ADM2 = await makeUser('root2')
+await admin.from('profiles').update({ role: 'admin' }).in('id', [ADM.id, ADM2.id])
+ok('Sin sesión → 401', (await adm(client(), { action: 'list' })).status === 401)
+ok('Un alumno NO puede listar, crear ni borrar alumnos → 403', (await adm(A.c, { action: 'list' })).status === 403 && (await adm(A.c, { action: 'create', email: 'x@ejemplo.com', name: '', credits: 5 })).status === 403 && (await adm(A.c, { action: 'delete', id: B.id })).status === 403)
+ok('  y no se creó nada', ((await admin.from('profiles').select('id').eq('email', 'x@ejemplo.com')).data ?? []).length === 0)
+
+const newEmail = `nuevo-${Date.now()}@alumnos.test`
+let cr = await adm(ADM.c, { action: 'create', email: newEmail.toUpperCase(), name: 'Lucas Prueba', credits: 12 })
+const sid = cr.body.student?.id
+ok('El admin da de alta un alumno: devuelve email y contraseña temporal', cr.status === 200 && cr.body.student?.email === newEmail && (cr.body.student?.password ?? '').length >= 12, JSON.stringify(cr).slice(0, 160))
+const lc = client(); const li = await lc.auth.signInWithPassword({ email: newEmail, password: cr.body.student?.password ?? 'x' })
+ok('  el alumno entra con esa contraseña', !li.error)
+ok('  con los créditos pedidos (12) y su nombre', (await credits(sid)) === 12 && (await admin.from('profiles').select('full_name').eq('id', sid).single()).data.full_name === 'Lucas Prueba')
+ok('  la contraseña no se guarda en ningún sitio visible (ni libro de créditos)', !JSON.stringify((await admin.from('credit_ledger').select('*').eq('user_id', sid)).data).includes(cr.body.student.password))
+ok('Repetir el email → 409', (await adm(ADM.c, { action: 'create', email: newEmail, name: '', credits: 5 })).status === 409)
+ok('Email inválido → 400', (await adm(ADM.c, { action: 'create', email: 'sin-arroba', name: '', credits: 5 })).status === 400)
+ok('Créditos fuera de rango → 400', (await adm(ADM.c, { action: 'create', email: `otro-${Date.now()}@alumnos.test`, name: '', credits: 5000 })).status === 400)
+const lst = await adm(ADM.c, { action: 'list' })
+ok('La lista incluye al alumno nuevo con sus datos', lst.status === 200 && lst.body.students.some((x) => x.id === sid && x.credits === 12 && x.projects === 0))
+
+ok('Añadir créditos: +5 → 17', (await adm(ADM.c, { action: 'grant', id: sid, amount: 5 })).body.credits === 17 && (await credits(sid)) === 17)
+ok('Quitar créditos: -3 → 14', (await adm(ADM.c, { action: 'grant', id: sid, amount: -3 })).body.credits === 14)
+ok('Quitar más de los que tiene → 409 y no cambia', (await adm(ADM.c, { action: 'grant', id: sid, amount: -100 })).status === 409 && (await credits(sid)) === 14)
+ok('Cantidad 0 o enorme → 400', (await adm(ADM.c, { action: 'grant', id: sid, amount: 0 })).status === 400 && (await adm(ADM.c, { action: 'grant', id: sid, amount: 5000 })).status === 400)
+
+const rs = await adm(ADM.c, { action: 'reset_password', id: sid })
+const oldLogin = await client().auth.signInWithPassword({ email: newEmail, password: cr.body.student.password })
+const newLogin = await client().auth.signInWithPassword({ email: newEmail, password: rs.body.student?.password ?? 'x' })
+ok('Nueva contraseña: la anterior deja de funcionar y la nueva sí', rs.status === 200 && !!oldLogin.error && !newLogin.error)
+
+ok('El admin NO puede borrarse a sí mismo → 400', (await adm(ADM.c, { action: 'delete', id: ADM.id })).status === 400)
+ok('NO se puede borrar a otro administrador → 400', (await adm(ADM.c, { action: 'delete', id: ADM2.id })).status === 400)
+ok('Alumno inexistente → 404', (await adm(ADM.c, { action: 'delete', id: '00000000-0000-0000-0000-000000000000' })).status === 404)
+
+// El alumno tiene proyecto, agente y un número de WhatsApp vinculado: todo debe desaparecer al borrarlo
+const sc = newLogin.data.session ? client() : null
+await sc.auth.signInWithPassword({ email: newEmail, password: rs.body.student.password })
+const { data: rmS } = await sc.from('roadmaps').insert({ project_name: 'De Lucas', user_id: sid, selected_nichos: ['Bares'] }).select().single()
+const { data: agS } = await admin.from('agents').insert({ user_id: sid, roadmap_id: rmS.id, source: 'niche', business_name: 'Bar', config: { negocio: { nombre: 'Bar', rubro: 'bar' }, servicios: [], secretaria: { nombre: 'A', tono: 't', saludo: 'h' } } }).select().single()
+const sess = `wa_${crypto.randomUUID().replaceAll('-', '')}`
+await fetch(`${WA_MOCK}/api/sessions`, { method: 'POST', headers: { 'x-api-key': 'test-key', 'Content-Type': 'application/json' }, body: JSON.stringify({ name: sess }) })
+await admin.from('whatsapp_connections').insert({ user_id: sid, roadmap_id: rmS.id, agent_id: agS.id, session: sess, status: 'working' })
+const del = await adm(ADM.c, { action: 'delete', id: sid })
+ok('Eliminar un alumno borra su cuenta, perfil, proyectos, agentes y conexiones', del.status === 200
+  && ((await admin.from('profiles').select('id').eq('id', sid)).data ?? []).length === 0
+  && ((await admin.from('roadmaps').select('id').eq('user_id', sid)).data ?? []).length === 0
+  && ((await admin.from('agents').select('id').eq('user_id', sid)).data ?? []).length === 0
+  && ((await admin.from('whatsapp_connections').select('id').eq('user_id', sid)).data ?? []).length === 0)
+ok('  desvincula su WhatsApp en el servidor (la sesión desaparece)', (await fetch(`${WA_MOCK}/api/sessions/${sess}`, { headers: { 'x-api-key': 'test-key' } })).status === 404)
+ok('  y ya no puede entrar', !!(await client().auth.signInWithPassword({ email: newEmail, password: rs.body.student.password })).error)
+
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
 const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]

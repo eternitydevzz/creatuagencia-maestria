@@ -91,6 +91,8 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 
 ## Puesta en producción
 
+> **Alumnos sin correo electrónico:** una cuenta con rol `admin` ve la pestaña **Alumnos**: da de alta (se muestra una contraseña temporal una sola vez, con un mensaje listo para copiar), añade o quita créditos, genera contraseñas nuevas y elimina alumnos (con su WhatsApp, proyectos y datos). El rol admin se asigna a mano: `update profiles set role = 'admin' where email = '…'`. El registro público debe estar cerrado: `supabase config push --project-ref <ref> --workdir deploy/supabase-prod-auth`.
+
 1. **Supabase**: crea un proyecto en supabase.com → `supabase link --project-ref <ref>` → `supabase db push`.
    En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
    En *Authentication → Providers → Email*: deja activo el email y **desactiva "Allow new users to sign up"** (acceso solo por invitación).

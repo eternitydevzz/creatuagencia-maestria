@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Coins, LogOut, Save, User } from 'lucide-react'
+import { Coins, KeyRound, LogOut, Save, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useData'
@@ -77,6 +77,32 @@ export default function Settings() {
           </div>
         </section>
       )}
+      {tab === 'profile' && <PasswordCard />}
     </div>
+  )
+}
+
+/** Cambiar la contraseña: los alumnos entran con una temporal que les da el administrador. */
+function PasswordCard() {
+  const toast = useToast()
+  const [pw, setPw] = useState(''); const [again, setAgain] = useState(''); const [busy, setBusy] = useState(false)
+  const ok = pw.length >= 8 && pw === again
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!ok) return
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password: pw })
+    setBusy(false)
+    if (error) return toast(error.message.includes('different') ? 'La nueva contraseña debe ser distinta de la anterior.' : 'No se pudo cambiar la contraseña.', 'error')
+    setPw(''); setAgain(''); toast('Contraseña cambiada')
+  }
+  return (
+    <form onSubmit={save} className="card space-y-4 p-6" aria-labelledby="clave">
+      <h2 id="clave" className="flex items-center gap-2 text-lg font-bold text-accent-glow"><KeyRound className="h-5 w-5" />Cambiar contraseña</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-semibold">Nueva contraseña<input className="field mt-1.5 font-normal" type="password" autoComplete="new-password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} /><span className="mt-1 block text-xs font-normal text-muted">Mínimo 8 caracteres.</span></label>
+        <label className="block text-sm font-semibold">Repítela<input className="field mt-1.5 font-normal" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />{again && pw !== again && <span className="mt-1 block text-xs font-normal text-[#ffb3b3]">No coinciden.</span>}</label>
+      </div>
+      <button className="btn" type="submit" disabled={!ok || busy}>{busy ? <Spinner /> : <KeyRound className="h-4 w-4" />}Cambiar contraseña</button>
+    </form>
   )
 }

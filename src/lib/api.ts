@@ -85,3 +85,23 @@ export async function waConnect<T = Record<string, unknown>>(body: { action: 'st
   }
   return data as T
 }
+
+export interface Student { id: string; email: string; full_name: string | null; role: 'student' | 'admin'; credits: number; created_at: string; projects: number; last_sign_in_at: string | null }
+export interface Credentials { id: string; email: string; password: string; credits?: number }
+
+/** Gestión de alumnos (Edge Function `admin-students`): solo funciona con una cuenta administradora. */
+export async function adminStudents<T = Record<string, unknown>>(body:
+  | { action: 'list' }
+  | { action: 'create'; email: string; name: string; credits: number }
+  | { action: 'grant'; id: string; amount: number }
+  | { action: 'reset_password' | 'delete'; id: string }): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('admin-students', { body })
+  if (error) {
+    let message = GENERIC
+    const res = (error as { context?: Response }).context
+    if (res && typeof res.json === 'function') { try { const b = await res.json(); message = b.message ?? MESSAGES[b.error] ?? message } catch { /* cuerpo no JSON */ } }
+    else message = 'Se interrumpió la conexión. Inténtalo de nuevo.'
+    throw new GenerationError('admin_error', message)
+  }
+  return data as T
+}

@@ -1,0 +1,15 @@
+# Ajustes de autenticación de PRODUCCIÓN (solo lo que declara este archivo; lo demás no se toca).
+# Aplicar:  supabase config push --project-ref <ref> --workdir deploy/supabase-prod-auth
+# Previsualizar antes:  supabase config diff --project-ref <ref> --workdir deploy/supabase-prod-auth
+# OJO: [auth.email] enable_signup = true significa "proveedor de email ACTIVO" (si se pone false, nadie puede iniciar sesión).
+#      El registro público se cierra con [auth] enable_signup = false.
+project_id = "creatuagencia-maestria"
+
+[auth]
+enable_signup = false
+site_url = "https://creatuagencia-maestria.onrender.com"
+additional_redirect_urls = ["https://creatuagencia-maestria.onrender.com", "https://creatuagencia-maestria.onrender.com/reset-password"]
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
