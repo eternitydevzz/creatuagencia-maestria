@@ -15,9 +15,10 @@ import S5Offer from '@/components/sections/S5Offer'
 import S6Landing from '@/components/sections/S6Landing'
 import S7Agent from '@/components/sections/S7Agent'
 import S8TryAgent from '@/components/sections/S8TryAgent'
+import S9Demos from '@/components/sections/S9Demos'
 
 // Tipado con SectionId: si se añade un paso a SECTIONS y falta su pantalla aquí, no compila.
-const VIEWS: Record<SectionId, ComponentType<SectionProps>> = { 1: S1Problems, 2: S2Niche, 3: S3Numbers, 4: S4IdealClient, 5: S5Offer, 6: S6Landing, 7: S7Agent, 8: S8TryAgent }
+const VIEWS: Record<SectionId, ComponentType<SectionProps>> = { 1: S1Problems, 2: S2Niche, 3: S3Numbers, 4: S4IdealClient, 5: S5Offer, 6: S6Landing, 7: S7Agent, 8: S8TryAgent, 9: S9Demos }
 
 function Center({ children }: { children: React.ReactNode }) { return <div className="grid min-h-[60vh] place-items-center">{children}</div> }
 

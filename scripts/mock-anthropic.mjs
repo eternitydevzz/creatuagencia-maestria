@@ -2,7 +2,7 @@
 // Devuelve respuestas de ejemplo según el prompt y registra cada petición en /tmp/mock-anthropic-requests.jsonl.
 import http from 'node:http'
 import fs from 'node:fs'
-import { AGENT, IDEAL, OFFER, SITE } from './mock-samples.mjs'
+import { AGENT, DEMO, IDEAL, OFFER, SITE, SITE_HTML, SITE_SERVICES_HTML } from './mock-samples.mjs'
 
 const LOG = '/tmp/mock-anthropic-requests.jsonl'
 const PORT = Number(process.env.PORT ?? 8787)
@@ -22,6 +22,7 @@ function reply(prompt) {
   if (/Define el CLIENTE IDEAL de/.test(p)) return J(IDEAL)
   if (/Diseña la OFERTA de/.test(p)) return J(OFFER)
   if (/textos de la landing de venta/.test(p)) return J(SITE)
+  if (/AGENTE DE DEMOSTRACIÓN para un negocio real/.test(p)) return J(DEMO)
   if (/AGENTE DE DEMOSTRACIÓN/.test(p)) return J(AGENT)
   return 'Respuesta de ejemplo del servidor simulado.'
 }
@@ -54,6 +55,11 @@ function sse(res, text, model) {
 
 http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x')
+  // Páginas de prueba para la demo desde una URL (la función las descarga con FETCH_ALLOW_HOSTS=host.docker.internal)
+  if (url.pathname === '/__site') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(SITE_HTML); return }
+  if (url.pathname === '/__site/servicios') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(SITE_SERVICES_HTML); return }
+  if (url.pathname === '/__json') { res.writeHead(200, { 'Content-Type': 'application/json' }).end('{"a":1}'); return }
+  if (url.pathname === '/__redirect') { res.writeHead(302, { Location: 'http://169.254.169.254/latest/meta-data/' }).end(); return }
   if (url.pathname === '/__fail') { FAIL_NEXT.count = Number(url.searchParams.get('n') ?? 1); res.end('ok'); return }
   if (url.pathname === '/__bad') { BAD_NEXT.count = Number(url.searchParams.get('n') ?? 1); res.end('ok'); return }
   if (url.pathname === '/__slow') { SLOW_NEXT.count = Number(url.searchParams.get('n') ?? 1); SLOW_NEXT.ms = Number(url.searchParams.get('ms') ?? 2000); res.end('ok'); return }
@@ -62,7 +68,7 @@ http.createServer((req, res) => {
   req.on('end', () => {
     if (!url.pathname.startsWith('/v1/messages')) { res.writeHead(404).end(); return }
     let b = {}; try { b = JSON.parse(body) } catch { /* vacío */ }
-    fs.appendFileSync(LOG, J({ path: req.url, model: b.model, max_tokens: b.max_tokens, stream: b.stream, output_config: b.output_config, fallbacks: b.fallbacks, betas: req.headers['anthropic-beta'], thinking: b.thinking, tool_choice: b.tool_choice, temperature: b.temperature, n_messages: b.messages?.length, system_head: String(b.system).slice(0, 400), first_chars: String(b.messages?.[0]?.content).slice(0, 90), ideal_ctx: /CLIENTE IDEAL YA DEFINIDO/.test(String(b.messages?.[0]?.content)), offer_ctx: /OFERTA YA DEFINIDA/.test(String(b.messages?.[0]?.content)), has_meta: /_meta|"inputs"/.test(String(b.messages?.[0]?.content)) }) + '\n')
+    fs.appendFileSync(LOG, J({ path: req.url, model: b.model, max_tokens: b.max_tokens, stream: b.stream, output_config: b.output_config, fallbacks: b.fallbacks, betas: req.headers['anthropic-beta'], thinking: b.thinking, tool_choice: b.tool_choice, temperature: b.temperature, n_messages: b.messages?.length, web: (String(b.messages?.[0]?.content).match(/<<<WEB\n([\s\S]*?)\nWEB>>>/) ?? [])[1], system_head: String(b.system).slice(0, 400), first_chars: String(b.messages?.[0]?.content).slice(0, 90), ideal_ctx: /CLIENTE IDEAL YA DEFINIDO/.test(String(b.messages?.[0]?.content)), offer_ctx: /OFERTA YA DEFINIDA/.test(String(b.messages?.[0]?.content)), has_meta: /_meta|"inputs"/.test(String(b.messages?.[0]?.content)) }) + '\n')
     if (FAIL_NEXT.count > 0) { FAIL_NEXT.count--; res.writeHead(529, { 'Content-Type': 'application/json' }).end(J({ type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } })); return }
     // El reintento por JSON inválido añade mensajes al final: la petición se identifica por el primero
     const last = b.messages?.[0]?.content

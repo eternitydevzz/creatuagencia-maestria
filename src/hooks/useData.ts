@@ -20,7 +20,7 @@ export function useProfile() {
 // Las listas (cabecera, dashboard, proyectos) solo necesitan saber qué pasos lleva hecho cada proyecto:
 // de los entregables (que pesan decenas de KB) se pide únicamente un campo para saber si existen.
 const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,visited_sections,agents(id,source)'
-type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_agent'> & { ideal: string | null; offer: string | null; site: string | null; agents: Array<{ source: string }> }
+type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_agent' | 'has_demo'> & { ideal: string | null; offer: string | null; site: string | null; agents: Array<{ source: string }> }
 
 export function useRoadmaps() {
   const { session } = useAuth()
@@ -30,7 +30,7 @@ export function useRoadmaps() {
     queryFn: async (): Promise<RoadmapSummary[]> => {
       const { data, error } = await supabase.from('roadmaps').select(SUMMARY_COLUMNS).order('updated_at', { ascending: false }).returns<SummaryRow[]>()
       if (error) throw error
-      return data.map(({ ideal, offer, site, agents, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_agent: agents.some((a) => a.source === 'niche') }))
+      return data.map(({ ideal, offer, site, agents, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_agent: agents.some((a) => a.source === 'niche'), has_demo: agents.some((a) => a.source === 'demo') }))
     },
   })
 }
@@ -43,6 +43,18 @@ export function useAgent(roadmapId: string) {
       const { data, error } = await supabase.from('agents').select('*').eq('roadmap_id', roadmapId).eq('source', 'niche').maybeSingle()
       if (error) throw error
       return data as Agent | null
+    },
+  })
+}
+
+/** Demos para negocios de clientes del alumno (las más recientes primero). */
+export function useDemos(roadmapId: string) {
+  return useQuery({
+    queryKey: ['demos', roadmapId],
+    queryFn: async (): Promise<Agent[]> => {
+      const { data, error } = await supabase.from('agents').select('*').eq('roadmap_id', roadmapId).eq('source', 'demo').order('created_at', { ascending: false })
+      if (error) throw error
+      return data as Agent[]
     },
   })
 }

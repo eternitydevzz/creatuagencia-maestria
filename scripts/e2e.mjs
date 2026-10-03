@@ -255,6 +255,62 @@ await fetch(`${MOCK}/__fail?n=0`)
 const { error: delAgentErr } = await E.c.from('agents').delete().eq('id', ag[0].id)
 ok('El alumno puede borrar su agente', !delAgentErr && (await agentOf()).length === 0)
 
+
+console.log('\n— Demo para clientes: desde una web (descarga segura) o a mano')
+const H = await makeUser('hugo')
+const { data: rmH } = await H.c.from('roadmaps').insert({ project_name: 'De Hugo', user_id: H.id, selected_nichos: ['Clínicas dentales'] }).select().single()
+const demosOf = async () => (await admin.from('agents').select('*').eq('roadmap_id', rmH.id).eq('source', 'demo')).data ?? []
+const SITE_URL = 'http://host.docker.internal:8787/__site'
+const h0 = await credits(H.id)
+r = await call(H.c, 'demo_agent', rmH.id, { url: SITE_URL })
+let demos = await demosOf()
+ok('demo desde una web: crea la ficha del negocio real', r.status === 200 && demos.length === 1 && demos[0].business_name === 'Clínica Sonrisa Norte' && demos[0].config.origen?.tipo === 'url', JSON.stringify(r).slice(0, 200))
+ok('  cuesta 1 crédito', (await credits(H.id)) === h0 - 1)
+const webReq = log().filter((q) => q.web).at(-1)
+ok('  la IA recibe el texto de la portada y de la página de servicios', /Limpieza dental 60/.test(webReq?.web ?? '') && /Gran Vía 12/.test(webReq?.web ?? '') && /944 000 000/.test(webReq?.web ?? ''), (webReq?.web ?? '').slice(0, 200))
+ok('  no recibe el código JavaScript de la web ni sigue enlaces a imágenes', !/NO-DEBE-VERSE/.test(webReq?.web ?? '') && !/foto\.jpg/.test(webReq?.web ?? ''))
+ok('  el contenido ajeno va marcado como datos en el prompt', log().some((q) => /Prepara el AGENTE DE DEMOSTRACIÓN para un negocio real/.test(q.first_chars) || q.web))
+const dc = demos[0].config
+ok('  la ficha se limpia: tamaños acotados y sin etiquetas HTML', dc.negocio.descripcion.length <= 500 && !/[<>]/.test(dc.negocio.descripcion) && dc.servicios.length <= 12 && dc.servicios[0].descripcion.length <= 160)
+ok('  usa el modelo pequeño', log().filter((q) => q.web).every((q) => /haiku/.test(q.model)))
+const dChat = await chat(H.c, demos[0].id, [{ role: 'user', content: 'hola' }])
+ok('  la secretaria de la demo responde por chat', dChat.status === 200 && typeof dChat.body.reply === 'string')
+
+r = await call(H.c, 'demo_agent', rmH.id, { manual: { nombre: 'Taller Los Pinos', rubro: 'taller mecánico', servicios: 'Cambio de aceite - 70 €\nRevisión ITV - 45 €', horario: 'L-V 8:00-18:00' } })
+demos = await demosOf()
+ok('demo a mano: crea la ficha desde los datos del alumno', r.status === 200 && demos.length === 2 && demos.some((d) => d.config.origen?.tipo === 'manual'))
+ok('Datos a mano sin nombre → 400 y sin cobrar', (await call(H.c, 'demo_agent', rmH.id, { manual: { rubro: 'taller' } })).status === 400)
+
+console.log('\n— Demo para clientes: la descarga no puede usarse para llegar a redes internas')
+const hBefore = await credits(H.id)
+for (const [u, label] of [
+  ['http://127.0.0.1/', 'IP de bucle local'], ['http://localhost/', 'localhost'], ['http://169.254.169.254/latest/meta-data/', 'metadatos de la nube'],
+  ['http://10.0.0.5/', 'red privada 10.x'], ['http://192.168.1.1/', 'red privada 192.168.x'], ['http://172.16.0.1/', 'red privada 172.16.x'],
+  ['http://[::1]/', 'IPv6 de bucle local'], ['http://0.0.0.0/', '0.0.0.0'], ['http://intranet/', 'nombre sin dominio'], ['http://servidor.local/', 'dominio .local'],
+  ['file:///etc/passwd', 'file://'], ['ftp://ejemplo.com/', 'ftp://'], ['http://usuario:clave@ejemplo.com/', 'usuario y clave en la URL'],
+  ['http://ejemplo.com:22/', 'puerto 22'], ['http://127.0.0.1:55421/rest/v1/', 'API interna con puerto'],
+]) {
+  const x = await call(H.c, 'demo_agent', rmH.id, { url: u })
+  ok(`Bloquea ${label} (${u})`, x.status === 400 && ['url_blocked', 'url_invalid'].includes(x.body.error), JSON.stringify(x))
+}
+r = await call(H.c, 'demo_agent', rmH.id, { url: 'http://host.docker.internal:8787/__redirect' })
+ok('Bloquea una redirección hacia los metadatos de la nube', r.status === 400 && r.body.error === 'url_blocked', JSON.stringify(r))
+r = await call(H.c, 'demo_agent', rmH.id, { url: 'http://host.docker.internal:8787/__404' })
+ok('Una web que da error → 422 url_unreachable', r.status === 422 && r.body.error === 'url_unreachable', JSON.stringify(r))
+r = await call(H.c, 'demo_agent', rmH.id, { url: 'http://host.docker.internal:8787/__json' })
+ok('Una dirección que no es HTML → 422 url_not_html', r.status === 422 && r.body.error === 'url_not_html', JSON.stringify(r))
+ok('Ninguno de los intentos fallidos cobró créditos', (await credits(H.id)) === hBefore, `saldo ${await credits(H.id)} vs ${hBefore}`)
+
+console.log('\n— Demo para clientes: límites y permisos')
+const filler = Array.from({ length: 8 }, (_, i) => ({ user_id: H.id, roadmap_id: rmH.id, source: 'demo', business_name: `Relleno ${i}`, config: dc }))
+await admin.from('agents').insert(filler)
+r = await call(H.c, 'demo_agent', rmH.id, { manual: { nombre: 'Uno más', rubro: 'bar' } })
+ok('Con 10 demos en el proyecto → 409 demo_limit y sin cobrar', r.status === 409 && r.body.error === 'demo_limit' && (await credits(H.id)) === hBefore, JSON.stringify(r))
+const { data: hSeesE } = await F.c.from('agents').select('id').eq('roadmap_id', rmH.id)
+ok('Otro alumno NO ve las demos de Hugo', (hSeesE ?? []).length === 0)
+r = await call(F.c, 'demo_agent', rmH.id, { manual: { nombre: 'Intruso', rubro: 'bar' } })
+ok('Otro alumno NO puede crear demos en el proyecto de Hugo → 404', r.status === 404)
+
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
 const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]

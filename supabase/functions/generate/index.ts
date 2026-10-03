@@ -7,6 +7,8 @@ import { corsHeaders, json } from '../_shared/cors.ts'
 import { problemLabel } from '../_shared/catalog.ts'
 import { inputsSignature, type DeliverableMeta } from '../_shared/signature.ts'
 import * as P from './prompts.ts'
+import { FetchError, fetchSite } from './fetchSite.ts'
+import { cleanConfig } from '../_shared/agent.ts'
 
 // ---------------------------------------------------------------- configuración
 const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-opus-5-5'
@@ -41,7 +43,15 @@ const KINDS: Record<string, KindDef> = {
     valid: (v) => isObj(v) && isObj(v.negocio) && hasText(v.negocio.nombre) && hasText(v.negocio.rubro) && Array.isArray(v.servicios) && v.servicios.length >= 1
       && v.servicios.every((x) => isObj(x) && hasText(x.nombre)) && isObj(v.secretaria) && hasText(v.secretaria.nombre) && hasText(v.secretaria.saludo),
   },
+  // Demo para el negocio de un cliente del alumno (desde su web o a mano). Mismo formato de ficha que `agent`.
+  demo_agent: {
+    cost: 1, model: AGENT_MODEL, maxTokens: 6000,
+    // Una web sin servicios claros es válida: la secretaria atiende con lo que haya y no inventa el resto
+    valid: (v) => isObj(v) && isObj(v.negocio) && hasText(v.negocio.nombre) && Array.isArray(v.servicios)
+      && v.servicios.every((x) => isObj(x) && hasText(x.nombre)) && isObj(v.secretaria) && hasText(v.secretaria.nombre) && hasText(v.secretaria.saludo),
+  },
 }
+const MAX_DEMOS_PER_PROJECT = 10
 
 class HttpError extends Error {
   constructor(public status: number, public code: string, message?: string) { super(message ?? code) }
@@ -191,6 +201,7 @@ Deno.serve(async (req) => {
 
     // ---- construir el prompt (validando parámetros) ----
     let prompt = ''
+    let demoOrigin: { tipo: 'url' | 'manual'; url?: string } | undefined
     switch (kind) {
       case 'custom_problem': {
         const problemName = str(params.problemName, 120, 'problemName', 2)
@@ -202,6 +213,32 @@ Deno.serve(async (req) => {
       case 'agency_offer': prompt = P.agencyOffer(ctx); break
       case 'agency_site': prompt = P.agencySite(ctx); break
       case 'agent': prompt = P.agentConfig(ctx); break
+      case 'demo_agent': {
+        const { count: nDemos } = await userDb.from('agents').select('id', { count: 'exact', head: true }).eq('roadmap_id', roadmapId).eq('source', 'demo')
+        if ((nDemos ?? 0) >= MAX_DEMOS_PER_PROJECT) throw new HttpError(409, 'demo_limit', `Máximo ${MAX_DEMOS_PER_PROJECT} demos por proyecto. Borra alguna para crear otra.`)
+        const rawUrl = typeof params.url === 'string' ? params.url.trim() : ''
+        if (rawUrl) {
+          if (rawUrl.length > 300) throw new HttpError(400, 'url_invalid', 'La dirección es demasiado larga')
+          try {
+            // Se descarga la web ANTES de cobrar: si no se puede abrir, el alumno no paga nada
+            const site = await fetchSite(rawUrl)
+            demoOrigin = { tipo: 'url', url: site.url }
+            prompt = P.demoAgent({ kind: 'url', url: site.url, text: site.text })
+          } catch (e) {
+            if (e instanceof FetchError) throw new HttpError(e.code === 'url_invalid' || e.code === 'url_blocked' ? 400 : 422, e.code, e.message)
+            throw e
+          }
+        } else {
+          const m = (params.manual && typeof params.manual === 'object' ? params.manual : {}) as Record<string, unknown>
+          const opt = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
+          demoOrigin = { tipo: 'manual' }
+          prompt = P.demoAgent({ kind: 'manual', data: {
+            nombre: str(m.nombre, 120, 'nombre', 2), rubro: str(m.rubro, 120, 'rubro', 2),
+            descripcion: opt(m.descripcion, 500), servicios: opt(m.servicios, 1500), horario: opt(m.horario, 200), ubicacion: opt(m.ubicacion, 200),
+          } })
+        }
+        break
+      }
     }
     const system = P.SYSTEM
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [{ role: 'user', content: prompt }]
@@ -264,15 +301,24 @@ Deno.serve(async (req) => {
           case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
           case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
         }
-        if (kind === 'agent') {
-          // Un agente de ejemplo por proyecto: se actualiza el que haya o se crea
-          const cfg = { ...(result as Record<string, unknown>), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null, offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }
-          const businessName = String((result as { negocio: { nombre: string } }).negocio.nombre).slice(0, 120)
-          const { data: existing } = await admin.from('agents').select('id').eq('roadmap_id', roadmapId).eq('source', 'niche').maybeSingle()
-          const { error: aErr } = existing
-            ? await admin.from('agents').update({ business_name: businessName, config: cfg }).eq('id', existing.id)
-            : await admin.from('agents').insert({ user_id: userId, roadmap_id: roadmapId, source: 'niche', business_name: businessName, config: cfg })
-          if (aErr) throw new HttpError(500, 'db_error', aErr.message)
+        if (kind === 'agent' || kind === 'demo_agent') {
+          // Solo se guardan los campos conocidos de la ficha, con tamaños acotados (el texto puede venir de una web ajena)
+          const base = cleanConfig(result)
+          if (!base.negocio.nombre || (kind === 'agent' && !base.servicios.length)) throw new HttpError(502, 'invalid_model_output', 'La IA devolvió un formato inesperado')
+          const businessName = base.negocio.nombre.slice(0, 120)
+          if (kind === 'demo_agent') {
+            const cfg = { ...base, origen: demoOrigin }
+            const { error: aErr } = await admin.from('agents').insert({ user_id: userId, roadmap_id: roadmapId, source: 'demo', business_name: businessName, config: cfg })
+            if (aErr) throw new HttpError(500, 'db_error', aErr.message)
+          } else {
+            // Un agente de ejemplo por proyecto: se actualiza el que haya o se crea
+            const cfg = { ...base, _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null, offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }
+            const { data: existing } = await admin.from('agents').select('id').eq('roadmap_id', roadmapId).eq('source', 'niche').maybeSingle()
+            const { error: aErr } = existing
+              ? await admin.from('agents').update({ business_name: businessName, config: cfg }).eq('id', existing.id)
+              : await admin.from('agents').insert({ user_id: userId, roadmap_id: roadmapId, source: 'niche', business_name: businessName, config: cfg })
+            if (aErr) throw new HttpError(500, 'db_error', aErr.message)
+          }
         }
         if (Object.keys(patch).length) {
           const { error: uErr } = await admin.from('roadmaps').update(patch).eq('id', roadmapId).eq('user_id', userId)

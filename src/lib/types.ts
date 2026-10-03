@@ -55,7 +55,7 @@ export interface Agent {
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */
 export interface Progress {
   selected_problems: string[]; selected_nichos: string[]; business_metrics: Metrics
-  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; visited_sections: number[]
+  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; has_demo: boolean; visited_sections: number[]
 }
 export interface RoadmapSummary extends Progress {
   id: string; project_name: string; agency_name: string | null; status: Roadmap['status']; updated_at: string
@@ -66,4 +66,4 @@ export type EditablePatch = Partial<Pick<Roadmap,
   'agency_name' | 'selected_problems' | 'custom_problem_descriptions' | 'selected_nichos' | 'business_metrics' |
   'pricing_settings' | 'agency_contact' | 'current_section' | 'visited_sections' | 'status' | 'project_name'>>
 
-export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agent'
+export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agent' | 'demo_agent'
