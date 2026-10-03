@@ -1,4 +1,4 @@
-import { Bot, Building2, Calculator, Gem, Globe, MessageCircle, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
+import { Bot, Building2, Calculator, Gem, Globe, MessageCircle, Smartphone, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
 import type { Progress, Roadmap } from './types'
 
 interface SectionDef { id: number; title: string; icon: LucideIcon; heading: string; description: string }
@@ -15,6 +15,7 @@ export const SECTIONS = [
   { id: 7, title: 'Tu agente', icon: Bot, heading: 'Tu agente de WhatsApp', description: 'Una secretaria virtual para un negocio típico de tu nicho: responde, cualifica y agenda a cualquier hora. Es lo que enseñas a tus clientes para que vean el resultado antes de comprar.' },
   { id: 8, title: 'Probar el agente', icon: MessageCircle, heading: 'Pruébalo como si fueras un cliente', description: 'Un WhatsApp de prueba para hablar con tu agente. Intenta romperlo: pregúntale precios, pídele cita, escríbele con faltas.' },
   { id: 9, title: 'Demo para clientes', icon: Building2, heading: 'Una demo para cada cliente', description: 'Pega la web de un negocio (o escribe sus datos) y tendrás su secretaria lista para enseñársela antes de la llamada: "aquí tienes tu agente, pruébalo".' },
+  { id: 10, title: 'Conectar WhatsApp', icon: Smartphone, heading: 'Conecta un WhatsApp real (beta)', description: 'Escanea un QR y tu agente empieza a contestar en un número de WhatsApp de verdad. Solo responde a quien le escribe, y las citas que cierre te llegan aquí.' },
 ] as const satisfies ReadonlyArray<SectionDef>
 
 export type SectionId = (typeof SECTIONS)[number]['id']
@@ -25,7 +26,7 @@ const filled = (o: object | null | undefined) => !!o && Object.keys(o).length > 
 export const progressOf = (r: Roadmap): Progress => ({
   selected_problems: r.selected_problems, selected_nichos: r.selected_nichos, business_metrics: r.business_metrics,
   has_ideal: filled(r.ideal_client), has_offer: filled(r.agency_offer?.oferta as object | undefined), has_site: filled(r.agency_site),
-  has_agent: !!r.agents?.some((a) => a.source === 'niche'), has_demo: !!r.agents?.some((a) => a.source === 'demo'), visited_sections: r.visited_sections,
+  has_agent: !!r.agents?.some((a) => a.source === 'niche'), has_demo: !!r.agents?.some((a) => a.source === 'demo'), has_whatsapp: !!r.whatsapp_connections?.some((c) => c.status === 'working'), visited_sections: r.visited_sections,
 })
 
 /** Una sección cuenta como completada cuando el alumno ha hecho lo esencial de ella. */
@@ -40,6 +41,7 @@ export function isSectionDone(p: Progress, id: number): boolean {
     case 7: return p.has_agent
     case 8: return p.has_agent && p.visited_sections.includes(8) // probar = haber abierto el chat con un agente creado
     case 9: return p.has_demo
+    case 10: return p.has_whatsapp
     default: return false
   }
 }

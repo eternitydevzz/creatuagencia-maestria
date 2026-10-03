@@ -31,6 +31,7 @@ function reply(prompt) {
 function chatReply(system, messages) {
   const name = /Eres ([^,]+),/.exec(system)?.[1] ?? 'la secretaria'
   const last = String(messages.at(-1)?.content ?? '')
+  if (/confirmo la cita/i.test(last)) return 'Perfecto, cita confirmada. Te esperamos.\n\n[[CITA {"nombre":"Ana","telefono":"600123123","servicio":"Limpieza dental","cuando":"viernes a las 10:00","notas":""}]]'
   if (/cuesta|precio/i.test(last)) return 'El bono mensual ilimitado son 89 €/mes, sin permanencia.\n\n¿Quieres que te reserve una clase de prueba gratis?'
   if (/olvida|instrucciones/i.test(last)) return 'Prefiero seguir ayudándote con Studio Pulso. ¿Te cuento los bonos?'
   return `¡Hola! Soy ${name}, de Studio Pulso.\n\n¿Te cuento cómo funcionan las clases o quieres reservar una de prueba?`

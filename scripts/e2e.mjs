@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import WebSocket from 'ws' // Node < 22 no trae WebSocket nativo
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 const URL_ = process.env.SUPABASE_URL ?? 'http://127.0.0.1:55421'
 const ANON = process.env.SUPABASE_ANON_KEY
@@ -310,6 +311,132 @@ const { data: hSeesE } = await F.c.from('agents').select('id').eq('roadmap_id', 
 ok('Otro alumno NO ve las demos de Hugo', (hSeesE ?? []).length === 0)
 r = await call(F.c, 'demo_agent', rmH.id, { manual: { nombre: 'Intruso', rubro: 'bar' } })
 ok('Otro alumno NO puede crear demos en el proyecto de Hugo → 404', r.status === 404)
+
+
+console.log('\n— WhatsApp real (servidor WAHA simulado): vincular, recibir mensajes, responder, citas y pausas')
+const WA_MOCK = 'http://127.0.0.1:3100'
+const WA_SECRET = process.env.WA_WEBHOOK_SECRET ?? (fs.readFileSync(new URL('../supabase/.env.local', import.meta.url), 'utf8').match(/^WA_WEBHOOK_SECRET=(.+)$/m) ?? [])[1]
+const waInvoke = async (c, body) => {
+  const { data, error } = await c.functions.invoke('wa-connect', { body })
+  if (!error) return { status: 200, body: data }
+  let b = {}; try { b = await error.context.json() } catch { /* */ }
+  return { status: error.context?.status ?? 0, body: b }
+}
+const hook = async (evt, secret = WA_SECRET) => {
+  const raw = JSON.stringify(evt)
+  const sig = secret ? crypto.createHmac('sha512', secret).update(raw).digest('hex') : ''
+  const res = await fetch(`${URL_}/functions/v1/wa-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(sig ? { 'x-webhook-hmac': sig } : {}) }, body: raw })
+  return res.status
+}
+const waSent = async () => (await fetch(`${WA_MOCK}/__sent`)).json()
+const until = async (fn, ms = 10000) => { const t = Date.now(); while (Date.now() - t < ms) { const v = await fn(); if (v) return v; await new Promise((r) => setTimeout(r, 250)) } return null }
+const nowS = () => Math.floor(Date.now() / 1000)
+const incoming = (session, chat, body, extra = {}) => ({ event: 'message', session, me: { id: '34600111222@c.us' }, payload: { id: `m${Math.random().toString(36).slice(2)}`, timestamp: nowS(), from: chat, fromMe: false, body, hasMedia: false, ...extra } })
+await fetch(`${WA_MOCK}/__reset`, { method: 'POST' })
+
+const W = await makeUser('wanda'), X = await makeUser('xavi')
+const { data: rmW } = await W.c.from('roadmaps').insert({ project_name: 'De Wanda', user_id: W.id, selected_nichos: ['Clínicas dentales'] }).select().single()
+await call(W.c, 'agent', rmW.id)
+const agW = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).single()).data
+await call(W.c, 'demo_agent', rmW.id, { manual: { nombre: 'Taller Los Pinos', rubro: 'taller mecánico' } })
+const demoW = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).eq('source', 'demo').single()).data
+
+ok('wa-connect sin sesión → 401', (await waInvoke(client(), { action: 'start', agent_id: agW.id })).status === 401)
+ok('No se puede vincular el agente de otro alumno → 404', (await waInvoke(X.c, { action: 'start', agent_id: agW.id })).status === 404)
+let st = await waInvoke(W.c, { action: 'start', agent_id: agW.id })
+const conn = (await admin.from('whatsapp_connections').select('*').eq('agent_id', agW.id).single()).data
+ok('Vincular crea la conexión con un nombre de sesión no adivinable', st.status === 200 && /^wa_[0-9a-f]{32}$/.test(conn?.session ?? ''), JSON.stringify(st))
+ok('  repetirlo no duplica la conexión', (await waInvoke(W.c, { action: 'start', agent_id: agW.id })).body.connection?.id === conn.id && (await admin.from('whatsapp_connections').select('id').eq('agent_id', agW.id)).data.length === 1)
+const qr = await waInvoke(W.c, { action: 'qr', connection_id: conn.id })
+ok('El QR llega como imagen (data URL)', qr.status === 200 && /^data:image\/png;base64,/.test(qr.body.qr ?? ''), JSON.stringify(qr).slice(0, 120))
+ok('Otro alumno NO puede pedir el QR ni el estado de mi número → 404', (await waInvoke(X.c, { action: 'qr', connection_id: conn.id })).status === 404 && (await waInvoke(X.c, { action: 'status', connection_id: conn.id })).status === 404)
+st = await waInvoke(W.c, { action: 'status', connection_id: conn.id })
+ok('Mientras no se escanea, el estado es scan_qr', st.body.status === 'scan_qr', JSON.stringify(st))
+await fetch(`${WA_MOCK}/__status?session=${conn.session}&status=WORKING`, { method: 'POST' })
+st = await waInvoke(W.c, { action: 'status', connection_id: conn.id })
+ok('Tras escanear: working y el teléfono vinculado', st.body.status === 'working' && st.body.phone === '+34600111222', JSON.stringify(st))
+ok('Un segundo agente se puede vincular (límite 2 por cuenta)', (await waInvoke(W.c, { action: 'start', agent_id: demoW.id })).status === 200)
+await admin.from('agents').insert({ user_id: W.id, roadmap_id: rmW.id, source: 'demo', business_name: 'Tercero', config: { negocio: { nombre: 'T', rubro: 'x' }, servicios: [], secretaria: { nombre: 'A', tono: 't', saludo: 'h' } } })
+const third = (await admin.from('agents').select('id').eq('roadmap_id', rmW.id).eq('business_name', 'Tercero').single()).data
+ok('Un tercer número → 409 connection_limit', (await waInvoke(W.c, { action: 'start', agent_id: third.id })).status === 409)
+
+console.log('   · seguridad del webhook')
+const chat1 = '34611222333@c.us'
+ok('Webhook sin firma → 401', (await hook(incoming(conn.session, chat1, 'hola'), '')) === 401)
+ok('Webhook con firma incorrecta → 401', (await hook(incoming(conn.session, chat1, 'hola'), 'otro-secreto')) === 401)
+ok('Los mensajes rechazados no generan respuesta ni conversación', (await waSent()).length === 0 && ((await admin.from('wa_conversations').select('id').eq('connection_id', conn.id)).data ?? []).length === 0)
+
+console.log('   · conversación')
+const m1 = incoming(conn.session, chat1, 'hola, ¿cuánto cuesta una limpieza?')
+ok('Mensaje firmado → 200 inmediato', (await hook(m1)) === 200)
+const sent1 = await until(async () => { const s = await waSent(); return s.length >= 2 ? s : null })
+ok('El agente responde por WhatsApp al mismo chat (en varias burbujas)', !!sent1 && sent1.every((x) => x.chatId === chat1 && x.session === conn.session) && /89/.test(sent1.map((x) => x.text).join(' ')), JSON.stringify(sent1))
+const conv = (await admin.from('wa_conversations').select('*').eq('connection_id', conn.id).single()).data
+const msgs = async () => (await admin.from('wa_messages').select('role, content').eq('conversation_id', conv.id).order('id')).data
+ok('Guarda el mensaje del cliente y la respuesta', (await msgs()).map((m) => m.role).join() === 'user,assistant')
+ok('Cuenta la respuesta en el tope diario', (await admin.from('whatsapp_connections').select('replies_today').eq('id', conn.id).single()).data.replies_today === 1)
+await hook(m1); await new Promise((r) => setTimeout(r, 2500))
+ok('El mismo mensaje reenviado (reintento del webhook) no se contesta dos veces', (await waSent()).length === sent1.length && (await msgs()).length === 2)
+
+await fetch(`${WA_MOCK}/__reset`, { method: 'POST' })
+await hook(incoming(conn.session, '120363000000@g.us', 'hola grupo', { from: '120363000000@g.us' }))
+await hook(incoming(conn.session, chat1, 'es mío', { fromMe: true, to: chat1 }))
+await hook(incoming(conn.session, chat1, 'mensaje viejo', { timestamp: nowS() - 3600 }))
+await new Promise((r) => setTimeout(r, 1800))
+ok('Ignora grupos, mensajes propios de la API y mensajes atrasados', (await waSent()).length === 0)
+
+await hook(incoming(conn.session, chat1, '', { hasMedia: true }))
+const media = await until(async () => { const s = await waSent(); return s.length ? s : null })
+ok('Una nota de voz o imagen recibe una respuesta fija pidiendo texto', !!media && /solo puedo leer mensajes de texto/.test(media[0].text))
+
+await fetch(`${WA_MOCK}/__reset`, { method: 'POST' })
+await hook(incoming(conn.session, chat1, 'perfecto, confirmo la cita'))
+const bk = await until(async () => { const b = (await admin.from('bookings').select('*').eq('connection_id', conn.id)).data; return b?.length ? b : null })
+const sentBk = await waSent()
+ok('Una cita cerrada se guarda como reserva (servicio, día y hora)', !!bk && bk[0].service === 'Limpieza dental' && /viernes/.test(bk[0].when_text) && bk[0].conversation_id === conv.id, JSON.stringify(bk))
+ok('  y la marca interna [[CITA]] NUNCA llega al cliente', sentBk.length > 0 && sentBk.every((x) => !/\[\[|CITA/.test(x.text)), JSON.stringify(sentBk))
+ok('Las citas y los mensajes son del alumno: Xavi no los ve, Wanda sí', ((await X.c.from('bookings').select('id')).data ?? []).length === 0 && ((await X.c.from('wa_messages').select('id')).data ?? []).length === 0 && ((await W.c.from('bookings').select('id')).data ?? []).length === 1 && ((await W.c.from('wa_messages').select('id')).data ?? []).length >= 4)
+const { error: insBooking } = await W.c.from('bookings').insert({ user_id: W.id, connection_id: conn.id, name: 'falsa' })
+ok('El alumno NO puede inventar citas', !!insBooking)
+
+console.log('   · el dueño toma el control, topes y estado')
+await fetch(`${WA_MOCK}/__reset`, { method: 'POST' })
+await hook({ event: 'message.any', session: conn.session, payload: { id: 'own1', timestamp: nowS(), from: '34600111222@c.us', to: chat1, fromMe: true, body: 'Hola, soy Marta, yo me encargo', source: 'app' } })
+await until(async () => (await admin.from('wa_conversations').select('paused_until').eq('id', conv.id).single()).data.paused_until)
+await hook(incoming(conn.session, chat1, 'vale gracias, ¿cuánto cuesta?'))
+await new Promise((r) => setTimeout(r, 2000))
+ok('Si el dueño contesta desde su móvil, el agente se calla y guarda el mensaje del dueño', (await waSent()).length === 0 && (await msgs()).some((m) => m.role === 'owner'))
+await admin.from('wa_conversations').update({ paused_until: null }).eq('id', conv.id)
+await admin.from('whatsapp_connections').update({ replies_today: 200, replies_day: new Date().toISOString().slice(0, 10) }).eq('id', conn.id)
+await hook(incoming(conn.session, chat1, 'sigo aquí'))
+await new Promise((r) => setTimeout(r, 2000))
+ok('Con el tope diario alcanzado deja de responder', (await waSent()).length === 0)
+await admin.from('whatsapp_connections').update({ replies_today: 0 }).eq('id', conn.id)
+await hook(incoming(conn.session, chat1, 'otra vez, ¿cuánto cuesta?'))
+ok('Al bajar del tope vuelve a responder', !!(await until(async () => (await waSent()).length >= 1)))
+
+await new Promise((r) => setTimeout(r, 3500)) // deja que termine de enviarse y guardarse la respuesta anterior (va en 2 burbujas)
+await fetch(`${WA_MOCK}/__reset`, { method: 'POST' })
+await fetch(`${WA_MOCK}/__sendfail?n=1`, { method: 'POST' })
+const beforeFail = (await msgs()).filter((m) => m.role === 'assistant').length
+await hook(incoming(conn.session, chat1, 'precio por favor'))
+await new Promise((r) => setTimeout(r, 2500))
+ok('Si WhatsApp falla al enviar, no se guarda una respuesta que el cliente no recibió', (await msgs()).filter((m) => m.role === 'assistant').length === beforeFail)
+
+ok('session.status FAILED actualiza la conexión', (await hook({ event: 'session.status', session: conn.session, me: { id: '34600111222@c.us' }, payload: { status: 'FAILED' } })) === 200 && !!(await until(async () => (await admin.from('whatsapp_connections').select('status').eq('id', conn.id).single()).data.status === 'failed')))
+
+const chatB = await chat(W.c, agW.id, [{ role: 'user', content: 'confirmo la cita' }])
+ok('El simulador también detecta la cita y la devuelve aparte (tarjeta)', chatB.status === 200 && chatB.body.booking?.servicio === 'Limpieza dental' && !/\[\[/.test(chatB.body.reply), JSON.stringify(chatB))
+const prompts = log().filter((q) => /secretaria virtual de/.test(q.system_head ?? ''))
+ok('Las instrucciones del chat incluyen el registro de citas', prompts.length > 0)
+
+const dis = await waInvoke(W.c, { action: 'disconnect', connection_id: conn.id })
+ok('Desconectar elimina la conexión y todo lo que colgaba de ella (conversaciones, mensajes, citas)', dis.status === 200
+  && ((await admin.from('whatsapp_connections').select('id').eq('id', conn.id)).data ?? []).length === 0
+  && ((await admin.from('wa_messages').select('id').eq('conversation_id', conv.id)).data ?? []).length === 0
+  && ((await admin.from('bookings').select('id').eq('connection_id', conn.id)).data ?? []).length === 0)
+const gone = await fetch(`${WA_MOCK}/api/sessions/${conn.session}`, { headers: { 'x-api-key': 'test-key' } })
+ok('  y la sesión desaparece del servidor de WhatsApp', gone.status === 404)
 
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
 const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))

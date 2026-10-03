@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Lock, RotateCcw, Send } from 'lucide-react'
-import { chatWithAgent, GenerationError, type ChatTurn } from '@/lib/api'
+import { CalendarCheck, Lock, RotateCcw, Send } from 'lucide-react'
+import { chatWithAgent, GenerationError, type ChatBooking, type ChatTurn } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
 import type { Agent } from '@/lib/types'
 
-interface Bubble { id: number; from: 'me' | 'bot'; text: string; at: Date }
+interface Bubble { id: number; from: 'me' | 'bot' | 'booking'; text: string; at: Date; booking?: ChatBooking }
 
 // El servidor acepta 40 mensajes por conversación; con las respuestas de la secretaria, unos 18 del usuario
 const MAX_USER_MESSAGES = 18
@@ -15,6 +15,7 @@ const hhmm = (d: Date) => d.toLocaleTimeString('es-ES', { hour: '2-digit', minut
 function toTurns(bubbles: Bubble[]): ChatTurn[] {
   const turns: ChatTurn[] = []
   for (const b of bubbles) {
+    if (b.from === 'booking') continue
     const role = b.from === 'me' ? 'user' : 'assistant'
     const last = turns[turns.length - 1]
     if (last && last.role === role) last.content += `\n\n${b.text}`
@@ -57,12 +58,13 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
     setInput('')
     setTyping(true)
     try {
-      const reply = await chatWithAgent(agent.id, toTurns(history))
+      const { reply, booking } = await chatWithAgent(agent.id, toTurns(history))
       const parts = splitReply(reply)
       for (let i = 0; i < parts.length; i++) {
         if (i > 0) await wait(Math.min(1500, 500 + parts[i].length * 12)) // "escribiendo…" entre burbujas
         setBubbles((prev) => [...prev, { id: ++seq.current, from: 'bot', text: parts[i], at: new Date() }])
       }
+      if (booking) setBubbles((prev) => [...prev, { id: ++seq.current, from: 'booking', text: '', at: new Date(), booking }])
     } catch (e) {
       toast(e instanceof GenerationError ? e.message : 'No se pudo enviar el mensaje. Inténtalo de nuevo.', 'error')
       setBubbles((prev) => prev.filter((b) => b.id !== mine.id))
@@ -92,7 +94,13 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
         <p className="mx-auto mb-2 flex max-w-[88%] items-start gap-1.5 rounded-lg bg-[#182229] px-3 py-2 text-center text-[11.5px] leading-snug text-[#8696a0]">
           <Lock className="mt-0.5 h-3 w-3 flex-none" aria-hidden />Conversación de prueba. Escribe como lo haría un cliente de {agent.business_name}. No se guarda.
         </p>
-        {bubbles.map((b) => (
+        {bubbles.map((b) => b.from === 'booking' ? (
+          <div key={b.id} className="mx-auto my-1 w-full max-w-[88%] rounded-xl border border-[#00a884]/40 bg-[#00a884]/10 px-3.5 py-2.5 text-[13px] text-[#cdeee6]">
+            <p className="flex items-center gap-1.5 font-semibold text-[#7fe7cd]"><CalendarCheck className="h-4 w-4" aria-hidden />Cita registrada</p>
+            <p className="mt-1 leading-snug">{[b.booking?.servicio, b.booking?.cuando].filter(Boolean).join(' · ')}</p>
+            {(b.booking?.nombre || b.booking?.telefono) && <p className="text-[#8fb9ae]">{[b.booking?.nombre, b.booking?.telefono].filter(Boolean).join(' · ')}</p>}
+          </div>
+        ) : (
           <div key={b.id} className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-3 py-1.5 text-[14.5px] leading-snug text-[#e9edef] ${b.from === 'me' ? 'self-end rounded-tr-none bg-[#005c4b]' : 'self-start rounded-tl-none bg-[#202c33]'}`}>
             {b.text}
             <span className="ml-2 inline-flex translate-y-1 items-center gap-0.5 text-[10.5px] text-[#8696a0]">{hhmm(b.at)}{b.from === 'me' && <span className="text-[#53bdeb]" aria-hidden>✓✓</span>}</span>

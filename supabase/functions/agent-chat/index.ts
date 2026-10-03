@@ -5,14 +5,13 @@
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, json } from '../_shared/cors.ts'
-import { buildAgentPrompt, nowText, type AgentConfig } from '../_shared/agent.ts'
+import type { AgentConfig } from '../_shared/agent.ts'
+import { agentReply } from '../_shared/agentReply.ts'
 
-const MODEL = Deno.env.get('AGENT_MODEL') ?? 'claude-haiku-4-5-20251001'
 const PER_MINUTE = Number(Deno.env.get('AGENT_CHAT_PER_MINUTE') ?? 20)
 const PER_HOUR = Number(Deno.env.get('AGENT_CHAT_PER_HOUR') ?? 300)
 const MAX_TURNS = 40          // mensajes de la conversación que se aceptan
 const MAX_CHARS = 1000        // por mensaje
-const MAX_TOKENS = 450        // una respuesta de WhatsApp es corta
 const TIMEOUT_MS = 30_000
 
 class HttpError extends Error {
@@ -70,11 +69,10 @@ Deno.serve(async (req) => {
     await admin.from('agent_chat_log').insert({ user_id: userId })
     if (Math.random() < 0.05) await admin.from('agent_chat_log').delete().eq('user_id', userId).lt('created_at', new Date(Date.now() - 24 * 3_600_000).toISOString())
 
-    const system = buildAgentPrompt(config, nowText(config.negocio?.zona_horaria))
-    const msg = await anthropic.messages.create({ model: MODEL, max_tokens: MAX_TOKENS, system, messages: turns }, { signal: AbortSignal.timeout(TIMEOUT_MS) })
-    const reply = (msg.content as Array<{ type: string; text?: string }>).filter((b) => b.type === 'text').map((b) => b.text ?? '').join('').trim()
-    if (!reply) throw new HttpError(502, 'ai_error', 'La secretaria no respondió. Inténtalo de nuevo.')
-    return json({ reply })
+    // Si la secretaria cierra una cita, la marca se separa del texto: el simulador la enseña como tarjeta (aquí no se guarda)
+    const { text, booking } = await agentReply(anthropic, config, turns, TIMEOUT_MS)
+    if (!text) throw new HttpError(502, 'ai_error', 'La secretaria no respondió. Inténtalo de nuevo.')
+    return json({ reply: text, booking })
   } catch (e) {
     let status = 500, code = 'internal_error', message = 'Error inesperado'
     if (e instanceof HttpError) { status = e.status; code = e.code; message = e.message }

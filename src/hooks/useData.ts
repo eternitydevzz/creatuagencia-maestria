@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuth'
-import type { Agent, EditablePatch, Profile, Roadmap, RoadmapSummary } from '@/lib/types'
+import type { Agent, Booking, EditablePatch, Profile, Roadmap, RoadmapSummary, WaConnection, WaConversation, WaMessage } from '@/lib/types'
 
 export function useProfile() {
   const { session } = useAuth()
@@ -19,8 +19,8 @@ export function useProfile() {
 
 // Las listas (cabecera, dashboard, proyectos) solo necesitan saber qué pasos lleva hecho cada proyecto:
 // de los entregables (que pesan decenas de KB) se pide únicamente un campo para saber si existen.
-const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,visited_sections,agents(id,source)'
-type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_agent' | 'has_demo'> & { ideal: string | null; offer: string | null; site: string | null; agents: Array<{ source: string }> }
+const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,visited_sections,agents(id,source),whatsapp_connections(status)'
+type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_agent' | 'has_demo' | 'has_whatsapp'> & { ideal: string | null; offer: string | null; site: string | null; agents: Array<{ source: string }>; whatsapp_connections: Array<{ status: string }> }
 
 export function useRoadmaps() {
   const { session } = useAuth()
@@ -30,7 +30,7 @@ export function useRoadmaps() {
     queryFn: async (): Promise<RoadmapSummary[]> => {
       const { data, error } = await supabase.from('roadmaps').select(SUMMARY_COLUMNS).order('updated_at', { ascending: false }).returns<SummaryRow[]>()
       if (error) throw error
-      return data.map(({ ideal, offer, site, agents, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_agent: agents.some((a) => a.source === 'niche'), has_demo: agents.some((a) => a.source === 'demo') }))
+      return data.map(({ ideal, offer, site, agents, whatsapp_connections, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_agent: agents.some((a) => a.source === 'niche'), has_demo: agents.some((a) => a.source === 'demo'), has_whatsapp: whatsapp_connections.some((c) => c.status === 'working') }))
     },
   })
 }
@@ -57,6 +57,46 @@ export function useDemos(roadmapId: string) {
       return data as Agent[]
     },
   })
+}
+
+/** Números de WhatsApp del proyecto. Se refresca solo mientras alguno está arrancando o esperando el QR. */
+export function useConnections(roadmapId: string) {
+  return useQuery({
+    queryKey: ['wa-connections', roadmapId], refetchInterval: 10000,
+    queryFn: async (): Promise<WaConnection[]> => {
+      const { data, error } = await supabase.from('whatsapp_connections').select('id,agent_id,status,phone,replies_today,replies_day,created_at').eq('roadmap_id', roadmapId).order('created_at')
+      if (error) throw error
+      return data as WaConnection[]
+    },
+  })
+}
+
+export function useBookings(connectionIds: string[]) {
+  return useQuery({
+    queryKey: ['bookings', connectionIds.join(',')], enabled: connectionIds.length > 0, refetchInterval: 15000,
+    queryFn: async (): Promise<Booking[]> => {
+      const { data, error } = await supabase.from('bookings').select('id,name,phone,service,when_text,notes,created_at').in('connection_id', connectionIds).order('created_at', { ascending: false }).limit(30)
+      if (error) throw error
+      return data as Booking[]
+    },
+  })
+}
+
+export function useConversations(connectionIds: string[]) {
+  return useQuery({
+    queryKey: ['wa-conversations', connectionIds.join(',')], enabled: connectionIds.length > 0, refetchInterval: 15000,
+    queryFn: async (): Promise<WaConversation[]> => {
+      const { data, error } = await supabase.from('wa_conversations').select('id,chat_id,contact_name,paused_until,last_message_at').in('connection_id', connectionIds).order('last_message_at', { ascending: false }).limit(15)
+      if (error) throw error
+      return data as WaConversation[]
+    },
+  })
+}
+
+export async function fetchMessages(conversationId: string): Promise<WaMessage[]> {
+  const { data, error } = await supabase.from('wa_messages').select('id,role,content,created_at').eq('conversation_id', conversationId).order('id', { ascending: false }).limit(40)
+  if (error) throw error
+  return (data as WaMessage[]).reverse()
 }
 
 export function useGenerationCount() {
@@ -88,7 +128,7 @@ export function useRoadmap(id: string | undefined) {
 
   const load = useCallback(async () => {
     if (!id) return
-    const { data, error } = await supabase.from('roadmaps').select('*, agents(id, source)').eq('id', id).maybeSingle()
+    const { data, error } = await supabase.from('roadmaps').select('*, agents(id, source), whatsapp_connections(id, status)').eq('id', id).maybeSingle()
     if (error) console.error('[roadmap] error al cargar', error)
     // Lo que el alumno haya escrito mientras tanto y aún no esté guardado se conserva encima de lo recién cargado.
     setRoadmap(data ? ({ ...data, ...pending.current } as Roadmap) : null)

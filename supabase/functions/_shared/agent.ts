@@ -53,8 +53,24 @@ export function nowText(zone: string | undefined, now = new Date()): string {
   }
 }
 
-/** Instrucciones del chat a partir de la ficha. Las mismas se enseñan al alumno para que las copie a su plataforma de WhatsApp. */
-export function buildAgentPrompt(c: AgentConfig, now: string): string {
+export interface Booking { nombre?: string; telefono?: string; servicio?: string; cuando?: string; notas?: string }
+const BOOKING_RE = /\[\[\s*CITA\s*(\{[\s\S]*?\})\s*\]\]/i
+
+/** Si la secretaria cierra una cita, termina el mensaje con una marca [[CITA {...}]]: se separa del texto y se devuelve aparte. */
+export function extractBooking(reply: string): { text: string; booking: Booking | null } {
+  const m = reply.match(BOOKING_RE)
+  if (!m) return { text: reply.replace(/\[\[\s*CITA[\s\S]*$/i, '').trim() || reply.trim(), booking: null } // marca rota: nunca llega al cliente
+  const text = reply.replace(BOOKING_RE, '').trim()
+  try {
+    const o = JSON.parse(m[1]) as Record<string, unknown>
+    const b: Booking = { nombre: clean(o.nombre, 120) || undefined, telefono: clean(o.telefono, 40) || undefined, servicio: clean(o.servicio, 160) || undefined, cuando: clean(o.cuando, 160) || undefined, notas: clean(o.notas, 300) || undefined }
+    return { text, booking: b.servicio || b.cuando ? b : null }
+  } catch { return { text, booking: null } }
+}
+
+/** Instrucciones del chat a partir de la ficha. Con `capture` la secretaria marca las citas cerradas ([[CITA …]]) para que el servidor
+ *  las registre; sin él (las que se copian a otra plataforma) esa marca no existe. */
+export function buildAgentPrompt(c: AgentConfig, now: string, capture = false): string {
   const n = c.negocio
   const servicios = (c.servicios ?? []).map((s) => `- ${s.nombre}${s.precio ? ` · ${s.precio}` : ''}${s.duracion ? ` · ${s.duracion}` : ''}${s.descripcion ? ` — ${s.descripcion}` : ''}`).join('\n') || '- (sin servicios cargados: no inventes ninguno)'
   const politicas = (c.politicas ?? []).map((p) => `- ${p}`).join('\n')
@@ -83,7 +99,11 @@ ${servicios}
 ${politicas ? `\nPolíticas:\n${politicas}\n` : ''}${faq ? `\nPreguntas frecuentes:\n${faq}\n` : ''}
 AHORA MISMO: ${now}. Úsalo para entender "hoy", "mañana" o "el viernes", y no ofrezcas horas pasadas ni fuera de horario.
 
-REGLAS
+${capture ? `REGISTRO DE CITAS
+- Cuando la persona haya confirmado la cita y tengas todos los datos, termina ESE mismo mensaje con una línea aparte con este formato exacto: [[CITA {"nombre":"…","telefono":"…","servicio":"…","cuando":"día y hora acordados","notas":"…"}]]
+- Escríbela solo una vez por cita y nunca en otro caso. No la menciones ni la expliques.
+
+` : ''}REGLAS
 - Nunca inventes precios, servicios, horarios, promociones ni datos. Si no lo sabes, dilo con naturalidad y ofrece que el equipo lo confirme.
 - No des diagnósticos ni consejos médicos, legales o financieros. Ante una urgencia, indica que llamen por teléfono o acudan al servicio de urgencias.
 - Si te preguntan si eres una persona o una IA, di con sinceridad que eres la asistente virtual del negocio.

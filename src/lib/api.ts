@@ -55,7 +55,9 @@ export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 
 /** Una respuesta de la secretaria virtual (Edge Function `agent-chat`). La conversación viaja completa; las instrucciones
  *  se construyen en el servidor a partir de la ficha del agente. No cuesta créditos. */
-export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Promise<string> {
+export interface ChatBooking { nombre?: string; telefono?: string; servicio?: string; cuando?: string; notas?: string }
+
+export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Promise<{ reply: string; booking: ChatBooking | null }> {
   const { data, error } = await supabase.functions.invoke('agent-chat', { body: { agent_id: agentId, messages } })
   if (error) {
     let code = 'internal_error'; let message = GENERIC
@@ -66,5 +68,19 @@ export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Prom
     throw new GenerationError(code, message)
   }
   if (!data || typeof data.reply !== 'string') throw new GenerationError('internal_error', GENERIC)
-  return data.reply
+  return { reply: data.reply, booking: (data.booking as ChatBooking | null) ?? null }
+}
+
+/** Vincular un número de WhatsApp a un agente (Edge Function `wa-connect`). */
+export async function waConnect<T = Record<string, unknown>>(body: { action: 'start'; agent_id: string } | { action: 'status' | 'qr' | 'disconnect'; connection_id: string }): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('wa-connect', { body })
+  if (error) {
+    let code = 'internal_error'; let message = GENERIC
+    const res = (error as { context?: Response }).context
+    if (res && typeof res.json === 'function') {
+      try { const b = await res.json(); code = b.error ?? code; message = MESSAGES[code] ?? b.message ?? message } catch { /* cuerpo no JSON */ }
+    } else message = 'Se interrumpió la conexión. Inténtalo de nuevo.'
+    throw new GenerationError(code, message)
+  }
+  return data as T
 }

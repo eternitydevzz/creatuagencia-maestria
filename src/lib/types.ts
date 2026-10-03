@@ -45,7 +45,16 @@ export interface Roadmap {
   current_section: number; visited_sections: number[]; created_at: string; updated_at: string
   /** Agentes del proyecto (solo id y origen): sirve para saber si el paso del agente está hecho. */
   agents?: Array<{ id: string; source: Agent['source'] }>
+  whatsapp_connections?: Array<{ id: string; status: WaStatus }>
 }
+
+export type WaStatus = 'starting' | 'scan_qr' | 'working' | 'failed' | 'stopped'
+
+/** Número de WhatsApp vinculado a un agente (beta). */
+export interface WaConnection { id: string; agent_id: string; status: WaStatus; phone: string | null; replies_today: number; replies_day: string; created_at: string }
+export interface WaConversation { id: string; chat_id: string; contact_name: string | null; paused_until: string | null; last_message_at: string }
+export interface WaMessage { id: number; role: 'user' | 'assistant' | 'owner'; content: string; created_at: string }
+export interface Booking { id: string; name: string | null; phone: string | null; service: string | null; when_text: string | null; notes: string | null; created_at: string }
 
 /** Secretaria virtual de un negocio (ficha + datos); las instrucciones del chat se construyen a partir de `config`. */
 export interface Agent {
@@ -55,7 +64,7 @@ export interface Agent {
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */
 export interface Progress {
   selected_problems: string[]; selected_nichos: string[]; business_metrics: Metrics
-  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; has_demo: boolean; visited_sections: number[]
+  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; has_demo: boolean; has_whatsapp: boolean; visited_sections: number[]
 }
 export interface RoadmapSummary extends Progress {
   id: string; project_name: string; agency_name: string | null; status: Roadmap['status']; updated_at: string
