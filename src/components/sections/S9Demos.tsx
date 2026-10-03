@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Globe, PenLine, Trash2 } from 'lucide-react'
+import { Building2, Globe, PenLine, Trash2 } from 'lucide-react'
 import { buildAgentPrompt, nowText } from '@shared/agent'
-import { AiButton, CopyButton, Empty, Spinner } from '@/components/ui/bits'
+import { AiButton, CopyButton, Empty, Skeleton } from '@/components/ui/bits'
 import WhatsAppChat from '@/components/agent/WhatsAppChat'
 import { useDemos } from '@/hooks/useData'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
@@ -46,7 +46,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
   const canCreate = mode === 'url' ? url.trim().length >= 4 : manual.nombre.trim().length >= 2 && manual.rubro.trim().length >= 2
   const setM = (k: keyof typeof EMPTY_MANUAL) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setManual((m) => ({ ...m, [k]: e.target.value }))
 
-  if (isLoading) return <div className="grid place-items-center py-10"><Spinner className="h-6 w-6 text-accent-hi" /></div>
+  if (isLoading) return <Skeleton rows={3} />
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-start">
@@ -82,7 +82,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
         </div>
 
         {demos?.length ? (
-          <div className="space-y-2.5">
+          <div className="stagger space-y-2.5">
             <p className="eyebrow px-1">Tus demos · {demos.length}</p>
             {demos.map((d) => (
               <div key={d.id} className={`card flex items-center gap-3 p-3.5 ${d.id === selected ? '!border-accent/60 bg-accent/10' : ''}`}>
@@ -95,7 +95,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
               </div>
             ))}
           </div>
-        ) : <Empty>Aún no has creado ninguna demo. Pega la web de un negocio de tu nicho para empezar.</Empty>}
+        ) : <Empty icon={Building2}>Aún no has creado ninguna demo. Pega la web de un negocio de tu nicho para empezar.</Empty>}
       </div>
 
       <div className="space-y-3">

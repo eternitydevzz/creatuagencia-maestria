@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CalendarCheck, Lock, RotateCcw, Send } from 'lucide-react'
 import { chatWithAgent, GenerationError, type ChatBooking, type ChatTurn } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
+import { play } from '@/lib/sound'
 import type { Agent } from '@/lib/types'
 
 interface Bubble { id: number; from: 'me' | 'bot' | 'booking'; text: string; at: Date; booking?: ChatBooking }
@@ -57,14 +58,16 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
     setBubbles(history)
     setInput('')
     setTyping(true)
+    play('send')
     try {
       const { reply, booking } = await chatWithAgent(agent.id, toTurns(history))
       const parts = splitReply(reply)
       for (let i = 0; i < parts.length; i++) {
         if (i > 0) await wait(Math.min(1500, 500 + parts[i].length * 12)) // "escribiendo…" entre burbujas
         setBubbles((prev) => [...prev, { id: ++seq.current, from: 'bot', text: parts[i], at: new Date() }])
+        play('receive')
       }
-      if (booking) setBubbles((prev) => [...prev, { id: ++seq.current, from: 'booking', text: '', at: new Date(), booking }])
+      if (booking) { setBubbles((prev) => [...prev, { id: ++seq.current, from: 'booking', text: '', at: new Date(), booking }]); setTimeout(() => play('chime'), 250) }
     } catch (e) {
       toast(e instanceof GenerationError ? e.message : 'No se pudo enviar el mensaje. Inténtalo de nuevo.', 'error')
       setBubbles((prev) => prev.filter((b) => b.id !== mine.id))
@@ -95,10 +98,17 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
           <Lock className="mt-0.5 h-3 w-3 flex-none" aria-hidden />Conversación de prueba. Escribe como lo haría un cliente de {agent.business_name}. No se guarda.
         </p>
         {bubbles.map((b) => b.from === 'booking' ? (
-          <div key={b.id} className="mx-auto my-1 w-full max-w-[88%] rounded-xl border border-[#00a884]/40 bg-[#00a884]/10 px-3.5 py-2.5 text-[13px] text-[#cdeee6]">
-            <p className="flex items-center gap-1.5 font-semibold text-[#7fe7cd]"><CalendarCheck className="h-4 w-4" aria-hidden />Cita registrada</p>
-            <p className="mt-1 leading-snug">{[b.booking?.servicio, b.booking?.cuando].filter(Boolean).join(' · ')}</p>
-            {(b.booking?.nombre || b.booking?.telefono) && <p className="text-[#8fb9ae]">{[b.booking?.nombre, b.booking?.telefono].filter(Boolean).join(' · ')}</p>}
+          <div key={b.id} className="relative mx-auto my-2 w-full max-w-[90%] animate-pop-in overflow-hidden rounded-2xl border border-[#00a884]/50 text-[13px] text-[#cdeee6] shadow-[0_8px_30px_rgba(0,168,132,.25)]" style={{ background: 'linear-gradient(135deg, rgba(0,168,132,.28), rgba(0,92,75,.35))' }}>
+            <div className="flex items-center gap-2 border-b border-dashed border-[#00a884]/50 px-3.5 py-2">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-[#00a884] text-white"><CalendarCheck className="h-4 w-4" aria-hidden /></span>
+              <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#7fe7cd]">Cita registrada</p>
+            </div>
+            <div className="space-y-0.5 px-3.5 py-2.5">
+              <p className="text-[15px] font-semibold leading-snug text-white">{b.booking?.servicio ?? 'Cita'}</p>
+              {b.booking?.cuando && <p className="leading-snug">{b.booking.cuando}</p>}
+              {(b.booking?.nombre || b.booking?.telefono) && <p className="text-[#8fb9ae]">{[b.booking?.nombre, b.booking?.telefono].filter(Boolean).join(' · ')}</p>}
+            </div>
+            <span aria-hidden className="absolute -left-2 top-[38px] h-4 w-4 rounded-full bg-[#0b141a]" /><span aria-hidden className="absolute -right-2 top-[38px] h-4 w-4 rounded-full bg-[#0b141a]" />
           </div>
         ) : (
           <div key={b.id} className={`max-w-[82%] whitespace-pre-wrap rounded-lg px-3 py-1.5 text-[14.5px] leading-snug text-[#e9edef] ${b.from === 'me' ? 'self-end rounded-tr-none bg-[#005c4b]' : 'self-start rounded-tl-none bg-[#202c33]'}`}>
@@ -126,7 +136,7 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} disabled={limitReached} autoComplete="off"
           aria-label="Escribe un mensaje" placeholder={limitReached ? 'Reinicia la conversación para seguir probando' : 'Escribe un mensaje'}
           className="min-w-0 flex-1 rounded-full bg-[#2a3942] px-4 py-2.5 text-[15px] text-[#e9edef] placeholder:text-[#8696a0] focus:outline-none" />
-        <button type="submit" disabled={!input.trim() || typing || limitReached} aria-label="Enviar"
+        <button type="submit" data-silent disabled={!input.trim() || typing || limitReached} aria-label="Enviar"
           className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[#00a884] text-white transition hover:bg-[#06cf9c] disabled:opacity-40"><Send className="h-[18px] w-[18px]" /></button>
       </form>
     </div>

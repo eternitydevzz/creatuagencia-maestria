@@ -6,6 +6,9 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { ToastProvider } from '@/hooks/useToast'
 import App from './App'
 import './index.css'
+import { installClickSound } from '@/lib/sound'
+
+installClickSound()
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } })
 

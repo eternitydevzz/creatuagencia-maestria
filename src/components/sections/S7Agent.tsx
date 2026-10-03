@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { CalendarCheck, ShieldCheck, Zap, type LucideIcon } from 'lucide-react'
 import { buildAgentPrompt, nowText } from '@shared/agent'
-import { CopyButton, Spinner } from '@/components/ui/bits'
+import { CopyButton, Skeleton } from '@/components/ui/bits'
 import { Tree } from '@/components/ui/Tree'
 import Deliverable, { Expandable, Highlights } from '@/components/Deliverable'
 import { useAgent } from '@/hooks/useData'
@@ -24,13 +24,13 @@ export default function S7Agent({ roadmap, refresh }: SectionProps) {
   const cfg = agent?.config
   const missing = roadmap.selected_nichos.length === 0 && 'Primero elige tu nicho (paso 2): el agente se crea para un negocio típico de ese nicho.'
 
-  if (isLoading) return <div className="grid place-items-center py-10"><Spinner className="h-6 w-6 text-accent-hi" /></div>
+  if (isLoading) return <Skeleton rows={3} />
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="stagger grid gap-3 sm:grid-cols-3">
         {BENEFITS.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="card p-4">
+          <div key={title} className="card card-lift p-4">
             <span className="tile-icon grid h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
             <p className="mt-3 font-semibold text-white">{title}</p>
             <p className="mt-1 text-sm text-muted">{text}</p>

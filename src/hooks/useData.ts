@@ -93,6 +93,20 @@ export function useConversations(connectionIds: string[]) {
   })
 }
 
+/** Último mensaje de cada conversación (para la vista previa de la lista). */
+export function usePreviews(conversationIds: string[]) {
+  return useQuery({
+    queryKey: ['wa-previews', conversationIds.join(',')], enabled: conversationIds.length > 0, refetchInterval: 15000,
+    queryFn: async (): Promise<Record<string, WaMessage & { conversation_id: string }>> => {
+      const { data, error } = await supabase.from('wa_messages').select('id,conversation_id,role,content,created_at').in('conversation_id', conversationIds).order('id', { ascending: false }).limit(120)
+      if (error) throw error
+      const out: Record<string, WaMessage & { conversation_id: string }> = {}
+      for (const m of data as Array<WaMessage & { conversation_id: string }>) out[m.conversation_id] ??= m
+      return out
+    },
+  })
+}
+
 export async function fetchMessages(conversationId: string): Promise<WaMessage[]> {
   const { data, error } = await supabase.from('wa_messages').select('id,role,content,created_at').eq('conversation_id', conversationId).order('id', { ascending: false }).limit(40)
   if (error) throw error

@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { generate, GenerationError, type GenerationResult } from '@/lib/api'
 import { useToast } from './useToast'
+import { play } from '@/lib/sound'
 import type { EditablePatch, GenerationKind, Roadmap } from '@/lib/types'
 
 export interface SectionProps {
@@ -32,6 +33,7 @@ export function useGenerate(roadmapId: string, refresh: () => Promise<void>) {
       const res = await generate<T>(kind, roadmapId, params)
       if (opts.refresh !== false) await refresh()
       if (!opts.silent) toast('Listo: generado con IA')
+      play('receive')
       return res
     } catch (e) {
       const err = e instanceof GenerationError ? e : new GenerationError('internal_error', 'Algo ha fallado. Inténtalo de nuevo.')

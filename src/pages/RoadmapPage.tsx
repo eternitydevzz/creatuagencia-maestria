@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Plus } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import { play } from '@/lib/sound'
 import { useRoadmap, useRoadmaps } from '@/hooks/useData'
 import type { SectionProps } from '@/hooks/useGenerate'
 import { SECTIONS, completedCount, isSectionDone, progressOf, type SectionId } from '@/lib/gamification'
@@ -64,6 +65,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
   useEffect(() => {
     if (!roadmap) return
     if (doneCount.current !== null && done > doneCount.current) {
+      play(done === SECTIONS.length ? 'chime' : 'success')
       confetti({ particleCount: done === SECTIONS.length ? 140 : 60, spread: 80, origin: { y: 0.3 }, colors: ['#0070f8', '#4da3ff', '#ffffff', '#d00008'], disableForReducedMotion: true })
       if (done === SECTIONS.length && roadmap.status !== 'completed') update({ status: 'completed' })
     }
@@ -96,7 +98,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
         <div className="min-w-0 flex-1"><p className="truncate text-xl font-bold text-white sm:text-2xl">{roadmap.project_name}</p><p className={`text-xs ${saveFailed ? 'text-[#ffb3b3]' : 'text-muted'}`}>{saveFailed ? 'No se pudo guardar. Reintentando…' : saving ? 'Guardando…' : 'Guardado automáticamente'}</p></div>
         <div className="flex w-full items-center gap-4 sm:w-96">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del roadmap">
-            <div className="h-full rounded-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-500" style={{ width: `${pct}%` }} />
+            <div className="bar-shine h-full rounded-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-700" style={{ width: `${pct}%` }} />
           </div>
           <div className="text-right"><p className="text-3xl font-bold leading-none text-white">{pct}%</p><p className="mt-1 font-mono text-xs text-muted">{done} de {SECTIONS.length}</p></div>
         </div>
@@ -123,7 +125,7 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
 
         <div className="min-w-0 flex-1">
           <div key={current.id} className="section-shell animate-step-in">
-            <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} />
+            <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} eyebrow={`Paso ${current.id} de ${SECTIONS.length}`} />
             <View {...props} />
           </div>
           <div className="mt-6 flex justify-between gap-3">

@@ -30,14 +30,40 @@ export function AiButton({ onClick, busy, cost, children, disabled, className = 
   )
 }
 
-export function SectionHeader({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: ReactNode; subtitle?: ReactNode }) {
+export function SectionHeader({ icon: Icon, title, subtitle, eyebrow }: { icon: LucideIcon; title: ReactNode; subtitle?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-6 flex items-start gap-3.5 border-b border-white/10 pb-5">
-      <span className="tile-icon mt-0.5 hidden sm:grid"><Icon className="h-5 w-5" /></span>
+    <div className="hero-panel mb-6 flex items-start gap-4 rounded-2xl border border-white/10 p-5">
+      <span className="tile-hero mt-0.5 hidden sm:grid"><Icon className="h-6 w-6" strokeWidth={1.75} /></span>
       <div>
+        {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
         <h2 className="text-xl font-bold sm:text-2xl">{title}</h2>
-        {subtitle && <p className="mt-1 max-w-3xl text-sm text-muted sm:text-base">{subtitle}</p>}
+        {subtitle && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">{subtitle}</p>}
       </div>
+    </div>
+  )
+}
+
+/** Anillo de progreso (0 a 1) con el porcentaje en el centro. */
+export function ProgressRing({ value, size = 96, stroke = 8, children }: { value: number; size?: number; stroke?: number; children?: ReactNode }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r
+  const v = Math.min(1, Math.max(0, value))
+  return (
+    <div className="relative grid flex-none place-items-center" style={{ width: size, height: size }} role="img" aria-label={`${Math.round(v * 100)} % completado`}>
+      <svg width={size} height={size} className="-rotate-90">
+        <defs><linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#4da3ff" /><stop offset="100%" stopColor="#8cc6ff" /></linearGradient></defs>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#ring)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v)} style={{ transition: 'stroke-dashoffset .8s cubic-bezier(.16,1,.3,1)' }} />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center">{children ?? <span className="text-xl font-bold text-white">{Math.round(v * 100)}%</span>}</div>
+    </div>
+  )
+}
+
+/** Marcador de posición mientras cargan los datos: líneas con brillo que recorre. */
+export function Skeleton({ rows = 3, className = '' }: { rows?: number; className?: string }) {
+  return (
+    <div className={`space-y-3 ${className}`} role="status" aria-label="Cargando">
+      {Array.from({ length: rows }, (_, i) => <div key={i} className="skeleton h-16" style={{ width: `${100 - i * 8}%` }} />)}
     </div>
   )
 }
@@ -48,8 +74,13 @@ export function Avatar({ name, className = 'h-9 w-9 text-sm' }: { name?: string 
   return <span aria-hidden className={`grid flex-none place-items-center rounded-full bg-accent font-bold text-white ${className}`}>{initials}</span>
 }
 
-export function Empty({ children }: { children: ReactNode }) {
-  return <div className="rounded-2xl border border-dashed border-line px-5 py-8 text-center text-sm text-muted">{children}</div>
+export function Empty({ children, icon: Icon = Sparkles }: { children: ReactNode; icon?: LucideIcon }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line px-5 py-9 text-center text-sm text-muted">
+      <span className="tile-icon grid h-11 w-11 animate-float"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
+      <p className="max-w-md">{children}</p>
+    </div>
+  )
 }
 
 const STATUS = {

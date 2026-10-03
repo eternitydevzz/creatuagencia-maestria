@@ -1,9 +1,10 @@
 import { NavLink, Link } from 'react-router-dom'
-import { FolderOpen, LayoutDashboard, LogOut, Map, Settings as Cog, Coins } from 'lucide-react'
+import { FolderOpen, LayoutDashboard, LogOut, Map, Settings as Cog, Coins, Volume2, VolumeX } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
 import { computeXp, levelFor } from '@/lib/gamification'
 import { Avatar } from '@/components/ui/bits'
+import { useSound } from '@/hooks/useSound'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -20,6 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const xp = computeXp(roadmaps ?? [], gens ?? 0)
   const lvl = levelFor(xp)
   const low = (profile?.credits ?? 99) <= 5
+  const sound = useSound()
 
   return (
     <div className="min-h-screen ">
@@ -44,6 +46,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Avatar name={profile?.full_name ?? profile?.email} />
               <span className="hidden max-w-[170px] text-left leading-tight 2xl:block"><span className="block truncate text-sm font-bold text-white">{profile?.full_name ?? '…'}</span><span className="block truncate text-xs text-muted">{profile?.email}</span></span>
             </div>
+            <button type="button" data-silent onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? 'Silenciar sonidos' : 'Activar sonidos'} title={sound.on ? 'Silenciar sonidos' : 'Activar sonidos'}
+              className="rounded-xl p-2 text-muted transition hover:bg-white/5 hover:text-white">{sound.on ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}</button>
             <button type="button" className="rounded-xl p-2 text-muted hover:bg-white/5 hover:text-white" onClick={() => void signOut()} aria-label="Cerrar sesión" title="Cerrar sesión"><LogOut className="h-5 w-5" /></button>
           </div>
         </div>

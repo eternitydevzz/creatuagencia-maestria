@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { play } from '@/lib/sound'
 
 interface Toast { id: number; text: string; kind: 'ok' | 'error' }
 const Ctx = createContext<{ toast: (text: string, kind?: Toast['kind']) => void } | null>(null)
@@ -8,6 +9,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Toast[]>([])
   const toast = useCallback((text: string, kind: Toast['kind'] = 'ok') => {
     const id = Date.now() + Math.random()
+    if (kind === 'error') play('error')
     setItems((l) => [...l, { id, text, kind }])
     setTimeout(() => setItems((l) => l.filter((t) => t.id !== id)), kind === 'error' ? 6000 : 2800)
   }, [])
