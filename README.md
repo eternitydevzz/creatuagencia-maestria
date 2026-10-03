@@ -1,11 +1,11 @@
 # MaestrIA · Constructor de Agencia IA
 
-Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 8 pasos y entrega
+Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 9 pasos y entrega
 tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virtual de WhatsApp para enseñar a los clientes:
 
 1. Problemas que resuelves · 2. Tu agencia y tu nicho · 3. Tu cliente en números (leads, conversión, ticket, modo de precios)
 4. **Cliente ideal** · 5. **Oferta** (usa el cliente ideal) · 6. **Landing** de venta premium (usa los dos anteriores)
-7. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 8. **Probar el agente**: simulador de WhatsApp para hablar con ella
+7. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 8. **Probar el agente**: simulador de WhatsApp para hablar con ella · 9. **Demo para clientes**: pega la web de un negocio (o escribe sus datos) y sale su propia secretaria
 
 ## Cómo está organizado
 
@@ -35,7 +35,7 @@ resultado en el proyecto y, si algo falla, **devuelve los créditos**.
 | 1 | problema personalizado, sugerir nichos |
 | 2 | cliente ideal |
 | 3 | oferta, landing |
-| 1 | agente (ficha del negocio de ejemplo) |
+| 1 | agente (ficha del negocio de ejemplo), demo para un cliente |
 
 El chat con el agente (paso 8) no cuesta créditos: usa un modelo pequeño (`AGENT_MODEL`, Haiku por defecto) y está limitado por ritmo
 (`AGENT_CHAT_PER_MINUTE`, `AGENT_CHAT_PER_HOUR`) y por tamaño de conversación (40 mensajes).
@@ -46,6 +46,7 @@ da para regenerar cada entregable varias veces. Se ajustan con `scripts/invite.m
 ### Agentes: cómo funcionan
 - La ficha del negocio (servicios, precios, horario, políticas, preguntas frecuentes, nombre y tono de la secretaria) se genera con `generate` (tipo `agent`) y se guarda en la tabla `agents`.
 - Las **instrucciones del chat** no se guardan: `supabase/functions/_shared/agent.ts` las construye a partir de la ficha (la Edge Function `agent-chat` las usa para responder y el navegador las muestra para copiarlas).
+- La **demo desde una URL** (`demo_agent`) descarga la web en el servidor (`generate/fetchSite.ts`) y la IA extrae la ficha usando solo lo que consta. Defensas contra SSRF: solo http/https en 80/443, sin usuario en la URL, se resuelve el DNS y se rechazan IP privadas, de bucle local, de enlace local y de metadatos de la nube, las redirecciones (máx. 3) se validan una a una, y hay límite de tiempo (20 s), de tamaño (1,5 MB) y solo HTML. Si la descarga falla no se cobra. Las fichas se limpian y se acotan antes de guardarse (el texto de una web ajena acaba dentro de las instrucciones del chat). Máximo 10 demos por proyecto. `FETCH_ALLOW_HOSTS` es solo para pruebas locales: en producción, vacío.
 - `agent-chat` es sin estado: el navegador envía la conversación y recibe la siguiente respuesta. Las conversaciones no se guardan.
 
 ## Desarrollo local
@@ -75,7 +76,7 @@ SUPABASE_URL=http://127.0.0.1:55421 SUPABASE_SERVICE_ROLE_KEY=<clave secreta loc
 ```bash
 SUPABASE_URL=… SUPABASE_ANON_KEY=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/e2e.mjs
 ```
-Ejecuta unas 80 comprobaciones: créditos, seguridad entre alumnos, validaciones, reembolso si la IA falla, límite de ritmo, registro bloqueado, doble clic, respuestas de la IA con forma errónea, generaciones colgadas…
+Ejecuta unas 110 comprobaciones: créditos, seguridad entre alumnos, validaciones, reembolso si la IA falla, límite de ritmo, registro bloqueado, doble clic, respuestas de la IA con forma errónea, generaciones colgadas…
 Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 
 ## Puesta en producción
