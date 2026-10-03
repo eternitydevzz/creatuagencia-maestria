@@ -22,7 +22,7 @@ export function Privacy() {
   return (
     <Page title="Política de privacidad">
       <section><h2>1. Quién es el responsable</h2>
-        <p>{LEGAL.company} ({LEGAL.taxId}), con domicilio en {LEGAL.address}. Para cualquier asunto de privacidad: {LEGAL.email}.</p></section>
+        <p>{LEGAL.company} ({LEGAL.taxId}), con domicilio en {LEGAL.address}. Para cualquier asunto de privacidad: {LEGAL.email}. Somos una empresa con sede en Estados Unidos: tus datos se tratan allí y en los países de nuestros proveedores.</p></section>
       <section><h2>2. Qué datos tratamos y para qué</h2>
         <ul>
           <li><b>Tu cuenta:</b> email y nombre. Para darte acceso y gestionar el programa. Base legal: ejecución del contrato.</li>
