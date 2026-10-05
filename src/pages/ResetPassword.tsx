@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { MIN_PASSWORD_LENGTH, useAuth } from '@/hooks/useAuth'
 import { Spinner } from '@/components/ui/bits'
 
 export default function ResetPassword() {
@@ -14,7 +14,7 @@ export default function ResetPassword() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setError('')
-    if (pw.length < 10) return setError('Usa al menos 10 caracteres.')
+    if (pw.length < MIN_PASSWORD_LENGTH) return setError(`Usa al menos ${MIN_PASSWORD_LENGTH} caracteres.`)
     if (pw !== pw2) return setError('Las contraseñas no coinciden.')
     setBusy(true)
     const { error } = await supabase.auth.updateUser({ password: pw })
@@ -32,8 +32,8 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div className="text-center"><h1 className="text-xl font-bold">Crea tu contraseña</h1><p className="mt-1 text-sm text-muted">Con ella entrarás siempre a tu cuenta de MaestrIA.</p></div>
-            <label className="block text-sm font-semibold">Contraseña nueva<input type="password" required minLength={10} autoComplete="new-password" className="field mt-1.5 font-normal" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
-            <label className="block text-sm font-semibold">Repítela<input type="password" required minLength={10} autoComplete="new-password" className="field mt-1.5 font-normal" value={pw2} onChange={(e) => setPw2(e.target.value)} /></label>
+            <label className="block text-sm font-semibold">Contraseña nueva<input type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" className="field mt-1.5 font-normal" value={pw} onChange={(e) => setPw(e.target.value)} /></label>
+            <label className="block text-sm font-semibold">Repítela<input type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" className="field mt-1.5 font-normal" value={pw2} onChange={(e) => setPw2(e.target.value)} /></label>
             {error && <p role="alert" className="text-sm text-[#ff8f8f]">{error}</p>}
             <button className="btn w-full" type="submit" disabled={busy}>{busy ? <Spinner /> : null}Guardar y entrar</button>
           </form>

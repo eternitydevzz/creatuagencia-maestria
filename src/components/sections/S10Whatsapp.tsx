@@ -22,7 +22,7 @@ function ago(iso: string): string {
 
 /** "viernes a las 10:00" → { day: 'Viernes', time: '10:00' } (el agente escribe el día y la hora en texto libre). */
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-export function parseWhen(text: string | null): { day?: string; time?: string } {
+function parseWhen(text: string | null): { day?: string; time?: string } {
   if (!text) return {}
   const day = text.match(/\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|hoy|ma[ñn]ana)\b/i)?.[1]
   const t = text.match(/\b(\d{1,2})\s*[:.h]\s*(\d{2})\b/) ?? text.match(/\ba las (\d{1,2})\b/i)
@@ -99,7 +99,7 @@ export default function S10Whatsapp({ roadmap, refresh }: SectionProps) {
 function Stat({ icon: Icon, value, label }: { icon: typeof Sparkles; value: number; label: string }) {
   return (
     <div className="card flex items-center gap-3 p-3.5">
-      <span className="tile-icon grid h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+      <span className="tile-icon h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
       <div><p className="text-2xl font-bold leading-none text-white">{value}</p><p className="mt-1 text-xs text-muted">{label}</p></div>
     </div>
   )

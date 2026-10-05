@@ -38,8 +38,9 @@ function Panel() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy('create')
     try {
-      const r = await adminStudents<{ student: Credentials }>({ action: 'create', email, name, credits })
+      const r = await adminStudents<{ student: Credentials; warning?: string }>({ action: 'create', email, name, credits })
       setCreds({ ...r.student, name }); setEmail(''); setName(''); play('success'); await reload()
+      if (r.warning) toast(r.warning, 'error')
     } catch (err) { fail(err) } finally { setBusy(null) }
   }
   const grant = async (s: Student) => {

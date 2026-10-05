@@ -4,8 +4,8 @@
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { json } from '../_shared/cors.ts'
-import type { AgentConfig } from '../_shared/agent.ts'
-import { agentReply, type Turn } from '../_shared/agentReply.ts'
+import { mergeTurns, splitReply, type AgentConfig, type Turn } from '../_shared/agent.ts'
+import { agentReply } from '../_shared/agentReply.ts'
 import { mapStatus, phoneOf, waha } from '../_shared/waha.ts'
 
 const SECRET = Deno.env.get('WA_WEBHOOK_SECRET') ?? ''
@@ -38,22 +38,11 @@ type Row = { role: 'user' | 'assistant' | 'owner'; content: string }
 
 /** Historial de las últimas 24 h como turnos alternos que empiezan y acaban con el cliente (lo que exige la API). */
 function toTurns(rows: Row[]): Turn[] {
-  const turns: Turn[] = []
-  for (const r of rows) {
-    const role = r.role === 'user' ? 'user' : 'assistant' // lo que escribe el dueño cuenta como respuesta del negocio
-    const last = turns[turns.length - 1]
-    if (last && last.role === role) last.content += `\n\n${r.content}`
-    else turns.push({ role, content: r.content })
-  }
+  // lo que escribe el dueño desde su móvil cuenta como respuesta del negocio
+  const turns = mergeTurns(rows.map((r): Turn => ({ role: r.role === 'user' ? 'user' : 'assistant', content: r.content })))
   while (turns.length && turns[0].role !== 'user') turns.shift()
   while (turns.length && turns[turns.length - 1].role !== 'user') turns.pop()
   return turns
-}
-
-function splitReply(reply: string): string[] {
-  const parts = reply.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
-  if (parts.length <= 4) return parts.length ? parts : [reply]
-  return [...parts.slice(0, 3), parts.slice(3).join('\n\n')]
 }
 
 // deno-lint-ignore no-explicit-any
@@ -147,7 +136,6 @@ async function onMessage(evt: any) {
   }
   await admin.from('wa_messages').insert({ user_id: conn.user_id, conversation_id: conv.id, role: 'assistant', content: reply.slice(0, 2000) })
   await admin.from('whatsapp_connections').update({ replies_day: today, replies_today: repliesToday + 1 }).eq('id', conn.id)
-  repliesToday++
   if (booking) {
     await admin.from('bookings').insert({
       user_id: conn.user_id, connection_id: conn.id, conversation_id: conv.id, name: booking.nombre ?? conv.contact_name ?? null,

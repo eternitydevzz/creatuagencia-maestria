@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Bot, Check, Eye, Coins, Gem, Globe, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
-import { SECTIONS, completedCount, computeXp, isSectionDone, levelFor } from '@/lib/gamification'
+import { SECTIONS, completedCount, computeXp, isSectionDone, levelFor, stepNo } from '@/lib/gamification'
 import { ProgressRing, Skeleton, Spinner, StatusBadge } from '@/components/ui/bits'
 import { loadSample } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
@@ -20,7 +20,7 @@ const GAINS: Array<{ icon: LucideIcon; title: string; text: string }> = [
 function Tile({ icon: Icon, label, value, hint }: { icon: LucideIcon; label: string; value: string; hint?: string }) {
   return (
     <div className="card flex items-center gap-3 p-3.5 sm:gap-3.5 sm:p-4">
-      <span className="tile-icon grid h-11 w-11"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
+      <span className="tile-icon h-11 w-11"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
       <div className="min-w-0"><p className="truncate text-xl font-bold leading-none text-white sm:text-2xl">{value}</p><p className="mt-1 text-xs leading-tight text-muted">{label}{hint ? ` · ${hint}` : ''}</p></div>
     </div>
   )
@@ -36,7 +36,7 @@ function PathStrip({ project, next }: { project: RoadmapSummary; next: number })
         const Icon = s.icon
         return (
           <li key={s.id} className="flex flex-none items-center">
-            <Link to={`/roadmap/${project.id}`} title={`${s.id}. ${s.title}`} aria-label={`${s.id}. ${s.title}${ok ? ' (hecho)' : isNext ? ' (siguiente)' : ''}`}
+            <Link to={`/roadmap/${project.id}`} title={`${stepNo(s.id)}. ${s.title}`} aria-label={`${stepNo(s.id)}. ${s.title}${ok ? ' (hecho)' : isNext ? ' (siguiente)' : ''}`}
               className={`grid h-10 w-10 place-items-center rounded-full border-2 transition hover:scale-110 ${ok ? 'border-accent-hi bg-accent-hi text-bg' : isNext ? 'animate-ping-soft border-accent-hi bg-accent text-white' : 'border-white/20 text-muted'}`}>
               {ok ? <Check className="h-4 w-4" strokeWidth={3.5} /> : <Icon className="h-4 w-4" strokeWidth={1.75} />}
             </Link>
@@ -81,7 +81,7 @@ export default function Dashboard() {
             <p className="mt-2 max-w-xl text-muted">
               {!latest ? 'Crea tu primer proyecto y en unos minutos tendrás tu cliente ideal, tu oferta, tu landing y un agente de WhatsApp listo para enseñar.'
                 : finished ? `«${latest.project_name}» está completo. Crea una demo para tu próximo cliente.`
-                  : <>Vas por el paso <b className="text-white">{next.id}: {next.title}</b> de «{latest.project_name}».</>}
+                  : <>Vas por el paso <b className="text-white">{stepNo(next.id)}: {next.title}</b> de «{latest.project_name}».</>}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

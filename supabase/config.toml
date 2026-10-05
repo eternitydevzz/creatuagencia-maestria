@@ -63,8 +63,9 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
+# Sin datos de arranque: los alumnos se crean con scripts/invite.mjs y el proyecto de ejemplo con la función load-sample.
+# (Estaba en true apuntando a ./seed.sql, que no existe.)
+enabled = false
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
 sql_paths = ["./seed.sql"]
@@ -216,8 +217,10 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = false
+# OJO: esto es "proveedor de email ACTIVO", no "registro abierto": con false nadie puede iniciar sesión
+# (GoTrue rechaza el grant de contraseña con "Email logins are disabled"). El registro público se cierra
+# arriba, con [auth] enable_signup = false. Mismo valor que en deploy/supabase-prod-auth/supabase/config.toml.
+enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true

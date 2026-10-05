@@ -9,7 +9,7 @@ project_id = "creatuagencia-maestria"
 enable_signup = false
 site_url = "https://creatuagencia-maestria.onrender.com"
 additional_redirect_urls = ["https://creatuagencia-maestria.onrender.com", "https://creatuagencia-maestria.onrender.com/reset-password"]
-minimum_password_length = 8
+minimum_password_length = 10
 
 [auth.email]
 enable_signup = true

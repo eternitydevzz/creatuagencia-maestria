@@ -83,7 +83,7 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
             return (
               <article key={l.id} className="card card-lift flex flex-col p-5">
                 <div className="flex items-start gap-3">
-                  <span className="tile-icon grid h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                  <span className="tile-icon h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   <div className="min-w-0"><h4 className="font-semibold leading-snug text-white">{l.name}</h4><p className="mt-0.5 text-sm text-muted">{l.description}</p></div>
                 </div>
                 <div className="mt-auto flex items-end justify-between gap-3 pt-5">

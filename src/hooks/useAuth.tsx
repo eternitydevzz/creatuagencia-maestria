@@ -2,6 +2,11 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+/** Mínimo de caracteres de una contraseña. Debe coincidir con `minimum_password_length` en supabase/config.toml
+ *  (y en deploy/supabase-prod-auth/supabase/config.toml): si el servidor es más estricto, el formulario deja
+ *  enviar contraseñas que luego rechaza. */
+export const MIN_PASSWORD_LENGTH = 10
+
 interface AuthCtx { session: Session | null; loading: boolean; needsPassword: boolean; clearNeedsPassword: () => void; signOut: () => Promise<void> }
 const Ctx = createContext<AuthCtx | null>(null)
 

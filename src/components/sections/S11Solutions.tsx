@@ -1,10 +1,9 @@
-import { ArrowRight, Zap } from 'lucide-react'
+import { ArrowRight, Lightbulb, Zap } from 'lucide-react'
 import { problemLabel, solutionParts } from '@shared/catalog'
 import { Empty } from '@/components/ui/bits'
 import { problemIcon } from '@/lib/icons'
 import { stepNo } from '@/lib/gamification'
 import type { SectionProps } from '@/hooks/useGenerate'
-import { Lightbulb } from 'lucide-react'
 
 /** Cada problema elegido, convertido en la solución que el alumno vende: qué incluye y el cambio que consigue. */
 export default function S11Solutions({ roadmap }: SectionProps) {

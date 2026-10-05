@@ -71,10 +71,19 @@ Deno.serve(async (req) => {
       }
       // El alta automática da los créditos iniciales; aquí se ajustan a los que se pidieron
       const { data: p } = await admin.from('profiles').select('credits').eq('id', data.user.id).single()
-      const delta = credits - (p?.credits ?? 0)
-      if (delta > 0) await admin.rpc('refund_credits', { p_user: data.user.id, p_amount: delta, p_reason: 'admin: créditos del alta' })
-      else if (delta < 0) await admin.rpc('spend_credits', { p_user: data.user.id, p_cost: -delta, p_reason: 'admin: ajuste del alta' })
-      return json({ student: { id: data.user.id, email, password, credits } })
+      const granted = p?.credits ?? 0
+      const delta = credits - granted
+      // La cuenta ya existe: si el ajuste falla no se deshace el alta, pero se informa del saldo real (no del pedido).
+      const adjust = delta > 0
+        ? await admin.rpc('refund_credits', { p_user: data.user.id, p_amount: delta, p_reason: 'admin: créditos del alta' })
+        : delta < 0
+          ? await admin.rpc('spend_credits', { p_user: data.user.id, p_cost: -delta, p_reason: 'admin: ajuste del alta' })
+          : { data: granted, error: null }
+      if (adjust.error) console.error('[admin-students] ajuste de créditos del alta', adjust.error.message)
+      return json({
+        student: { id: data.user.id, email, password, credits: typeof adjust.data === 'number' ? adjust.data : granted },
+        ...(adjust.error ? { warning: `La cuenta se creó, pero los créditos quedaron en ${granted} en vez de ${credits}. Ajústalos con el botón de créditos.` } : {}),
+      })
     }
 
     if (action === 'grant') {

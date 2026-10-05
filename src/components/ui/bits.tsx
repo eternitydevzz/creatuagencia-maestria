@@ -77,7 +77,7 @@ export function Avatar({ name, className = 'h-9 w-9 text-sm' }: { name?: string 
 export function Empty({ children, icon: Icon = Sparkles }: { children: ReactNode; icon?: LucideIcon }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line px-5 py-9 text-center text-sm text-muted">
-      <span className="tile-icon grid h-11 w-11 animate-float"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
+      <span className="tile-icon h-11 w-11 animate-float"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
       <p className="max-w-md">{children}</p>
     </div>
   )
@@ -89,7 +89,7 @@ const STATUS = {
   completed: { label: 'Completado', cls: 'border-accent-glow/60 text-accent-glow bg-accent/20' },
 } as const
 export function StatusBadge({ status }: { status: keyof typeof STATUS }) {
-  const s = STATUS[status] ?? STATUS.draft
+  const s = STATUS[status]
   return <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${s.cls}`}>{s.label}</span>
 }
 

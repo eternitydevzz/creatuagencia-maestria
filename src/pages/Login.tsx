@@ -16,7 +16,6 @@ export default function Login() {
   if (session && needsPassword) return <Navigate to="/reset-password" replace />
   if (session) return <Navigate to="/" replace />
 
-  const redirectTo = `${window.location.origin}/reset-password`
   const wrap = async (fn: () => Promise<string | void>) => {
     setBusy(true); setError(''); setInfo('')
     try { const msg = await fn(); if (msg) setInfo(msg) } catch (e) { setError(e instanceof Error ? e.message : 'Algo ha fallado') } finally { setBusy(false) }
@@ -33,7 +32,7 @@ export default function Login() {
   })
   const forgot = () => void wrap(async () => {
     if (!email.trim()) throw new Error('Escribe tu email primero.')
-    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` })
     return 'Si tu email está dado de alta, te hemos enviado un enlace para crear una contraseña nueva.'
   })
 

@@ -32,7 +32,7 @@ export default function S7Agent({ roadmap, refresh }: SectionProps) {
       <div className="stagger grid gap-3 sm:grid-cols-3">
         {BENEFITS.map(({ icon: Icon, title, text }) => (
           <div key={title} className="card card-lift p-4">
-            <span className="tile-icon grid h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+            <span className="tile-icon h-10 w-10"><Icon className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
             <p className="mt-3 font-semibold text-white">{title}</p>
             <p className="mt-1 text-sm text-muted">{text}</p>
           </div>

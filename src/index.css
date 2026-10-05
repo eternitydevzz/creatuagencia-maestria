@@ -64,8 +64,8 @@
   /* Detalles */
   .eyebrow { @apply font-mono text-[11px] font-semibold uppercase tracking-[.18em] text-accent-glow/90; }
   .pill { @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white; }
-  .tile-icon { @apply h-11 w-11 flex-none place-items-center rounded-xl border border-white/10 bg-white/5 text-accent-hi; }
-  .tile-icon-sm { @apply grid h-8 w-8 flex-none place-items-center rounded-lg text-muted transition; }
+  /* El tamaño lo pone cada uso (h-10/h-11), igual que en .tile-hero */
+  .tile-icon { @apply grid flex-none place-items-center rounded-xl border border-white/10 bg-white/5 text-accent-hi; }
 
   /* Ruta de pasos: línea vertical que une los nodos (hecho · activo · pendiente). En móvil, fila con scroll. */
   .step-list { @apply flex list-none gap-1 overflow-x-auto p-0 pb-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:pb-0; margin: 0; }

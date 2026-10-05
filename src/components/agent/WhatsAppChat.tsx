@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarCheck, Lock, RotateCcw, Send } from 'lucide-react'
+import { mergeTurns, splitReply, type Turn } from '@shared/agent'
 import { chatWithAgent, GenerationError, type ChatBooking, type ChatTurn } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
 import { play } from '@/lib/sound'
@@ -14,22 +15,7 @@ const hhmm = (d: Date) => d.toLocaleTimeString('es-ES', { hour: '2-digit', minut
 
 /** Burbujas consecutivas de la secretaria = un solo mensaje del asistente para la API (que exige turnos alternos). */
 function toTurns(bubbles: Bubble[]): ChatTurn[] {
-  const turns: ChatTurn[] = []
-  for (const b of bubbles) {
-    if (b.from === 'booking') continue
-    const role = b.from === 'me' ? 'user' : 'assistant'
-    const last = turns[turns.length - 1]
-    if (last && last.role === role) last.content += `\n\n${b.text}`
-    else turns.push({ role, content: b.text })
-  }
-  return turns
-}
-
-/** Una respuesta larga se reparte en varias burbujas, como escribe una persona en WhatsApp. */
-function splitReply(reply: string): string[] {
-  const parts = reply.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
-  if (parts.length <= 4) return parts.length ? parts : [reply]
-  return [...parts.slice(0, 3), parts.slice(3).join('\n\n')]
+  return mergeTurns(bubbles.filter((b) => b.from !== 'booking').map((b): Turn => ({ role: b.from === 'me' ? 'user' : 'assistant', content: b.text })))
 }
 
 /** Simulador de WhatsApp: el alumno (o su cliente) habla con la secretaria virtual del agente. Las conversaciones no se guardan. */

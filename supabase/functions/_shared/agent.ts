@@ -15,6 +15,26 @@ export interface AgentConfig {
 
 export const DEFAULT_TIMEZONE = 'Europe/Madrid'
 
+export type Turn = { role: 'user' | 'assistant'; content: string }
+
+/** Funde los turnos consecutivos del mismo papel en uno solo: la API exige que usuario y asistente se alternen. */
+export function mergeTurns(items: Turn[]): Turn[] {
+  const turns: Turn[] = []
+  for (const { role, content } of items) {
+    const last = turns[turns.length - 1]
+    if (last && last.role === role) last.content += `\n\n${content}`
+    else turns.push({ role, content })
+  }
+  return turns
+}
+
+/** Una respuesta larga se reparte en varias burbujas, como escribe una persona en WhatsApp. */
+export function splitReply(reply: string): string[] {
+  const parts = reply.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  if (parts.length <= 4) return parts.length ? parts : [reply]
+  return [...parts.slice(0, 3), parts.slice(3).join('\n\n')]
+}
+
 // Límites de la ficha. Los datos de una web ajena acaban dentro de las instrucciones del chat: se acotan por si la web trae
 // texto pensado para manipular al modelo (y para que una ficha no crezca sin control).
 const LIMITS = { short: 160, long: 500, servicios: 12, faq: 8, politicas: 6, datos: 6 }
