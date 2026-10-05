@@ -19,6 +19,9 @@ export type JsonObject = { [k: string]: Json }
 export interface AgencyContact { whatsapp?: string; email?: string }
 export interface AgencySite {
   _meta?: DeliverableMeta
+  /** Dirección visual con la que se pinta la landing (ver lib/agencySite.ts). Opcional: si no viene, se
+   *  deduce de forma determinista del nombre de la agencia, así que las landings ya generadas siguen funcionando. */
+  direccion?: string
   meta?: { title?: string; description?: string }
   nav_cta?: string
   hero?: { eyebrow?: string; titulo?: string; subtitulo?: string; cta?: string; nota?: string; pruebas?: string[] }

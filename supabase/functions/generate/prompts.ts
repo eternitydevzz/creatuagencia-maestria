@@ -193,8 +193,20 @@ Devuelve JSON con esta estructura EXACTA (las cantidades entre paréntesis son o
 }
 
 export function agencySite(c: Ctx): string {
-  return `Escribe todos los textos de la landing de venta de "${agencyOf(c)}", dirigida a empresarios de: ${niche0(c)}. Se publican sobre una plantilla premium ya diseñada (estética tipo Linear o Stripe): tú solo entregas el copy, definitivo y listo para publicar.
+  return `Escribe todos los textos de la landing de venta de "${agencyOf(c)}", dirigida a empresarios de: ${niche0(c)}. Se publican sobre una plantilla premium ya diseñada: tú entregas el copy (definitivo, listo para publicar) y eliges la dirección visual.
 El objetivo único de la página es que el visitante pida una demo o escriba por WhatsApp.
+
+ELIGE LA DIRECCIÓN VISUAL ("direccion") que mejor le hable a este nicho. Cada una cambia paleta, tipografía, fondos Y composición:
+- "tech-blue": oscuro azul, retícula técnica, tarjetas en rejilla, hero centrado. Para nichos técnicos, SaaS, industria, automoción, logística.
+- "violet-dark": casi negro con violeta, tipografía ancha, filas numeradas, hero centrado. Para nichos creativos, marketing, formación, ocio, estética moderna.
+- "soft-light": claro con degradados suaves, dos columnas, mucho aire. Para salud, bienestar, infantil, servicios a familias, clínicas.
+- "editorial": papel crema con serifa, reglas finas en vez de tarjetas, hero a la izquierda. Para despachos, arquitectura, inmobiliaria de alto nivel, consultoría, lujo discreto.
+- "corporate": pizarra con acento ámbar, tabla protagonista, hero a dos columnas. Para abogados, asesorías, finanzas, seguros, B2B tradicional.
+
+LA COMPOSICIÓN CAMBIA SEGÚN LA DIRECCIÓN, así que el copy tiene que funcionar tanto en tarjeta como en fila o a dos columnas:
+- "titulo" de cada punto, beneficio o paso: 2-5 palabras. Es un encabezado, no una frase.
+- "texto" de cada uno: 1-2 frases, máx. 28 palabras. Si no cabe en una tarjeta estrecha, está mal.
+- "coste": etiqueta cortísima con una cifra ("−540 €/mes", "8 h/semana", "12 citas"). Nunca una frase.
 
 CONTEXTO
 ${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
@@ -215,9 +227,10 @@ CÓMO ESCRIBE UNA AGENCIA PREMIUM
 
 Devuelve JSON con esta estructura EXACTA:
 {
+  "direccion": "uno de: tech-blue | violet-dark | soft-light | editorial | corporate",
   "meta": { "title": "máx. 60 caracteres, con el nicho", "description": "máx. 155 caracteres" },
-  "nav_cta": "texto corto del botón del menú",
-  "hero": { "eyebrow": "etiqueta de 3-5 palabras", "titulo": "", "subtitulo": "", "cta": "", "nota": "frase pequeña bajo el botón que quita el miedo", "pruebas": ["(3) garantías cortas de 2-4 palabras: plazo de puesta en marcha, sin permanencia, garantía"] },
+  "nav_cta": "texto corto del botón del menú (1-3 palabras)",
+  "hero": { "eyebrow": "etiqueta de 3-5 palabras", "titulo": "máx. 10 palabras", "subtitulo": "máx. 25 palabras", "cta": "", "nota": "frase pequeña bajo el botón que quita el miedo, máx. 14 palabras", "pruebas": ["(3) garantías de 3-6 palabras que se entiendan sueltas, porque en algunas direcciones van en una tarjeta aparte: plazo de puesta en marcha, sin permanencia, garantía"] },
   "problema": { "titulo": "", "intro": "1-2 frases", "puntos": [{ "titulo": "", "texto": "", "coste": "cifra corta, p. ej. '−540 €/mes'" }] },
   "solucion": { "titulo": "", "texto": "2 frases", "beneficios": [{ "titulo": "", "texto": "" }] },
   "comparativa": { "titulo": "", "columnas": ["Sin sistema", "Contratar a alguien", "Con ${agencyOf(c)}"], "filas": [{ "aspecto": "", "valores": ["", "", ""] }] },
@@ -231,7 +244,7 @@ Devuelve JSON con esta estructura EXACTA:
   "cta_final": { "titulo": "", "texto": "", "cta": "" },
   "footer": "1 frase sobre la agencia y el nicho"
 }
-"problema.puntos": 3 · "solucion.beneficios": 4 · "comparativa.filas": 5 (coste al mes, horario de atención, tiempo de respuesta, seguimiento a los que no compran, qué pasa en temporada alta) · "como_funciona.pasos": 3 · "resultados.cifras": 3 · "faq": 5, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
+"direccion" obligatoria y exactamente uno de los cinco valores. "problema.puntos": 3 · "solucion.beneficios": 4 · "comparativa.filas": 5 (coste al mes, horario de atención, tiempo de respuesta, seguimiento a los que no compran, qué pasa en temporada alta) · "como_funciona.pasos": 3 · "resultados.cifras": 3 · "faq": 5, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
 }
 
 export function agentConfig(c: Ctx): string {
