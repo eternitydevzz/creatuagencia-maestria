@@ -5,6 +5,8 @@ dist
 supabase/.env.local
 supabase/.branches
 supabase/.temp
+# estado temporal que deja la CLI al hacer `config push` sobre el workdir de producción
+deploy/**/.temp
 *.log
 *.tsbuildinfo
 
