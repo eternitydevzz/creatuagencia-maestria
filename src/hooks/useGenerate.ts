@@ -31,9 +31,10 @@ export function useGenerate(roadmapId: string, refresh: () => Promise<void>) {
     setBusy(key, true)
     try {
       const res = await generate<T>(kind, roadmapId, params)
-      if (opts.refresh !== false) await refresh()
+      // El aviso y el sonido no esperan a la recarga: en cuanto responde el servidor, el trabajo ya está hecho y guardado.
       if (!opts.silent) toast('Listo: generado con IA')
       play('receive')
+      if (opts.refresh !== false) await refresh()
       return res
     } catch (e) {
       const err = e instanceof GenerationError ? e : new GenerationError('internal_error', 'Algo ha fallado. Inténtalo de nuevo.')

@@ -523,9 +523,12 @@ const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim(
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]
 console.log('   ', JSON.stringify(one))
 const big = reqs.filter((q) => !/haiku/.test(q.model))
-ok('Los entregables usan el modelo configurado', big.length > 0 && big.every((q) => q.model === 'claude-opus-5-5'))
+const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5-5'
+ok(`Los entregables usan el modelo configurado (${MODEL})`, big.length > 0 && big.every((q) => q.model === MODEL))
 ok('Pide streaming', big.every((q) => q.stream === true))
-ok('No envía temperature ni tool_choice forzado ni thinking desactivado', reqs.every((q) => q.temperature === undefined && q.tool_choice === undefined && q.thinking === undefined))
+// En Sonnet 5.5 thinking:{type:'disabled'} da 400; apagarlo se hace con 'between_tools'. Cualquier otra cosa es un error.
+ok('No envía temperature, ni tool_choice forzado, ni un thinking inválido',
+  reqs.every((q) => q.temperature === undefined && q.tool_choice === undefined && (q.thinking === undefined || q.thinking?.type === 'between_tools')))
 ok('Envía effort en output_config', big.every((q) => ['low', 'medium', 'high'].includes(q.output_config?.effort)))
 ok('La ficha del agente usa el modelo pequeño, sin effort ni fallbacks', reqs.filter((q) => /^Crea el AGENTE/.test(q.first_chars)).every((q) => /haiku/.test(q.model) && q.output_config === undefined && !q.fallbacks && !q.betas))
 

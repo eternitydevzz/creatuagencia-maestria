@@ -11,10 +11,18 @@ import { FetchError, fetchSite } from './fetchSite.ts'
 import { cleanConfig } from '../_shared/agent.ts'
 
 // ---------------------------------------------------------------- configuración
-const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-opus-5-5'
+const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-sonnet-5-5'
 // Los agentes de atención usan un modelo rápido y barato: son fichas cortas, y el chat posterior (agent-chat) usa el mismo
 const AGENT_MODEL = Deno.env.get('AGENT_MODEL') ?? 'claude-haiku-4-5-20251001'
 const USE_FALLBACKS = (Deno.env.get('ANTHROPIC_FALLBACKS') ?? 'on') !== 'off'
+// El razonamiento del modelo es lo que más tiempo consume: la salida útil son ~3.000 tokens, pero el modelo genera muchos
+// más pensando. En Sonnet 5.5 no se puede mandar thinking:{type:'disabled'} (da 400); la forma de apagarlo es
+// 'between_tools', que solo piensa entre llamadas a herramientas — y aquí no hay ninguna, así que no piensa nada.
+// Se admite con effort 'high' o menos (los nuestros son 'low' y 'medium') y no acepta ningún otro campo.
+//   ANTHROPIC_THINKING=off   → sin razonamiento: lo más rápido y barato
+//   ANTHROPIC_THINKING=on    → razonamiento adaptativo (por defecto), acotado por `effort`
+// Mide los dos con scripts/latency.sql antes de fijar uno.
+const THINKING_OFF = (Deno.env.get('ANTHROPIC_THINKING') ?? 'on') === 'off'
 const RATE_LIMIT_PER_MINUTE = Number(Deno.env.get('RATE_LIMIT_PER_MINUTE') ?? 10)
 // Tiempo máximo de una generación. Debe quedar por debajo del límite de la función en tu plan de Supabase (150 s en Free, 400 s en Pro):
 // así falla de forma limpia, con los créditos devueltos, en vez de que la plataforma corte la función a medias.
@@ -86,6 +94,8 @@ async function complete(def: KindDef, system: string, messages: Array<{ role: 'u
     system,
     messages,
     ...(def.effort ? { output_config: { effort: def.effort } } : {}),
+    // Solo para el modelo principal: las fichas de agente van con un modelo pequeño que no admite estos parámetros
+    ...(!def.model && THINKING_OFF ? { thinking: { type: 'between_tools' as const } } : {}),
   }
   const run = async (withFallbacks: boolean) => {
     // Streaming: max_tokens altos y respuestas largas superarían el timeout de una petición normal.
@@ -96,7 +106,10 @@ async function complete(def: KindDef, system: string, messages: Array<{ role: 'u
       : (anthropic.messages as any).stream(base, { signal })
     return await stream.finalMessage()
   }
-  const fallbacks = USE_FALLBACKS && !def.model
+  // Los fallbacks reenvían la misma petición a otro modelo si el actual la rechaza por seguridad. No está documentado que
+  // ese otro modelo acepte 'between_tools', y un 400 ahí tumbaría la generación entera: con el razonamiento apagado,
+  // preferimos quedarnos sin refuerzo (un rechazo por seguridad es rarísimo con este contenido) antes que arriesgar eso.
+  const fallbacks = USE_FALLBACKS && !def.model && !THINKING_OFF
   let msg
   try {
     msg = await run(fallbacks)
@@ -168,24 +181,35 @@ Deno.serve(async (req) => {
     else if (e instanceof SyntaxError) { status = 400; code = 'invalid_json'; message = 'Petición mal formada' }
     console.error('[generate]', code, e instanceof Error ? e.message : e)
 
+    // Nada de aquí abajo puede lanzar: esta función se llama desde el catch de `work()`, y si rechazara, el stream
+    // moriría sin cuerpo y el alumno se quedaría sin respuesta Y sin reembolso. Si la DB falla, lo recoge
+    // `sweep_stale_generations` en la siguiente generación (a los 6 minutos).
     let creditsLeft: number | undefined
-    if (charged > 0 && userId) {
-      const { data } = await admin.rpc('refund_credits', { p_user: userId, p_amount: charged, p_reason: `reembolso: ${code}`, p_generation: generationId })
-      if (typeof data === 'number') creditsLeft = data
-      charged = 0
+    try {
+      if (charged > 0 && userId) {
+        const { data } = await admin.rpc('refund_credits', { p_user: userId, p_amount: charged, p_reason: `reembolso: ${code}`, p_generation: generationId })
+        if (typeof data === 'number') creditsLeft = data
+        charged = 0
+      }
+      if (generationId) await admin.from('generations').update({ status: 'failed', error: `${code}: ${message}`.slice(0, 500), finished_at: new Date().toISOString() }).eq('id', generationId)
+    } catch (inner) {
+      console.error('[generate] fallo al reembolsar o al cerrar la generación', inner instanceof Error ? inner.message : inner)
     }
-    if (generationId) await admin.from('generations').update({ status: 'failed', error: `${code}: ${message}`.slice(0, 500), finished_at: new Date().toISOString() }).eq('id', generationId)
     return { status, payload: { error: code, message, credits_left: creditsLeft } }
   }
 
   try {
     if (!Deno.env.get('ANTHROPIC_API_KEY')) throw new HttpError(503, 'ai_not_configured', 'La IA no está configurada en el servidor')
 
-    const { data: auth } = await userDb.auth.getUser()
+    // La sesión, el cuerpo de la petición y el proyecto no dependen entre sí: se piden a la vez.
+    // (El proyecto se lee con el token del alumno, así que la seguridad por filas sigue mandando aunque la sesión falle.)
+    const rawP = req.text()
+    const authP = userDb.auth.getUser()
+    const { data: auth } = await authP
     if (!auth?.user) throw new HttpError(401, 'unauthorized')
     userId = auth.user.id
 
-    const raw = await req.text()
+    const raw = await rawP
     if (raw.length > 120_000) throw new HttpError(413, 'payload_too_large')
     const body = JSON.parse(raw || '{}')
     const kind = str(body.kind, 40, 'kind')
@@ -245,10 +269,12 @@ Deno.serve(async (req) => {
 
     // ---- límite de ritmo, generación y cobro ----
     // Si una ejecución anterior murió a medias (tiempo máximo de la función), se libera y se devuelven sus créditos.
-    await admin.rpc('sweep_stale_generations', { p_user: userId })
-
+    // El barrido y el conteo del límite de ritmo no dependen entre sí (el conteo va por fecha, no por estado): en paralelo.
     const since = new Date(Date.now() - 60_000).toISOString()
-    const { count } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', since)
+    const [, { count }] = await Promise.all([
+      admin.rpc('sweep_stale_generations', { p_user: userId }),
+      admin.from('generations').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', since),
+    ])
     if ((count ?? 0) >= RATE_LIMIT_PER_MINUTE) throw new HttpError(429, 'rate_limited', 'Vas muy rápido. Espera unos segundos.')
 
     // Un índice único (roadmap_id, kind) sobre las generaciones en curso impide cobrar dos veces lo mismo a la vez.

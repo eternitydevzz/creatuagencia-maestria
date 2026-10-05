@@ -37,7 +37,9 @@ resultado en el proyecto y, si algo falla, **devuelve los créditos**.
 | 3 | oferta, landing |
 | 1 | agente (ficha del negocio de ejemplo), demo para un cliente |
 
-El chat con el agente (paso 8) no cuesta créditos: usa un modelo pequeño (`AGENT_MODEL`, Haiku por defecto) y está limitado por ritmo
+Los entregables usan `ANTHROPIC_MODEL` (Sonnet 5.5 por defecto); `ANTHROPIC_THINKING=off` quita el razonamiento y es la palanca
+más grande de velocidad (mídelo con `scripts/latency.sql`). El chat con el agente (paso 8) no cuesta créditos: usa un modelo
+pequeño (`AGENT_MODEL`, Haiku por defecto) y está limitado por ritmo
 (`AGENT_CHAT_PER_MINUTE`, `AGENT_CHAT_PER_HOUR`) y por tamaño de conversación (40 mensajes).
 
 Cada alumno recibe **30 créditos** al darse de alta (`app_settings.initial_credits`): el mapa completo cuesta unos 10, así que

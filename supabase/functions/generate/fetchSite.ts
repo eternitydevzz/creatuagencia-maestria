@@ -133,9 +133,11 @@ export async function fetchSite(input: string): Promise<{ text: string; url: str
       return [u.toString()]
     } catch { return [] }
   }))].slice(0, 2)
-  for (const l of links) {
-    try { parts.push(`--- ${l}\n${htmlToText((await fetchHtml(l, deadline)).html)}`) } catch { /* una subpágina que falla no impide la demo */ }
-  }
+  // Las subpáginas son independientes: se descargan a la vez en vez de una detrás de otra (hasta 2 x 8 s menos de espera).
+  const extra = await Promise.all(links.map(async (l) => {
+    try { return `--- ${l}\n${htmlToText((await fetchHtml(l, deadline)).html)}` } catch { return '' } // una subpágina que falla no impide la demo
+  }))
+  parts.push(...extra.filter(Boolean))
   const text = parts.join('\n\n').slice(0, MAX_TEXT)
   if (text.replace(/\s/g, '').length < 80) throw new FetchError('url_not_html', 'La web no tiene texto que leer (¿se carga con JavaScript?). Rellena los datos a mano.')
   return { text, url: first.url.toString() }
