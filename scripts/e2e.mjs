@@ -11,6 +11,12 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const MOCK = 'http://127.0.0.1:8787'
 if (!ANON || !SERVICE) { console.error('Faltan SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY'); process.exit(1) }
 
+// El servidor simulado AÑADE al log y nunca lo trunca, así que contiene también las peticiones de ejecuciones
+// anteriores. Nos quedamos con el número de líneas que ya había para leer solo las de esta ejecución: si no,
+// un run con otro modelo o con otros parámetros contamina las comprobaciones de abajo.
+const MOCK_LOG = '/tmp/mock-anthropic-requests.jsonl'
+const LOG_BASE = fs.existsSync(MOCK_LOG) ? fs.readFileSync(MOCK_LOG, 'utf8').split('\n').filter(Boolean).length : 0
+
 let pass = 0, fail = 0
 const ok = (name, cond, extra = '') => { cond ? pass++ : fail++; console.log(`${cond ? '✅' : '❌'} ${name}${!cond && extra ? '  → ' + extra : ''}`) }
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false }, realtime: { transport: WebSocket } })
@@ -96,7 +102,7 @@ for (const k of ['offers', 'proposal', 'sales_kit', 'action_plan', 'demo_prompt'
   if ((await call(A.c, k, rmA.id)).status !== 400) ok(`Tipo eliminado "${k}" → 400`, false)
 ok('Los tipos eliminados (kit, plan, demos, scripts…) responden 400', true)
 
-const log = () => fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+const log = () => fs.readFileSync(MOCK_LOG, 'utf8').split('\n').filter(Boolean).slice(LOG_BASE).map((l) => JSON.parse(l))
 ok('La oferta y la landing reciben los precios de referencia calculados (los mismos que ve el alumno)', log().some((q) => /^Diseña la OFERTA/.test(q.first_chars) && q.price_ref) && log().some((q) => /textos de la landing/.test(q.first_chars) && q.price_ref))
 ok('La oferta se escribe con el cliente ideal como contexto', log().some((q) => /^Diseña la OFERTA/.test(q.first_chars) && q.ideal_ctx))
 ok('La landing se escribe con el cliente ideal y la oferta como contexto', log().some((q) => /textos de la landing/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
@@ -519,7 +525,7 @@ const sm3 = await sample(S2.c)
 ok('Cada alumno tiene su propia copia (otro id) y no ve la del otro', sm3.body.roadmap_id !== sm.body.roadmap_id && ((await S2.c.from('roadmaps').select('id').eq('id', sm.body.roadmap_id)).data ?? []).length === 0)
 
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
-const reqs = fs.readFileSync('/tmp/mock-anthropic-requests.jsonl', 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+const reqs = log()   // solo las peticiones de esta ejecución (ver LOG_BASE arriba)
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]
 console.log('   ', JSON.stringify(one))
 const big = reqs.filter((q) => !/haiku/.test(q.model))
