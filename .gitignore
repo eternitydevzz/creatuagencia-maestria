@@ -12,3 +12,6 @@ deploy/**/.temp
 
 # material de referencia (no subir)
 webinar*.md
+
+# configuración local del editor/Claude (no se comparte)
+.claude/
