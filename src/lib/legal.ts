@@ -1,11 +1,11 @@
-// Datos del responsable que aparecen en la política de privacidad y en los términos.
+// Datos del responsable que aparecen en la política de privacidad y en los términos. Completalos con los de TU empresa.
 // (Si algún valor vuelve a empezar por «[», las páginas muestran un aviso de borrador.)
 export const LEGAL = {
-  company: 'TRUDSALES LLC (dba Codigo Maestria)',
-  taxId: 'EIN 33-1750081',
-  address: '7901 4th St N, Suite 300, St. Petersburg, FL 33702, Estados Unidos',
-  email: 'info@codigomaestria.com',
-  updated: '4 de octubre de 2026',
+  company: '[Nombre de tu empresa LLC]',
+  taxId: '[EIN o identificación fiscal]',
+  address: '[Dirección completa de tu empresa]',
+  email: '[email de contacto]',
+  updated: '[fecha de la última actualización]',
 }
 
 export const legalIsDraft = Object.values(LEGAL).some((v) => v.startsWith('['))

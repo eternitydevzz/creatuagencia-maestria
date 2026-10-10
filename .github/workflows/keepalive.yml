@@ -1,6 +1,9 @@
 name: Keepalive
 # El plan gratuito de Supabase pausa los proyectos tras una semana sin actividad. Este latido (una llamada a una función que solo
-# devuelve la hora) lo evita. La clave anon es pública por diseño: también va dentro del JavaScript de la web.
+# devuelve la hora) lo evita. Configuración, en GitHub → tu repo → Settings → Secrets and variables → Actions:
+#   - Variable SUPABASE_URL      = https://TU-REF.supabase.co
+#   - Secret   SUPABASE_ANON_KEY = la clave anon (pública) de tu proyecto
+# Sin esas dos, el latido no hace nada (no falla).
 on:
   schedule:
     - cron: '17 6 */2 * *'
@@ -10,8 +13,14 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST 'https://sniinyzcwdfgvnctshuj.supabase.co/rest/v1/rpc/ping' \
-            -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuaWlueXpjd2RmZ3ZuY3RzaHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MTQ1NjAsImV4cCI6MjEwNjQ5MDU2MH0.xp9Gfcd8jj9eD34nxculxuGgxKjaZ0bneIcYbBCMPy0' -H 'Content-Type: application/json' -d '{}')
+      - env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Falta SUPABASE_URL (variable) o SUPABASE_ANON_KEY (secret): latido omitido."; exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$SUPABASE_URL/rest/v1/rpc/ping" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -d '{}')
           echo "Supabase respondió $code"
           test "$code" = "200"
