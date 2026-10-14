@@ -524,6 +524,25 @@ ok('Pedirlo otra vez devuelve el mismo proyecto, no uno nuevo', sm2.body.roadmap
 const sm3 = await sample(S2.c)
 ok('Cada alumno tiene su propia copia (otro id) y no ve la del otro', sm3.body.roadmap_id !== sm.body.roadmap_id && ((await S2.c.from('roadmaps').select('id').eq('id', sm.body.roadmap_id)).data ?? []).length === 0)
 
+console.log('\n— Moneda del proyecto (euro / dólar)')
+const U = await makeUser('moneda')
+const newProject = async (name, pricing_settings) => (await U.c.from('roadmaps').insert({ project_name: name, user_id: U.id, selected_problems: ['atencion_leads'], selected_nichos: ['Gimnasios boutique'], agency_name: 'FitIA', pricing_settings }).select().single()).data
+const rmUsd = await newProject('En dólares', { mode: 'premium', currency: 'USD' })
+const rmEur = await newProject('En euros', { mode: 'premium' })
+ok('El alumno puede guardar la moneda en su proyecto (pricing_settings.currency)', rmUsd?.pricing_settings?.currency === 'USD' && rmEur?.pricing_settings?.currency === undefined)
+const gen = async (rm) => { const from = log().length; const a = await call(U.c, 'new_niches', rm.id); const b = await call(U.c, 'agent', rm.id); return { codes: [a.status, b.status], reqs: log().slice(from).filter((q) => !/haiku/.test(q.model) || /^Crea el AGENTE/.test(q.first_chars)) } }
+const gUsd = await gen(rmUsd)
+ok('Generar en dólares funciona (200 y 200)', gUsd.codes.join() === '200,200', gUsd.codes.join())
+ok('  la IA recibe el mercado de dólares (system con $100,000)', gUsd.reqs.length >= 2 && gUsd.reqs.every((q) => q.sys_usd && !q.sys_eur), JSON.stringify(gUsd.reqs.map((q) => [q.sys_usd, q.sys_eur])))
+ok('  y ningún "€" en lo que se le manda', gUsd.reqs.every((q) => q.euro_in_prompt === false), JSON.stringify(gUsd.reqs.map((q) => q.euro_in_prompt)))
+const gEur = await gen(rmEur)
+ok('Generar en euros sigue igual (200 y 200)', gEur.codes.join() === '200,200', gEur.codes.join())
+ok('  la IA recibe el mercado de euros (system con 100.000 €)', gEur.reqs.length >= 2 && gEur.reqs.every((q) => q.sys_eur && !q.sys_usd), JSON.stringify(gEur.reqs.map((q) => [q.sys_usd, q.sys_eur])))
+ok('  y ningún "$" de dólar en el system', gEur.reqs.every((q) => q.sys_usd === false))
+// (que cambiar la moneda marque lo generado como desactualizado lo decide signature.ts en el navegador, no esta función)
+const { error: curErr } = await U.c.from('roadmaps').update({ pricing_settings: { mode: 'premium', currency: 'USD' } }).eq('id', rmEur.id)
+ok('El alumno puede cambiar la moneda de un proyecto ya existente', !curErr, curErr?.message)
+
 console.log('\n— Petición enviada a la API de Anthropic (según el registro del servidor simulado)')
 const reqs = log()   // solo las peticiones de esta ejecución (ver LOG_BASE arriba)
 const one = reqs.find((q) => /OFERTA/.test(q.first_chars)) ?? reqs[0]

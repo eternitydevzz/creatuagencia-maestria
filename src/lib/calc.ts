@@ -1,7 +1,5 @@
 import type { Metrics } from './types'
 
-export const eur = (n: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(n))
-
 /** Lo que gana hoy el cliente y lo que ganaría atendiendo y siguiendo bien cada consulta (estimación conservadora).
  *  Mejora de conversión en puntos porcentuales: +2 por problema resuelto, con un tope de +8. */
 export function impact(m: Metrics, problemCount: number) {

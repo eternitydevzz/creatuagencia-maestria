@@ -6,5 +6,5 @@
     "strict": true, "noUnusedLocals": true, "noUnusedParameters": true, "noFallthroughCasesInSwitch": true,
     "baseUrl": ".", "paths": { "@/*": ["src/*"], "@shared/*": ["supabase/functions/_shared/*"] }
   },
-  "include": ["src", "supabase/functions/_shared/agent.ts", "supabase/functions/_shared/catalog.ts", "supabase/functions/_shared/pricing.ts", "supabase/functions/_shared/signature.ts", "vite.config.ts"]
+  "include": ["src", "supabase/functions/_shared/agent.ts", "supabase/functions/_shared/catalog.ts", "supabase/functions/_shared/currency.ts", "supabase/functions/_shared/pricing.ts", "supabase/functions/_shared/signature.ts", "vite.config.ts"]
 }

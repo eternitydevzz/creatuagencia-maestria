@@ -17,7 +17,7 @@ const LABELS: Record<string, string> = {
   bonos: 'Bonos', urgencia: 'Urgencia', pitch_30s: 'Pitch de 30 segundos', objeciones: 'Objeciones', objecion: 'Objeción', respuesta: 'Respuesta',
   oferta_piloto: 'Oferta piloto (primeros clientes)', que_incluye: 'Qué incluye', duracion: 'Duración', paso_a_principal: 'Paso a la oferta principal',
   como_proponerla: 'Cómo proponerla', escalera: 'Escalera de ofertas', nivel: 'Nivel', numeros_agencia: 'Números de tu agencia',
-  coste_entrega_mensual: 'Coste de entrega al mes', margen_por_cliente: 'Margen por cliente', clientes_para_5000_mes: 'Clientes para 5.000 €/mes',
+  coste_entrega_mensual: 'Coste de entrega al mes', margen_por_cliente: 'Margen por cliente', clientes_para_5000_mes: 'Clientes para llegar a 5000 al mes',
   // agente
   negocio: 'Negocio de ejemplo', rubro: 'Rubro', descripcion: 'Descripción', ubicacion: 'Dirección', horario: 'Horario', telefono: 'Teléfono',
   web: 'Web', zona_horaria: 'Zona horaria', servicios: 'Servicios y precios', secretaria: 'La secretaria', tono: 'Tono', saludo: 'Saludo',

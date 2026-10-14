@@ -4,7 +4,7 @@ import { inputsSignature } from '@shared/signature'
 import type { Agent, DeliverableMeta, Roadmap } from './types'
 
 const metaOf = (o: object | undefined): DeliverableMeta | undefined => (o as { _meta?: DeliverableMeta } | undefined)?._meta
-const CHANGED = 'Has cambiado tus respuestas (problemas, nicho, números o nombre) después de generar esto. Regéneralo para que esté al día.'
+const CHANGED = 'Has cambiado tus respuestas (problemas, nicho, números, moneda o nombre) después de generar esto. Regéneralo para que esté al día.'
 
 interface Staleness { ideal: string | null; offer: string | null; site: string | null }
 

@@ -1,8 +1,9 @@
 import { Bot, Globe, Megaphone, Package, Phone, RefreshCw, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react'
 import { clientsToPayBack, DEFAULTS, LIMITS, priceTable } from '@shared/pricing'
+import { CURRENCIES, currencyOf, formatMoney, marketOf, withCurrency } from '@shared/currency'
 import { AnimatedNumber } from '@/components/ui/bits'
 import type { SectionProps } from '@/hooks/useGenerate'
-import { eur, impact } from '@/lib/calc'
+import { impact } from '@/lib/calc'
 import type { Metrics, Pricing } from '@/lib/types'
 
 const ICONS: Record<string, LucideIcon> = { landing: Globe, whatsapp: Bot, followup: RefreshCw, voice: Phone, ads: Megaphone }
@@ -11,6 +12,9 @@ const MODE_HINT: Record<NonNullable<Pricing['mode']>, string> = {
   aggressive: 'Precio de entrada para conseguir tus primeros 2-3 clientes rápido. Recomendado si empiezas de cero.',
   premium: 'Precios altos para clientes de calidad. Menos trabajo, más rentabilidad. Para cuando ya tienes resultados que enseñar.',
 }
+
+// Botón de un selector segmentado (modo de precios y moneda comparten aspecto)
+const SEG_BTN = (on: boolean) => `rounded-lg py-2 text-sm font-semibold transition ${on ? 'bg-gradient-to-b from-[#2b92ff] to-accent text-white shadow-[0_4px_14px_rgba(0,112,248,.45)]' : 'text-muted hover:text-white'}`
 
 interface SliderProps { label: string; value: number; min: number; max: number; step: number; format: (n: number) => string; onChange: (n: number) => void; minLabel: string; maxLabel: string }
 
@@ -30,6 +34,7 @@ function SliderCard({ label, value, min, max, step, format, onChange, minLabel, 
 export default function S3Numbers({ roadmap, update }: SectionProps) {
   const m = roadmap.business_metrics
   const mode = roadmap.pricing_settings.mode ?? 'aggressive'
+  const currency = currencyOf(roadmap.pricing_settings)
   const saved = (m.leads ?? 0) > 0 && (m.ticket ?? 0) > 0
   const v = { leads: m.leads ?? DEFAULTS.leads, adSpend: m.ad_spend ?? DEFAULTS.adSpend, ticket: m.ticket ?? DEFAULTS.ticket, conversion: m.conversion ?? DEFAULTS.conversion }
   // Al mover cualquier deslizador se guardan los cuatro números (los que no se tocan, con su valor de ejemplo)
@@ -38,17 +43,24 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
   const table = priceTable({ leads: v.leads, adSpend: v.adSpend, ticket: v.ticket, mode })
   const imp = impact({ leads: v.leads, conversion: v.conversion, ticket: v.ticket }, roadmap.selected_problems.length)
   const need = clientsToPayBack(table.pack.monthly, v.ticket)
-  const n = (x: number) => eur(x)
+  const n = (x: number) => formatMoney(x, currency)
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <p className="max-w-xl text-muted">Cuántas consultas le llegan a un negocio típico de tu nicho, cuánto invierte en anuncios y cuánto vale un cliente. Con eso, el precio sale solo.</p>
         <div className="card w-full flex-none p-3 lg:w-[360px]">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/30 p-1" role="radiogroup" aria-label="Moneda">
+            {CURRENCIES.map((c) => (
+              <button key={c} type="button" role="radio" aria-checked={currency === c} onClick={() => update({ pricing_settings: withCurrency(roadmap.pricing_settings, c) })}
+                className={SEG_BTN(currency === c)}>{marketOf(c).label}</button>
+            ))}
+          </div>
+          <p className="px-1.5 pb-3 pt-2 text-xs leading-relaxed text-muted">Cambia el símbolo y el mercado que usa la IA (dólar = Estados Unidos). Las cifras no se convierten.</p>
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/30 p-1" role="radiogroup" aria-label="Modo de precios">
             {MODES.map(([id, name]) => (
-              <button key={id} type="button" role="radio" aria-checked={mode === id} onClick={() => update({ pricing_settings: { mode: id } })}
-                className={`rounded-lg py-2 text-sm font-semibold transition ${mode === id ? 'bg-gradient-to-b from-[#2b92ff] to-accent text-white shadow-[0_4px_14px_rgba(0,112,248,.45)]' : 'text-muted hover:text-white'}`}>{name}</button>
+              <button key={id} type="button" role="radio" aria-checked={mode === id} onClick={() => update({ pricing_settings: { ...roadmap.pricing_settings, mode: id } })}
+                className={SEG_BTN(mode === id)}>{name}</button>
             ))}
           </div>
           <p className="px-1.5 pb-1 pt-3 text-xs leading-relaxed text-muted">{MODE_HINT[mode]}</p>
@@ -75,7 +87,7 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
       <section aria-labelledby="prices">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div><p className="eyebrow">Tu tabla de precios</p><h3 id="prices" className="text-2xl font-bold">Esto es lo que puedes cobrar</h3></div>
-          <p className="text-xs text-muted">Guía de mercado calculada con estos números, en euros.</p>
+          <p className="text-xs text-muted">Guía de mercado calculada con estos números, en {marketOf(currency).name}.</p>
         </div>
         <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {table.lines.map((l) => {

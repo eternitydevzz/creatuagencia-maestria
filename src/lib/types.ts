@@ -1,6 +1,7 @@
 import type { CustomProblem } from '@shared/catalog'
 import type { DeliverableMeta } from '@shared/signature'
 import type { AgentConfig } from '@shared/agent'
+import type { Currency } from '@shared/currency'
 
 export type { DeliverableMeta, AgentConfig }
 
@@ -9,7 +10,7 @@ export interface Profile {
   role: 'student' | 'admin'; credits: number; created_at: string
 }
 export interface Metrics { leads?: number; conversion?: number; ticket?: number; ad_spend?: number }
-export interface Pricing { mode?: 'aggressive' | 'premium' }
+export interface Pricing { mode?: 'aggressive' | 'premium'; currency?: Currency }
 
 /** Valor JSON genérico: el cliente ideal y la oferta se pintan de forma genérica (ver lib/tree.ts). */
 export type Json = string | number | boolean | null | Json[] | { [k: string]: Json }

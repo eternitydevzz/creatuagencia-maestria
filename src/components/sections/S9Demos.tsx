@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Building2, Globe, PenLine, Trash2 } from 'lucide-react'
 import { buildAgentPrompt, nowText } from '@shared/agent'
+import { currencyOf, marketOf } from '@shared/currency'
 import { AiButton, CopyButton, Empty, Skeleton } from '@/components/ui/bits'
 import WhatsAppChat from '@/components/agent/WhatsAppChat'
 import { useDemos } from '@/hooks/useData'
@@ -24,6 +25,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
   const [manual, setManual] = useState(EMPTY_MANUAL)
   const [selected, setSelected] = useState<string | null>(null)
   const busy = isBusy('demo_agent')
+  const money = marketOf(currencyOf(roadmap.pricing_settings))
 
   // Al crear una demo nueva se abre sola; si se borra la abierta, se abre la primera que quede
   useEffect(() => {
@@ -72,7 +74,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
               <label className="block space-y-1.5"><span className="text-sm font-semibold text-white">Rubro *</span><input className="field" value={manual.rubro} onChange={setM('rubro')} placeholder="clínica dental, taller…" maxLength={120} /></label>
               <label className="block space-y-1.5 sm:col-span-2"><span className="text-sm font-semibold text-white">Qué hacen</span><input className="field" value={manual.descripcion} onChange={setM('descripcion')} maxLength={500} /></label>
               <label className="block space-y-1.5 sm:col-span-2"><span className="text-sm font-semibold text-white">Servicios y precios (uno por línea)</span>
-                <textarea className="field min-h-28" value={manual.servicios} onChange={setM('servicios')} placeholder={'Limpieza dental - 60 € - 45 min\nBlanqueamiento - 250 €'} maxLength={1500} /></label>
+                <textarea className="field min-h-28" value={manual.servicios} onChange={setM('servicios')} placeholder={`Limpieza dental - ${money.fmt(60)} - 45 min\nBlanqueamiento - ${money.fmt(250)}`} maxLength={1500} /></label>
               <label className="block space-y-1.5"><span className="text-sm font-semibold text-white">Horario</span><input className="field" value={manual.horario} onChange={setM('horario')} placeholder="L-V 9:00-20:00" maxLength={200} /></label>
               <label className="block space-y-1.5"><span className="text-sm font-semibold text-white">Dirección</span><input className="field" value={manual.ubicacion} onChange={setM('ubicacion')} maxLength={200} /></label>
             </div>

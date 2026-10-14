@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
             // Se descarga la web ANTES de cobrar: si no se puede abrir, el alumno no paga nada
             const site = await fetchSite(rawUrl)
             demoOrigin = { tipo: 'url', url: site.url }
-            prompt = P.demoAgent({ kind: 'url', url: site.url, text: site.text })
+            prompt = P.demoAgent({ kind: 'url', url: site.url, text: site.text }, ctx)
           } catch (e) {
             if (e instanceof FetchError) throw new HttpError(e.code === 'url_invalid' || e.code === 'url_blocked' ? 400 : 422, e.code, e.message)
             throw e
@@ -259,12 +259,12 @@ Deno.serve(async (req) => {
           prompt = P.demoAgent({ kind: 'manual', data: {
             nombre: str(m.nombre, 120, 'nombre', 2), rubro: str(m.rubro, 120, 'rubro', 2),
             descripcion: opt(m.descripcion, 500), servicios: opt(m.servicios, 1500), horario: opt(m.horario, 200), ubicacion: opt(m.ubicacion, 200),
-          } })
+          } }, ctx)
         }
         break
       }
     }
-    const system = P.SYSTEM
+    const system = P.systemFor(ctx)
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [{ role: 'user', content: prompt }]
 
     // ---- límite de ritmo, generación y cobro ----
