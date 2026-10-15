@@ -10,6 +10,7 @@ import Settings from '@/pages/Settings'
 import RoadmapPage from '@/pages/RoadmapPage'
 import { Privacy, Terms } from '@/pages/Legal'
 import Admin from '@/pages/Admin'
+import PublicDemo from '@/pages/PublicDemo'
 
 function Protected({ children }: { children: React.ReactNode }) {
   const { session, loading, needsPassword } = useAuth()
@@ -26,6 +27,8 @@ export default function App() {
       <Route path="/privacidad" element={<Privacy />} />
       <Route path="/terminos" element={<Terms />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      {/* Link público de una demo: lo abre el prospecto del alumno, sin cuenta */}
+      <Route path="/d/:token" element={<PublicDemo />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/projects" element={<Protected><Projects /></Protected>} />
       <Route path="/roadmap" element={<Protected><RoadmapPage /></Protected>} />

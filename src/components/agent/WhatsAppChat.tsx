@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarCheck, Lock, RotateCcw, Send } from 'lucide-react'
 import { mergeTurns, splitReply, type Turn } from '@shared/agent'
-import { chatWithAgent, GenerationError, type ChatBooking, type ChatTurn } from '@/lib/api'
+import { chatWithAgent, GenerationError, type ChatBooking, type ChatReply, type ChatTurn } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
 import { play } from '@/lib/sound'
-import type { Agent } from '@/lib/types'
+
+/** Lo mínimo del agente para pintar el chat (el link público no tiene la ficha entera). */
+export interface ChatAgent { id: string; business_name: string; config: { secretaria: { nombre: string } } }
 
 interface Bubble { id: number; from: 'me' | 'bot' | 'booking'; text: string; at: Date; booking?: ChatBooking }
 
@@ -18,8 +20,11 @@ function toTurns(bubbles: Bubble[]): ChatTurn[] {
   return mergeTurns(bubbles.filter((b) => b.from !== 'booking').map((b): Turn => ({ role: b.from === 'me' ? 'user' : 'assistant', content: b.text })))
 }
 
-/** Simulador de WhatsApp: el alumno (o su cliente) habla con la secretaria virtual del agente. Las conversaciones no se guardan. */
-export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent; suggestions?: string[] }) {
+/** Simulador de WhatsApp: el alumno (o su cliente) habla con la secretaria virtual del agente. Las conversaciones no se guardan.
+ *  `send` cambia a quién se le pregunta (el link público usa el código de la demo en vez de la sesión del alumno). */
+export default function WhatsAppChat({ agent, suggestions = [], send: ask = (turns) => chatWithAgent(agent.id, turns) }: {
+  agent: ChatAgent; suggestions?: string[]; send?: (turns: ChatTurn[]) => Promise<ChatReply>
+}) {
   const toast = useToast()
   const [bubbles, setBubbles] = useState<Bubble[]>([])
   const [input, setInput] = useState('')
@@ -46,7 +51,7 @@ export default function WhatsAppChat({ agent, suggestions = [] }: { agent: Agent
     setTyping(true)
     play('send')
     try {
-      const { reply, booking } = await chatWithAgent(agent.id, toTurns(history))
+      const { reply, booking } = await ask(toTurns(history))
       const parts = splitReply(reply)
       for (let i = 0; i < parts.length; i++) {
         if (i > 0) await wait(Math.min(1500, 500 + parts[i].length * 12)) // "escribiendo…" entre burbujas
