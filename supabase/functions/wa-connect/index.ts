@@ -3,6 +3,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, json } from '../_shared/cors.ts'
 import { mapStatus, phoneOf, sessionConfig, waha, wahaConfigured } from '../_shared/waha.ts'
+import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
 const MAX_CONNECTIONS = Number(Deno.env.get('WA_MAX_CONNECTIONS_PER_USER') ?? 2)
 
@@ -22,6 +23,7 @@ Deno.serve(async (req) => {
     const { data: auth } = await userDb.auth.getUser()
     if (!auth?.user) throw new HttpError(401, 'unauthorized')
     const userId = auth.user.id
+    if (!(await isApproved(admin, userId))) throw new HttpError(403, 'not_approved', NOT_APPROVED_MESSAGE)
 
     const body = JSON.parse((await req.text()) || '{}')
     const action = String(body.action ?? '')

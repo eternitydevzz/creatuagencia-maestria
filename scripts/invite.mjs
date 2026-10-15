@@ -31,12 +31,29 @@ async function grant(userId, amount, reason) {
     : await db.rpc('spend_credits', { p_user: userId, p_cost: -amount, p_reason: reason })
   if (error) throw new Error(error.message)
 }
-async function setCredits(userId, wanted) {
-  const n = Number(wanted)
-  if (!Number.isInteger(n) || n < 0) throw new Error(`Créditos no válidos: ${wanted}`)
-  const { data: p, error } = await db.from('profiles').select('credits').eq('id', userId).single()
+// Las altas por script se aprueban en el momento (el registro público deja las cuentas en revisión y sin créditos).
+// approve_student da los créditos de alta: los pedidos o, si no se indican, los de app_settings.
+const creditsOf = (wanted) => {
+  const n = wanted === undefined || wanted === '' ? null : Number(wanted)
+  if (n !== null && (!Number.isInteger(n) || n < 0 || n > 1000)) throw new Error(`Créditos no válidos: ${wanted} (entre 0 y 1000)`)
+  return n
+}
+async function approve(userId, wanted, email) {
+  const { data, error } = await db.rpc('approve_student', { p_user: userId, p_credits: creditsOf(wanted) })
   if (error) throw new Error(error.message)
-  if (n !== p.credits) await grant(userId, n - p.credits, 'ajuste: créditos de alta')
+  if (data === false) console.warn(`  ${email ?? userId} ya estaba aprobado: no se le añadieron créditos (usa grant)`)
+}
+// Con el registro abierto, alguien podría registrarse con el email de un futuro alumno (con su propia contraseña) antes de
+// que lo invitemos: la invitación reutilizaría esa cuenta. Si existe sin confirmar, se borra y se invita desde cero.
+async function clearUnconfirmed(email) {
+  const { data: p } = await db.from('profiles').select('id').eq('email', email).maybeSingle()
+  if (!p) return
+  const { data: u } = await db.auth.admin.getUserById(p.id)
+  if (u?.user && !u.user.email_confirmed_at) {
+    const { error } = await db.auth.admin.deleteUser(p.id)
+    if (error) throw new Error(`${email}: no se pudo limpiar un registro sin confirmar (${error.message})`)
+    console.warn(`  ${email} tenía un registro sin confirmar: se borró antes de invitar`)
+  }
 }
 // Igualdad exacta (los emails se guardan en minúsculas). Con ilike, "_" y "%" funcionan como comodines y podrían coincidir otros alumnos.
 async function userByEmail(email) {
@@ -46,9 +63,12 @@ async function userByEmail(email) {
 }
 async function invite(email, name, wantedCredits = credits) {
   if (!site) throw new Error('Falta SITE_URL (el dominio de tu web, p. ej. https://app.tu-dominio.com): sin él, el enlace de la invitación no llevaría al alumno a ningún sitio.')
+  email = String(email ?? '').trim().toLowerCase()
+  creditsOf(wantedCredits) // se valida antes de enviar nada
+  await clearUnconfirmed(email)
   const { data, error } = await db.auth.admin.inviteUserByEmail(email, { data: { full_name: name || undefined }, redirectTo: `${site}/reset-password` })
   if (error) throw new Error(`${email}: ${error.message}`)
-  if (wantedCredits !== undefined && wantedCredits !== '') await setCredits(data.user.id, wantedCredits)
+  await approve(data.user.id, wantedCredits, email)
   console.log(`✓ invitado ${email}`)
 }
 
@@ -77,7 +97,7 @@ try {
   } else if (cmd === 'create') {
     const { data, error } = await db.auth.admin.createUser({ email: rest[0].toLowerCase(), password: rest[1], email_confirm: true, user_metadata: { full_name: rest[2] } })
     if (error) throw new Error(error.message)
-    if (credits !== undefined) await setCredits(data.user.id, credits)
+    await approve(data.user.id, credits, rest[0])
     console.log(`✓ creado ${rest[0]}`)
   } else { console.error('Comando desconocido. Mira la cabecera del archivo.'); process.exit(1) }
 } catch (e) { console.error(`✗ ${e.message}`); process.exit(1) }

@@ -25,6 +25,7 @@ const MESSAGES: Record<string, string> = {
   demo_link_invalid: 'Este link de demo ya no está activo. Pide uno nuevo a quien te lo envió.',
   demo_link_busy: 'Esta demo ha recibido muchos mensajes hoy. Vuelve a probar mañana.',
   unavailable: 'No se pudo enviar el mensaje. Inténtalo en un momento.',
+  not_approved: 'Tu cuenta está en revisión. Te avisaremos cuando el equipo la apruebe.',
 }
 const GENERIC = 'Algo ha fallado. Inténtalo de nuevo.'
 
@@ -100,7 +101,12 @@ export async function waConnect<T = Record<string, unknown>>(body: { action: 'st
   return data as T
 }
 
-export interface Student { id: string; email: string; full_name: string | null; role: 'student' | 'admin'; credits: number; created_at: string; projects: number; last_sign_in_at: string | null }
+export interface Student {
+  id: string; email: string; full_name: string | null; phone: string | null; role: 'student' | 'admin'; credits: number; created_at: string
+  projects: number; last_sign_in_at: string | null
+  /** null = en revisión (se registró y falta aprobarlo) */ approved_at: string | null
+  /** null = todavía no confirmó su email */ email_confirmed_at: string | null
+}
 export interface Credentials { id: string; email: string; password: string; credits?: number }
 
 /** Gestión de alumnos (Edge Function `admin-students`): solo funciona con una cuenta administradora. */
@@ -108,6 +114,7 @@ export async function adminStudents<T = Record<string, unknown>>(body:
   | { action: 'list' }
   | { action: 'create'; email: string; name: string; credits: number }
   | { action: 'grant'; id: string; amount: number }
+  | { action: 'approve'; id: string; credits: number }
   | { action: 'reset_password' | 'delete'; id: string }): Promise<T> {
   const { data, error } = await supabase.functions.invoke('admin-students', { body })
   if (error) {

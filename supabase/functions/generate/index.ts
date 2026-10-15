@@ -9,6 +9,7 @@ import { inputsSignature, type DeliverableMeta } from '../_shared/signature.ts'
 import * as P from './prompts.ts'
 import { FetchError, fetchSite } from './fetchSite.ts'
 import { cleanConfig } from '../_shared/agent.ts'
+import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
 // ---------------------------------------------------------------- configuración
 const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-sonnet-5-5'
@@ -208,6 +209,7 @@ Deno.serve(async (req) => {
     const { data: auth } = await authP
     if (!auth?.user) throw new HttpError(401, 'unauthorized')
     userId = auth.user.id
+    if (!(await isApproved(admin, userId))) throw new HttpError(403, 'not_approved', NOT_APPROVED_MESSAGE)
 
     const raw = await rawP
     if (raw.length > 120_000) throw new HttpError(413, 'payload_too_large')

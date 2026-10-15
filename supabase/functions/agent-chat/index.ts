@@ -8,6 +8,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, json } from '../_shared/cors.ts'
 import type { AgentConfig } from '../_shared/agent.ts'
 import { agentReply } from '../_shared/agentReply.ts'
+import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
 const PER_MINUTE = Number(Deno.env.get('AGENT_CHAT_PER_MINUTE') ?? 20)
 const PER_HOUR = Number(Deno.env.get('AGENT_CHAT_PER_HOUR') ?? 300)
@@ -92,6 +93,7 @@ Deno.serve(async (req) => {
       const { data: auth } = await userDb.auth.getUser()
       if (!auth?.user) throw new HttpError(401, 'unauthorized')
       const userId = auth.user.id
+      if (!(await isApproved(admin, userId))) throw new HttpError(403, 'not_approved', NOT_APPROVED_MESSAGE)
       if (typeof body.agent_id !== 'string' || body.agent_id.length > 64) throw new HttpError(400, 'invalid_params', 'agent_id inválido')
 
       // El agente se lee con el token del alumno: la seguridad por filas garantiza que es suyo

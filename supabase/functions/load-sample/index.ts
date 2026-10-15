@@ -5,6 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, json } from '../_shared/cors.ts'
 import { inputsSignature } from '../_shared/signature.ts'
 import { SAMPLE } from '../_shared/sample.ts'
+import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
 const NAME = 'Ejemplo: Dentia (clínica dental)'
 
@@ -18,6 +19,7 @@ Deno.serve(async (req) => {
     const { data: auth } = await userDb.auth.getUser()
     if (!auth?.user) return json({ error: 'unauthorized' }, 401)
     const userId = auth.user.id
+    if (!(await isApproved(admin, userId))) return json({ error: 'not_approved', message: NOT_APPROVED_MESSAGE }, 403)
 
     const { data: existing } = await admin.from('roadmaps').select('id').eq('user_id', userId).eq('project_name', NAME).maybeSingle()
     if (existing) return json({ roadmap_id: existing.id, created: false })
