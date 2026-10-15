@@ -103,7 +103,7 @@ export default function S9Demos({ roadmap, refresh }: SectionProps) {
       <div className="space-y-3">
         {current ? (
           <>
-            <WhatsAppChat agent={current} suggestions={['Hola', 'Quiero pedir cita', '¿Qué servicios tenéis?', '¿Dónde estáis y qué horario tenéis?']} />
+            <WhatsAppChat agent={current} suggestions={['Hola', 'Quiero pedir cita', '¿Qué servicios ofrecen?', '¿Dónde están y qué horario tienen?']} />
             <CopyButton className="w-full" text={buildAgentPrompt(current.config, nowText(current.config.negocio.zona_horaria))} label="Copiar las instrucciones de esta secretaria" />
           </>
         ) : (

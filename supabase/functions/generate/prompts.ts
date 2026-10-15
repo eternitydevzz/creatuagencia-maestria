@@ -256,6 +256,16 @@ Devuelve JSON con esta estructura EXACTA:
 "direccion" obligatoria y exactamente uno de los cinco valores. "problema.puntos": 3 · "solucion.beneficios": 4 · "comparativa.filas": 5 (coste al mes, horario de atención, tiempo de respuesta, seguimiento a los que no compran, qué pasa en temporada alta) · "como_funciona.pasos": 3 · "resultados.cifras": 3 · "faq": 5, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
 }
 
+// Nombres para la secretaria: los elige el servidor al azar porque, si se deja al modelo, repite casi siempre los mismos
+// (Martina, Mariana…) y diez demos del mismo rubro se notan hechas con plantilla. Válidos en España, Latinoamérica y EEUU.
+const SECRETARY_NAMES = [
+  'Lucía', 'Valentina', 'Camila', 'Sofía', 'Daniela', 'Paula', 'Carolina', 'Andrea', 'Natalia', 'Gabriela',
+  'Fernanda', 'Victoria', 'Julieta', 'Florencia', 'Renata', 'Ximena', 'Lorena', 'Claudia', 'Patricia', 'Elena',
+  'Isabel', 'Carla', 'Verónica', 'Silvia', 'Rocío', 'Mónica', 'Adriana', 'Alejandra', 'Jimena', 'Agustina',
+  'Micaela', 'Paola', 'Luciana', 'Elisa', 'Inés', 'Noelia', 'Sara', 'Diana', 'Teresa', 'Rosa',
+]
+const pickSecretaryName = () => SECRETARY_NAMES[Math.floor(Math.random() * SECRETARY_NAMES.length)]
+
 export function agentConfig(c: Ctx): string {
   const mk = mkt(c)
   return `Crea el AGENTE DE DEMOSTRACIÓN de "${agencyOf(c)}": una secretaria virtual de WhatsApp para un negocio típico de este nicho: ${niche0(c)}. El alumno se la enseñará a empresarios del nicho para que vean cómo atiende a SUS clientes, así que el negocio de ejemplo tiene que parecerles real.
@@ -269,7 +279,7 @@ QUÉ DEBES INVENTAR (un negocio de ejemplo creíble)
 - Horario realista, dirección ficticia con ${mk.cityHint}, teléfono ficticio con formato ${mk.phoneFormat}.${mk.timezoneRule ? `\n- ${mk.timezoneRule}` : ''}
 - 3-4 políticas que un cliente pregunta de verdad (cancelaciones, formas de pago, urgencias, primera visita…).
 - 5-6 preguntas frecuentes del nicho con su respuesta, usando el vocabulario del cliente ideal.
-- Nombre de la secretaria (${mk.nameHint}), tono acorde al sector (clínica: cercano y tranquilo; taller: directo y claro…) y un saludo de WhatsApp de 1-2 frases que se presenta y pregunta en qué puede ayudar.
+- La secretaria se llama ${pickSecretaryName()} (usa exactamente ese nombre), tono acorde al sector (clínica: cercano y tranquilo; taller: directo y claro…) y un saludo de WhatsApp de 1-2 frases que se presenta y pregunta en qué puede ayudar.
 - Qué datos pide para agendar (3-5, en orden).
 
 Devuelve JSON con esta estructura EXACTA:
@@ -303,7 +313,7 @@ REGLAS PARA LA FICHA
 - Lo que no conste se omite o se deja vacío (p. ej. un servicio sin precio va sin "precio"; sin horario, "horario" vacío). Nunca pongas "no consta" ni "N/A" como si fuera un dato.
 - Hasta 10 servicios, los más importantes. Si la web no tiene servicios claros, deduce solo los generales evidentes por el rubro, sin precios.
 - Políticas y preguntas frecuentes: solo si se deducen del material (cancelaciones, formas de pago, primera visita, urgencias…). Es mejor 2 reales que 6 inventadas.
-- La secretaria tiene un nombre corriente en español, un tono acorde al sector y un saludo de WhatsApp de 1-2 frases que menciona el nombre del negocio y pregunta en qué puede ayudar.
+- La secretaria se llama ${pickSecretaryName()} (usa exactamente ese nombre), con un tono acorde al sector y un saludo de WhatsApp de 1-2 frases que menciona el nombre del negocio y pregunta en qué puede ayudar.
 - "datos_cita": 3-5 datos que pide para agendar, en orden, adecuados al negocio.
 - Escribe todo en español.${mk.timezoneRule ? `\n- ${mk.timezoneRule}` : ''}
 
