@@ -29,6 +29,10 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      # Links públicos de demos (/d/<código>): privados, que no los indexe ningún buscador
+      - path: /d/*
+        name: X-Robots-Tag
+        value: noindex, nofollow
       # Los archivos de /assets llevan hash en el nombre: pueden cachearse para siempre
       - path: /assets/*
         name: Cache-Control

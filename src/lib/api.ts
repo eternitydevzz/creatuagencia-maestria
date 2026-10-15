@@ -22,6 +22,9 @@ const MESSAGES: Record<string, string> = {
   unauthorized: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
   agent_not_found: 'No se encuentra este agente. Recarga la página.',
   consent_required: 'Para vincular un número tienes que aceptar el aviso sobre tus clientes.',
+  demo_link_invalid: 'Este link de demo ya no está activo. Pide uno nuevo a quien te lo envió.',
+  demo_link_busy: 'Esta demo ha recibido muchos mensajes hoy. Vuelve a probar mañana.',
+  unavailable: 'No se pudo enviar el mensaje. Inténtalo en un momento.',
 }
 const GENERIC = 'Algo ha fallado. Inténtalo de nuevo.'
 
@@ -58,8 +61,19 @@ export interface ChatTurn { role: 'user' | 'assistant'; content: string }
  *  se construyen en el servidor a partir de la ficha del agente. No cuesta créditos. */
 export interface ChatBooking { nombre?: string; telefono?: string; servicio?: string; cuando?: string; notas?: string }
 
-export async function chatWithAgent(agentId: string, messages: ChatTurn[]): Promise<{ reply: string; booking: ChatBooking | null }> {
-  const { data, error } = await supabase.functions.invoke('agent-chat', { body: { agent_id: agentId, messages } })
+export type ChatReply = { reply: string; booking: ChatBooking | null }
+
+export function chatWithAgent(agentId: string, messages: ChatTurn[]): Promise<ChatReply> {
+  return invokeChat({ agent_id: agentId, messages })
+}
+
+/** El mismo chat desde el link público de una demo (…/d/<código>): sin sesión, lo abre el prospecto del alumno. */
+export function chatWithDemoLink(shareToken: string, messages: ChatTurn[]): Promise<ChatReply> {
+  return invokeChat({ share_token: shareToken, messages })
+}
+
+async function invokeChat(body: Record<string, unknown>): Promise<ChatReply> {
+  const { data, error } = await supabase.functions.invoke('agent-chat', { body })
   if (error) {
     let code = 'internal_error'; let message = GENERIC
     const res = (error as { context?: Response }).context
@@ -112,3 +126,31 @@ export async function loadSample(): Promise<string> {
   if (error || !data?.roadmap_id) throw new GenerationError('internal_error', 'No se pudo cargar el ejemplo. Inténtalo de nuevo.')
   return data.roadmap_id as string
 }
+
+// ---------------------------------------------------------------- link público de una demo
+export interface DemoLink { token: string; expires_at: string }
+export interface PublicDemo { business_name: string; secretary_name: string | null; agency_name: string | null; first_service: string | null; expires_at: string }
+
+/** Crea o renueva (código nuevo, 7 días más) el link de una demo propia. */
+export async function shareDemo(agentId: string): Promise<DemoLink> {
+  const { data, error } = await supabase.rpc('share_demo', { p_agent: agentId })
+  const row = Array.isArray(data) ? data[0] : data
+  if (error || !row) throw new GenerationError('internal_error', 'No se pudo crear el link. Inténtalo de nuevo.')
+  return row as DemoLink
+}
+
+/** Desactiva el link de una demo propia: el código deja de funcionar al momento. */
+export async function unshareDemo(agentId: string): Promise<void> {
+  const { error } = await supabase.rpc('unshare_demo', { p_agent: agentId })
+  if (error) throw new GenerationError('internal_error', 'No se pudo desactivar el link. Inténtalo de nuevo.')
+}
+
+/** Lo que ve el prospecto: nombre del negocio, de la secretaria y de la agencia. Null si el link no existe o venció. */
+export async function publicDemo(token: string): Promise<PublicDemo | null> {
+  const { data, error } = await supabase.rpc('public_demo', { p_token: token })
+  if (error) throw new GenerationError('internal_error', GENERIC)
+  const row = Array.isArray(data) ? data[0] : data
+  return (row as PublicDemo | undefined) ?? null
+}
+
+export const demoLinkUrl = (token: string) => `${window.location.origin}/d/${token}`

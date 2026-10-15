@@ -63,6 +63,8 @@ export interface Booking { id: string; name: string | null; phone: string | null
 /** Secretaria virtual de un negocio (ficha + datos); las instrucciones del chat se construyen a partir de `config`. */
 export interface Agent {
   id: string; roadmap_id: string; source: 'niche' | 'demo'; business_name: string; config: AgentConfig; created_at: string; updated_at: string
+  /** Link público de la demo (…/d/<código>) y su vencimiento; null si no está compartida. */
+  share_token?: string | null; share_expires_at?: string | null
 }
 
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */

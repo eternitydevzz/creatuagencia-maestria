@@ -319,6 +319,41 @@ ok('Otro alumno NO ve las demos de Hugo', (hSeesE ?? []).length === 0)
 r = await call(F.c, 'demo_agent', rmH.id, { manual: { nombre: 'Intruso', rubro: 'bar' } })
 ok('Otro alumno NO puede crear demos en el proyecto de Hugo → 404', r.status === 404)
 
+console.log('\n— Link público de una demo (…/d/<código>)')
+const anonC = client()
+const linkChat = async (share_token, messages = [{ role: 'user', content: 'hola' }]) => {
+  const { data, error } = await anonC.functions.invoke('agent-chat', { body: { share_token, messages } })
+  if (!error) return { status: 200, body: data }
+  const res = error.context; let body = {}; try { body = await res.json() } catch { /* */ }
+  return { status: res?.status ?? 0, body }
+}
+const demoId = demos[0].id
+const { data: sh, error: shErr } = await H.c.rpc('share_demo', { p_agent: demoId })
+const shareTok = sh?.[0]?.token
+ok('El dueño crea el link de su demo (7 días)', !shErr && /^[A-Za-z0-9_-]{22}$/.test(shareTok ?? '') && Math.abs(new Date(sh[0].expires_at) - Date.now() - 7 * 864e5) < 60e3, JSON.stringify(shErr ?? sh))
+const { error: fShare } = await F.c.rpc('share_demo', { p_agent: demoId })
+ok('Otro alumno NO puede compartir la demo de Hugo', !!fShare)
+// Agente de ejemplo del nicho de Hugo (uno por proyecto): ni él puede compartirlo, ni un código puesto a mano lo abre
+let { data: hNiche } = await admin.from('agents').select('id').eq('roadmap_id', rmH.id).eq('source', 'niche').maybeSingle()
+if (!hNiche) hNiche = (await admin.from('agents').insert({ user_id: H.id, roadmap_id: rmH.id, source: 'niche', business_name: 'Ejemplo', config: dc }).select('id').single()).data
+ok('El dueño NO puede compartir el agente de ejemplo del nicho', !!(await H.c.rpc('share_demo', { p_agent: hNiche.id })).error)
+const { data: pub } = await anonC.rpc('public_demo', { p_token: shareTok })
+ok('Sin cuenta se ve solo el nombre del negocio, de la secretaria y de la agencia', pub?.length === 1 && pub[0].business_name === demos[0].business_name && Object.keys(pub[0]).sort().join() === 'agency_name,business_name,expires_at,first_service,secretary_name', JSON.stringify(pub))
+ok('Sin cuenta no se lee la tabla de agentes', ((await anonC.from('agents').select('id')).data ?? []).length === 0)
+r = await linkChat(shareTok)
+ok('Sin cuenta, con el link, la secretaria responde', r.status === 200 && typeof r.body.reply === 'string', JSON.stringify(r))
+const { data: linkLog } = await admin.from('agent_chat_log').select('user_id, agent_id').eq('agent_id', demoId)
+ok('  el mensaje cuenta para el link y para el alumno dueño', (linkLog ?? []).length === 1 && linkLog[0].user_id === H.id)
+await admin.from('agents').update({ share_token: 'CodigoPuestoAManoEnNicho', share_expires_at: new Date(Date.now() + 864e5).toISOString() }).eq('id', hNiche.id)
+ok('Un código en el agente del nicho no abre el chat', (await linkChat('CodigoPuestoAManoEnNicho')).status === 404)
+ok('Un código inventado → 404 demo_link_invalid', (r = await linkChat('CodigoQueNoExisteNinguno')).status === 404 && r.body.error === 'demo_link_invalid', JSON.stringify(r))
+await admin.from('agents').update({ share_expires_at: new Date(Date.now() - 1000).toISOString() }).eq('id', demoId)
+ok('Un link vencido → 404', (await linkChat(shareTok)).status === 404 && ((await anonC.rpc('public_demo', { p_token: shareTok })).data ?? []).length === 0)
+const { data: sh2 } = await H.c.rpc('share_demo', { p_agent: demoId })
+ok('Renovar da un código nuevo y el viejo deja de valer', sh2?.[0]?.token && sh2[0].token !== shareTok && (await linkChat(shareTok)).status === 404 && (await linkChat(sh2[0].token)).status === 200)
+await H.c.rpc('unshare_demo', { p_agent: demoId })
+ok('Desactivado → deja de funcionar al momento', (await linkChat(sh2[0].token)).status === 404)
+
 
 console.log('\n— WhatsApp real (servidor WAHA simulado): vincular, recibir mensajes, responder, citas y pausas')
 const WA_MOCK = 'http://127.0.0.1:3100'
