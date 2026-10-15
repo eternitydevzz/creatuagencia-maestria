@@ -40,7 +40,6 @@ export interface Market {
   country: string
   phoneFormat: string
   cityHint: string
-  nameHint: string
   timezone: string
   /** Regla extra sobre la zona horaria; vacía donde basta el ejemplo. */
   timezoneRule: string
@@ -52,7 +51,7 @@ const MARKETS: Record<Currency, Market> = {
     fmt: (n) => `${n} €`,
     agencyYear: '100.000 €', nicheMonthly: '200-600 €/mes', goalMonthly: '3.000-5.000 €/mes',
     language: 'Español de España', country: 'España', phoneFormat: '6XX XXX XXX', cityHint: 'ciudad española',
-    nameHint: 'un nombre corriente en España', timezone: 'Europe/Madrid', timezoneRule: '',
+    timezone: 'Europe/Madrid', timezoneRule: '',
   },
   USD: {
     currency: 'USD', symbol: '$', name: 'dólares', label: 'Dólar ($)',
@@ -61,7 +60,7 @@ const MARKETS: Record<Currency, Market> = {
     // Neutro: lo entiende cualquier hispanohablante de EEUU. Nada de "vosotros", "coger" ni "vale".
     language: 'Español neutro latinoamericano (sin "vosotros" ni giros de España)', country: 'Estados Unidos',
     // 555-01XX es el rango que EEUU reserva para teléfonos de ficción: nunca coincide con un número real.
-    phoneFormat: '(XXX) 555-01XX', cityHint: 'ciudad de Estados Unidos', nameHint: 'un nombre corriente en Estados Unidos',
+    phoneFormat: '(XXX) 555-01XX', cityHint: 'ciudad de Estados Unidos',
     timezone: 'America/New_York',
     timezoneRule: '"zona_horaria": la zona IANA de la ciudad del negocio, escrita exactamente así (America/New_York, America/Chicago, America/Denver o America/Los_Angeles). Nunca una descripción.',
   },

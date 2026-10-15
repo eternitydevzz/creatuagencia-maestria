@@ -19,7 +19,7 @@ export default function S8TryAgent({ roadmap }: SectionProps) {
   if (!agent) return <Empty icon={MessageCircle}>Primero crea tu agente (paso {stepNo(7)}): aquí es donde hablas con él.</Empty>
 
   const first = agent.config.servicios[0]?.nombre
-  const suggestions = ['Hola', 'Quiero pedir cita', first ? `¿Cuánto cuesta ${first.toLowerCase()}?` : '¿Qué servicios ofrecéis?', '¿Dónde estáis y qué horario tenéis?']
+  const suggestions = ['Hola', 'Quiero pedir cita', first ? `¿Cuánto cuesta ${first.toLowerCase()}?` : '¿Qué servicios ofrecen?', '¿Dónde están y qué horario tienen?']
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,400px)_1fr] lg:items-start">
