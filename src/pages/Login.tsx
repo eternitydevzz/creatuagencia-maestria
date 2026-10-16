@@ -12,23 +12,30 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [unconfirmed, setUnconfirmed] = useState(false)
 
   if (session && needsPassword) return <Navigate to="/reset-password" replace />
   if (session) return <Navigate to="/" replace />
 
   const wrap = async (fn: () => Promise<string | void>) => {
-    setBusy(true); setError(''); setInfo('')
+    setBusy(true); setError(''); setInfo(''); setUnconfirmed(false)
     try { const msg = await fn(); if (msg) setInfo(msg) } catch (e) { setError(e instanceof Error ? e.message : 'Algo ha fallado') } finally { setBusy(false) }
   }
   const signIn = (e: React.FormEvent) => { e.preventDefault(); void wrap(async () => {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    if (error && /not confirmed/i.test(error.message)) { setUnconfirmed(true); throw new Error('Todavía no confirmaste tu email. Abre el enlace que te enviamos al registrarte.') }
     if (error) throw new Error(error.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : error.message)
   }) }
   const magic = () => void wrap(async () => {
     if (!email.trim()) throw new Error('Escribe tu email primero.')
     const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
-    if (error) throw new Error('No se pudo enviar el enlace. Comprueba que tu email es el de tu invitación.')
+    if (error) throw new Error('No se pudo enviar el enlace. Comprueba que tu email es el de tu cuenta.')
     return 'Si tu email está dado de alta, te hemos enviado un enlace de acceso.'
+  })
+  const resend = () => void wrap(async () => {
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim().toLowerCase(), options: { emailRedirectTo: `${window.location.origin}/` } })
+    if (error) throw new Error(/rate|security purposes/i.test(error.message) ? 'Ya te lo enviamos hace poco. Espera un minuto y vuelve a probar.' : 'No se pudo reenviar el email. Inténtalo en un momento.')
+    return 'Te reenviamos el email de confirmación. Revisa también spam o promociones.'
   })
   const forgot = () => void wrap(async () => {
     if (!email.trim()) throw new Error('Escribe tu email primero.')
@@ -42,14 +49,16 @@ export default function Login() {
       <div className="card relative w-full max-w-md animate-pop-in overflow-hidden shadow-[0_30px_90px_rgba(0,40,140,.55)]">
         <img src="/brand/portada-acceso.webp" alt="MaestrIA — Creación de Agencias IA" className="aspect-video w-full object-cover" />
         <div className="space-y-5 p-6">
-          <div className="text-center"><h1 className="text-2xl font-bold">Bienvenido a MaestrIA</h1><p className="mt-1 text-sm text-muted">Acceso solo para alumnos del programa. Usa el email con el que te invitamos.</p></div>
+          <div className="text-center"><h1 className="text-2xl font-bold">Bienvenido a MaestrIA</h1><p className="mt-1 text-sm text-muted">Entra con el email y la contraseña de tu cuenta.</p></div>
           <form onSubmit={signIn} className="space-y-4">
             <label className="block text-sm font-semibold">Correo electrónico<input type="email" required autoComplete="email" className="field mt-1.5 font-normal" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
             <label className="block text-sm font-semibold">Contraseña<input type="password" required autoComplete="current-password" className="field mt-1.5 font-normal" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
             {error && <p role="alert" className="text-sm text-[#ff8f8f]">{error}</p>}
+            {unconfirmed && <button type="button" className="text-sm font-semibold text-accent-hi underline underline-offset-4" onClick={resend} disabled={busy}>Reenviarme el email de confirmación</button>}
             {info && <p role="status" className="text-sm text-accent-glow">{info}</p>}
             <button className="btn w-full" type="submit" disabled={busy}>{busy ? <Spinner /> : null}Entrar<ArrowRight className="h-4 w-4" /></button>
           </form>
+          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-muted">¿Todavía no tienes cuenta? <Link to="/registro" className="font-semibold text-accent-hi hover:underline">Regístrate</Link></p>
           <div className="flex flex-col items-center gap-1 text-sm text-muted">
             <button type="button" className="underline underline-offset-4 hover:text-white" onClick={magic} disabled={busy}>Enviarme un enlace de acceso por email</button>
             <button type="button" className="underline underline-offset-4 hover:text-white" onClick={forgot} disabled={busy}>Olvidé mi contraseña</button>

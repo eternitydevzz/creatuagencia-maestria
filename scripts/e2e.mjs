@@ -22,10 +22,12 @@ const ok = (name, cond, extra = '') => { cond ? pass++ : fail++; console.log(`${
 const admin = createClient(URL_, SERVICE, { auth: { persistSession: false }, realtime: { transport: WebSocket } })
 const client = () => createClient(URL_, ANON, { auth: { persistSession: false }, realtime: { transport: WebSocket } })
 
-async function makeUser(tag) {
+async function makeUser(tag, approved = true) {
   const email = `${tag}-${Date.now()}@test.local`, password = 'Prueba-Local-12345'
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Alumno ${tag}` } })
   if (error) throw error
+  // Como un alta del admin: aprobada en el momento, con los créditos de alta (el registro público deja las cuentas en revisión)
+  if (approved) { const { error: aErr } = await admin.rpc('approve_student', { p_user: data.user.id }); if (aErr) throw aErr }
   const c = client(); const { error: e2 } = await c.auth.signInWithPassword({ email, password }); if (e2) throw e2
   c._uid = data.user.id
   return { id: data.user.id, email, c }
@@ -49,8 +51,29 @@ async function chat(c, agent_id, messages) {
 const credits = async (id) => (await admin.from('profiles').select('credits').eq('id', id).single()).data.credits
 
 const A = await makeUser('ana'), B = await makeUser('beto')
-const su = await client().auth.signUp({ email: `intruso-${Date.now()}@test.local`, password: 'Prueba-Local-12345' })
-ok('El registro público está bloqueado (solo por invitación)', !!su.error || !su.data.session, su.error?.message)
+
+console.log('\n— Registro abierto con aprobación')
+const regEmail = `registro-${Date.now()}@test.local`, regPass = 'Prueba-Local-12345'
+const su = await client().auth.signUp({ email: regEmail, password: regPass, options: { data: { full_name: 'Nora Registro', phone: '+1 (305) 555-0199' } } })
+ok('Cualquiera puede registrarse', !su.error && !!su.data.user, su.error?.message)
+ok('  pero sin sesión hasta confirmar el email', !su.data.session)
+const regId = su.data.user?.id
+const regP = (await admin.from('profiles').select('approved_at, credits, full_name, phone').eq('id', regId).single()).data
+ok('  queda en revisión, con 0 créditos, su nombre y su WhatsApp limpio', regP?.approved_at === null && regP.credits === 0 && regP.full_name === 'Nora Registro' && regP.phone === '+13055550199', JSON.stringify(regP))
+const noConf = await client().auth.signInWithPassword({ email: regEmail, password: regPass })
+ok('  sin confirmar el email no puede entrar', !!noConf.error && /confirm/i.test(noConf.error.message), noConf.error?.message)
+await admin.auth.admin.updateUserById(regId, { email_confirm: true }) // como si abriera el enlace del email
+const R = { id: regId, c: client() }; await R.c.auth.signInWithPassword({ email: regEmail, password: regPass }); R.c._uid = regId
+const { data: regRm, error: regRmErr } = await R.c.from('roadmaps').insert({ project_name: 'Intento', user_id: regId }).select().maybeSingle()
+ok('En revisión: NO puede crear proyectos', !!regRmErr && !regRm, regRmErr?.message)
+const { data: someRm } = await admin.from('roadmaps').select('id').limit(1).maybeSingle()
+const regGen = await call(R.c, 'new_niches', someRm?.id ?? '00000000-0000-0000-0000-000000000000')
+ok('En revisión: generate → 403 not_approved', regGen.status === 403 && regGen.body.error === 'not_approved', JSON.stringify(regGen))
+const regSample = await R.c.functions.invoke('load-sample', { body: {} })
+ok('En revisión: no puede cargar el proyecto de ejemplo → 403', regSample.error?.context?.status === 403)
+ok('En revisión: el chat del agente → 403', (await chat(R.c, '00000000-0000-0000-0000-000000000000', [{ role: 'user', content: 'hola' }])).status === 403)
+ok('En revisión: no puede aprobarse a sí misma', !!(await R.c.from('profiles').update({ approved_at: new Date().toISOString() }).eq('id', regId)).error || (await admin.from('profiles').select('approved_at').eq('id', regId).single()).data.approved_at === null)
+ok('En revisión: no puede llamar a approve_student', !!(await R.c.rpc('approve_student', { p_user: regId, p_credits: 500 })).error && (await credits(regId)) === 0)
 
 console.log('\n— Alta y créditos iniciales')
 ok('Perfil creado automáticamente con 30 créditos', (await credits(A.id)) === 30)
@@ -510,6 +533,23 @@ ok('Email inválido → 400', (await adm(ADM.c, { action: 'create', email: 'sin-
 ok('Créditos fuera de rango → 400', (await adm(ADM.c, { action: 'create', email: `otro-${Date.now()}@alumnos.test`, name: '', credits: 5000 })).status === 400)
 const lst = await adm(ADM.c, { action: 'list' })
 ok('La lista incluye al alumno nuevo con sus datos', lst.status === 200 && lst.body.students.some((x) => x.id === sid && x.credits === 12 && x.projects === 0))
+
+ok('  y el alta del admin queda aprobada en el momento', !!(await admin.from('profiles').select('approved_at').eq('id', sid).single()).data.approved_at)
+
+const pendingRow = lst.body.students?.find((x) => x.id === regId)
+ok('La lista muestra el registro pendiente, con su email confirmado y su WhatsApp', pendingRow?.approved_at === null && !!pendingRow?.email_confirmed_at && pendingRow?.phone === '+13055550199', JSON.stringify(pendingRow))
+const unconf = await client().auth.signUp({ email: `sinconfirmar-${Date.now()}@test.local`, password: regPass })
+const ap0 = await adm(ADM.c, { action: 'approve', id: unconf.data.user.id, credits: 30 })
+ok('Aprobar a quien no confirmó su email → 409 y sigue en revisión', ap0.status === 409 && ap0.body.error === 'email_not_confirmed' && (await admin.from('profiles').select('approved_at').eq('id', unconf.data.user.id).single()).data.approved_at === null, JSON.stringify(ap0))
+ok('Un alumno NO puede aprobar registros → 403', (await adm(A.c, { action: 'approve', id: regId, credits: 30 })).status === 403)
+ok('Créditos de aprobación fuera de rango → 400', (await adm(ADM.c, { action: 'approve', id: regId, credits: 5000 })).status === 400)
+const ap1 = await adm(ADM.c, { action: 'approve', id: regId, credits: 25 })
+ok('El admin aprueba: queda aprobada con los créditos elegidos (25)', ap1.status === 200 && ap1.body.student?.credits === 25 && (await credits(regId)) === 25, JSON.stringify(ap1))
+ok('  queda registrado quién la aprobó', (await admin.from('profiles').select('approved_by').eq('id', regId).single()).data.approved_by === ADM.id)
+ok('Aprobar dos veces → 409 y no regala créditos', (await adm(ADM.c, { action: 'approve', id: regId, credits: 25 })).status === 409 && (await credits(regId)) === 25)
+const { data: regRm2, error: regRm2Err } = await R.c.from('roadmaps').insert({ project_name: 'Ya aprobada', user_id: regId }).select().single()
+ok('Aprobada: ya puede crear proyectos', !regRm2Err && !!regRm2?.id, regRm2Err?.message)
+ok('Rechazar = borrar la cuenta pendiente', (await adm(ADM.c, { action: 'delete', id: unconf.data.user.id })).status === 200 && !(await admin.from('profiles').select('id').eq('id', unconf.data.user.id).maybeSingle()).data)
 
 ok('Añadir créditos: +5 → 17', (await adm(ADM.c, { action: 'grant', id: sid, amount: 5 })).body.credits === 17 && (await credits(sid)) === 17)
 ok('Quitar créditos: -3 → 14', (await adm(ADM.c, { action: 'grant', id: sid, amount: -3 })).body.credits === 14)

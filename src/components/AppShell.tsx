@@ -1,10 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { FolderOpen, LayoutDashboard, LogOut, Map, Settings as Cog, Coins, Users, Volume2, VolumeX } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
 import { computeXp, levelFor } from '@/lib/gamification'
 import { Avatar } from '@/components/ui/bits'
 import { useSound } from '@/hooks/useSound'
+import { adminStudents, type Student } from '@/lib/api'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -21,6 +23,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const xp = computeXp(roadmaps ?? [], gens ?? 0)
   const lvl = levelFor(xp)
   const low = (profile?.credits ?? 99) <= 5
+  // Solo para administradores: cuántos registros esperan aprobación (el número aparece junto a "Alumnos").
+  // Comparte la consulta del panel de alumnos, así que aprobar desde allí actualiza el contador.
+  const { data: students } = useQuery({
+    queryKey: ['students'], enabled: profile?.role === 'admin', staleTime: 60_000,
+    queryFn: async () => (await adminStudents<{ students: Student[] }>({ action: 'list' })).students,
+  })
+  // Solo los que ya confirmaron su email: son los que se pueden aprobar (los demás pueden ser bots o registros abandonados)
+  const pendingCount = (students ?? []).filter((s) => s.role === 'student' && !s.approved_at && s.email_confirmed_at).length
   const sound = useSound()
 
   return (
@@ -29,9 +39,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
           <Link to="/" aria-label="MaestrIA · inicio"><img src="/brand/logo-horizontal.png" alt="MaestrIA" className="h-9 w-auto" /></Link>
           <nav className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1 md:overflow-visible" aria-label="Principal">
-            {[...links, ...(profile?.role === 'admin' ? [{ to: '/admin', label: 'Alumnos', icon: Users, end: false }] : [])].map(({ to, label, icon: Icon, end }) => (
+            {[...links, ...(profile?.role === 'admin' ? [{ to: '/admin', label: 'Alumnos', icon: Users, end: false, badge: pendingCount }] : [])].map(({ to, label, icon: Icon, end, badge }: { to: string; label: string; icon: typeof Users; end?: boolean; badge?: number }) => (
               <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-none items-center gap-2 rounded-xl px-2.5 py-2 lg:px-3 text-sm font-semibold transition ${isActive ? 'border border-accent/40 bg-accent/15 text-white' : 'border border-transparent text-muted hover:text-white'}`}>
-                <Icon className="hidden h-4 w-4 min-[1500px]:block" />{label}
+                <Icon className="hidden h-4 w-4 min-[1500px]:block" />{label}{badge ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8b93a] px-1.5 font-mono text-[11px] font-bold text-bg" aria-label={`${badge} pendientes`}>{badge}</span> : null}
               </NavLink>
             ))}
           </nav>

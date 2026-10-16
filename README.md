@@ -20,7 +20,7 @@ tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virt
 | Capa | Tecnología |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite + Tailwind + React Query (`src/`) |
-| Auth y datos | Supabase: Auth (solo invitación), Postgres con seguridad por filas (`supabase/migrations/`) |
+| Auth y datos | Supabase: Auth (registro abierto con confirmación de email y aprobación manual), Postgres con seguridad por filas (`supabase/migrations/`) |
 | IA | Edge Function `generate` (`supabase/functions/generate/`) → API de Anthropic. **La clave nunca llega al navegador** |
 | Hosting | Render (web estática, `render.yaml`) + Supabase (base de datos, login y función de IA) |
 
@@ -94,11 +94,13 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 
 ## Puesta en producción
 
-> **Alumnos sin correo electrónico:** una cuenta con rol `admin` ve la pestaña **Alumnos**: da de alta (se muestra una contraseña temporal una sola vez, con un mensaje listo para copiar), añade o quita créditos, genera contraseñas nuevas y elimina alumnos (con su WhatsApp, proyectos y datos). El rol admin se asigna a mano: `update profiles set role = 'admin' where email = '…'`. El registro público debe estar cerrado: `supabase config push --project-ref <ref> --workdir deploy/supabase-prod-auth`.
+> **Registro abierto con aprobación** (`/registro`): cualquiera crea su cuenta (nombre, email, WhatsApp, contraseña) y confirma su email. Entra **en revisión**: sin créditos y sin poder crear proyectos, cargar el ejemplo ni usar la IA (lo bloquean la seguridad por filas y las Edge Functions, no solo la pantalla). Un admin la aprueba en **Alumnos → Pendientes**, eligiendo los créditos, o la rechaza (se borra la cuenta). Solo se puede aprobar a quien confirmó su email; los registros sin confirmar se borran a los 7 días. Las altas que hace un admin (panel o `scripts/invite.mjs`) quedan aprobadas en el momento. Requisito: **SMTP propio** en Supabase (Resend); el de Supabase solo envía a los miembros del equipo y pocos por hora.
+>
+> **Alumnos sin correo electrónico:** una cuenta con rol `admin` ve la pestaña **Alumnos**: da de alta (se muestra una contraseña temporal una sola vez, con un mensaje listo para copiar), añade o quita créditos, genera contraseñas nuevas y elimina alumnos (con su WhatsApp, proyectos y datos). El rol admin se asigna a mano: `update profiles set role = 'admin' where email = '…'`. La configuración de acceso de producción (registro y confirmación de email) se aplica con `supabase config push --project-ref <ref> --workdir deploy/supabase-prod-auth`, siempre **después** de la migración y las funciones.
 
 1. **Supabase**: crea un proyecto en supabase.com → `supabase link --project-ref <ref>` → `supabase db push`.
    En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
-   En *Authentication → Providers → Email*: deja activo el email y **desactiva "Allow new users to sign up"** (acceso solo por invitación).
+   En *Authentication → Providers → Email*: deja activo el email, **"Allow new users to sign up"** activo y **"Confirm email"** activo (lo aplica también `deploy/supabase-prod-auth`).
    Configura un SMTP propio (Resend, Postmark…) para que lleguen las invitaciones.
 2. **Clave de IA**: en el panel de Supabase (*Edge Functions → Secrets*) crea `ANTHROPIC_API_KEY` y `ALLOWED_ORIGIN=https://tu-dominio` (mejor desde el panel que desde la terminal: la clave no queda en el historial). Después despliega: `supabase functions deploy generate && supabase functions deploy agent-chat (y, si usas WhatsApp real, `wa-connect` y `wa-webhook`)`.
    La función responde con un latido mientras Claude trabaja y se corta a los `GENERATION_TIMEOUT_SECONDS` (140 por defecto; el límite de la función es 150 s en Free y 400 s en Pro). Si la IA tarda más, el alumno ve un error y se le devuelven los créditos.

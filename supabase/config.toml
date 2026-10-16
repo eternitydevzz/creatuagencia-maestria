@@ -173,7 +173,7 @@ enable_refresh_token_rotation = true
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
-enable_signup = false
+enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
@@ -219,13 +219,14 @@ web3 = 30
 [auth.email]
 # OJO: esto es "proveedor de email ACTIVO", no "registro abierto": con false nadie puede iniciar sesión
 # (GoTrue rechaza el grant de contraseña con "Email logins are disabled"). El registro público se cierra
-# arriba, con [auth] enable_signup = false. Mismo valor que en deploy/supabase-prod-auth/supabase/config.toml.
+# arriba, con [auth] enable_signup. Mismo valor que en deploy/supabase-prod-auth/supabase/config.toml.
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+# Registro abierto con aprobación: hay que confirmar el email antes de entrar (las altas del admin ya vienen confirmadas).
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.

@@ -8,6 +8,8 @@ export type { DeliverableMeta, AgentConfig }
 export interface Profile {
   id: string; email: string; full_name: string | null
   role: 'student' | 'admin'; credits: number; created_at: string
+  /** null = cuenta registrada que todavía no aprobó un administrador (sin créditos ni acceso al mapa). */
+  approved_at: string | null; phone: string | null
 }
 export interface Metrics { leads?: number; conversion?: number; ticket?: number; ad_spend?: number }
 export interface Pricing { mode?: 'aggressive' | 'premium'; currency?: Currency }

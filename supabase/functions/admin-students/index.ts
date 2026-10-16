@@ -1,4 +1,6 @@
-// Edge Function `admin-students`: alta, baja y gestión de alumnos desde el panel, solo para cuentas con rol admin.
+// Edge Function `admin-students`: alta, baja, aprobación y gestión de alumnos desde el panel, solo para cuentas con rol admin.
+// Registro abierto: quien se registra queda en revisión (approved_at vacío, 0 créditos) hasta que aquí se aprueba (`approve`);
+// rechazar es borrar la cuenta (`delete`). Las altas hechas por un admin (`create`) se aprueban en el mismo momento.
 // El rol se comprueba aquí contra la base de datos (nunca se fía de lo que diga el navegador). Las contraseñas temporales se
 // generan en el servidor y se devuelven una sola vez; no se guardan en ningún sitio.
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -47,14 +49,22 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'list') {
-      const { data: profiles, error } = await admin.from('profiles').select('id, email, full_name, role, credits, created_at').order('created_at', { ascending: false })
+      const { data: profiles, error } = await admin.from('profiles').select('id, email, full_name, phone, role, credits, created_at, approved_at').order('created_at', { ascending: false })
       if (error) throw new HttpError(500, 'db_error', error.message)
       const { data: projects } = await admin.from('roadmaps').select('user_id')
       const counts = new Map<string, number>()
       for (const r of projects ?? []) counts.set(r.user_id, (counts.get(r.user_id) ?? 0) + 1)
-      const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-      const seen = new Map((users?.users ?? []).map((u) => [u.id, u.last_sign_in_at ?? null]))
-      return json({ students: (profiles ?? []).map((p) => ({ ...p, projects: counts.get(p.id) ?? 0, last_sign_in_at: seen.get(p.id) ?? null })) })
+      const { data: info, error: iErr } = await admin.rpc('admin_auth_info')
+      if (iErr) throw new HttpError(500, 'db_error', iErr.message)
+      const seen = new Map(((info ?? []) as Array<{ id: string; email_confirmed_at: string | null; last_sign_in_at: string | null }>)
+        .map((u) => [u.id, { last: u.last_sign_in_at, confirmed: u.email_confirmed_at }]))
+      // Registros que nunca confirmaron su email en 7 días: se borran (no pueden entrar y solo llenan la lista de pendientes)
+      const stale = (profiles ?? []).filter((p) => p.role === 'student' && !p.approved_at && !seen.get(p.id)?.confirmed && Date.now() - new Date(p.created_at).getTime() > 7 * 864e5)
+      for (const p of stale) await admin.auth.admin.deleteUser(p.id).catch(() => null)
+      const gone = new Set(stale.map((p) => p.id))
+      return json({ students: (profiles ?? []).filter((p) => !gone.has(p.id)).map((p) => ({
+        ...p, projects: counts.get(p.id) ?? 0, last_sign_in_at: seen.get(p.id)?.last ?? null, email_confirmed_at: seen.get(p.id)?.confirmed ?? null,
+      })) })
     }
 
     if (action === 'create') {
@@ -66,24 +76,37 @@ Deno.serve(async (req) => {
       const password = tempPassword()
       const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: name ? { full_name: name } : undefined })
       if (error || !data.user) {
-        if (/already|registered|exists/i.test(error?.message ?? '')) throw new HttpError(409, 'email_exists', 'Ya existe un alumno con ese email')
+        if (/already|registered|exists/i.test(error?.message ?? '')) {
+          const { data: ex } = await admin.from('profiles').select('approved_at').eq('email', email).maybeSingle()
+          if (ex && !ex.approved_at) throw new HttpError(409, 'email_pending', 'Esa persona ya se registró y está en Pendientes: apruébala desde ahí (o recházala y vuelve a crearla).')
+          throw new HttpError(409, 'email_exists', 'Ya existe un alumno con ese email')
+        }
         throw new HttpError(500, 'create_failed', error?.message)
       }
-      // El alta automática da los créditos iniciales; aquí se ajustan a los que se pidieron
+      // El alta automática deja la cuenta en revisión y sin créditos: la que crea un admin se aprueba ya, con los créditos pedidos.
+      // La cuenta ya existe: si la aprobación falla no se deshace el alta, pero se avisa (queda en Pendientes para aprobarla a mano).
+      const { error: aErr } = await admin.rpc('approve_student', { p_user: data.user.id, p_credits: credits, p_by: me })
+      if (aErr) console.error('[admin-students] aprobación del alta', aErr.message)
       const { data: p } = await admin.from('profiles').select('credits').eq('id', data.user.id).single()
-      const granted = p?.credits ?? 0
-      const delta = credits - granted
-      // La cuenta ya existe: si el ajuste falla no se deshace el alta, pero se informa del saldo real (no del pedido).
-      const adjust = delta > 0
-        ? await admin.rpc('refund_credits', { p_user: data.user.id, p_amount: delta, p_reason: 'admin: créditos del alta' })
-        : delta < 0
-          ? await admin.rpc('spend_credits', { p_user: data.user.id, p_cost: -delta, p_reason: 'admin: ajuste del alta' })
-          : { data: granted, error: null }
-      if (adjust.error) console.error('[admin-students] ajuste de créditos del alta', adjust.error.message)
       return json({
-        student: { id: data.user.id, email, password, credits: typeof adjust.data === 'number' ? adjust.data : granted },
-        ...(adjust.error ? { warning: `La cuenta se creó, pero los créditos quedaron en ${granted} en vez de ${credits}. Ajústalos con el botón de créditos.` } : {}),
+        student: { id: data.user.id, email, password, credits: p?.credits ?? 0 },
+        ...(aErr ? { warning: 'La cuenta se creó, pero no se pudo aprobar. Apruébala desde Pendientes.' } : {}),
       })
+    }
+
+    if (action === 'approve') {
+      const t = await targetOf(body.id)
+      const credits = body.credits === undefined || body.credits === null ? null : Math.round(Number(body.credits))
+      if (credits !== null && (!Number.isFinite(credits) || credits < 0 || credits > 1000)) throw new HttpError(400, 'invalid_credits', 'Los créditos deben estar entre 0 y 1000')
+      // Solo se aprueba a quien confirmó su email: así sabemos que el correo es suyo (y sin confirmarlo no podría entrar)
+      const { data: u, error: uErr } = await admin.auth.admin.getUserById(t.id)
+      if (uErr || !u?.user) throw new HttpError(404, 'student_not_found', 'No existe ese alumno')
+      if (!u.user.email_confirmed_at) throw new HttpError(409, 'email_not_confirmed', 'Todavía no confirmó su email. Podrás aprobarlo cuando lo haga.')
+      const { data: done, error } = await admin.rpc('approve_student', { p_user: t.id, p_credits: credits, p_by: me })
+      if (error) throw new HttpError(500, 'db_error', error.message)
+      if (!done) throw new HttpError(409, 'already_approved', 'Esa cuenta ya estaba aprobada')
+      const { data: p } = await admin.from('profiles').select('credits, approved_at').eq('id', t.id).single()
+      return json({ student: { id: t.id, email: t.email, credits: p?.credits ?? 0, approved_at: p?.approved_at ?? null } })
     }
 
     if (action === 'grant') {

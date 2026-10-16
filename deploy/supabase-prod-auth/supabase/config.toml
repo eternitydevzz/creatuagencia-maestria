@@ -2,14 +2,17 @@
 # Aplicar:  supabase config push --project-ref <ref> --workdir deploy/supabase-prod-auth
 # Previsualizar antes:  supabase config diff --project-ref <ref> --workdir deploy/supabase-prod-auth
 # OJO: [auth.email] enable_signup = true significa "proveedor de email ACTIVO" (si se pone false, nadie puede iniciar sesión).
-#      El registro público se cierra con [auth] enable_signup = false.
+#      El registro público se abre o cierra con [auth] enable_signup. Abierto: quien se registra confirma su email y queda en
+#      revisión, sin créditos, hasta que un admin lo aprueba (migración 20261015000002_signup_approval.sql).
 project_id = "creatuagencia-maestria"
 
 [auth]
-enable_signup = false
+enable_signup = true
 site_url = "https://creatuagencia-maestria.onrender.com"
 additional_redirect_urls = ["https://creatuagencia-maestria.onrender.com", "https://creatuagencia-maestria.onrender.com/reset-password"]
 minimum_password_length = 10
 
 [auth.email]
 enable_signup = true
+# Hay que confirmar el email antes de entrar. Necesita SMTP propio (Resend): el de Supabase solo envía unos pocos por hora.
+enable_confirmations = true
