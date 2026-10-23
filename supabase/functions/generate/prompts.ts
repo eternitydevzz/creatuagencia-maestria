@@ -310,10 +310,11 @@ ${material}
 
 REGLAS PARA LA FICHA
 - Usa SOLO lo que consta en el material. Nombre, servicios, precios, horarios, dirección y teléfono tal cual aparecen. No inventes datos del negocio.
-- Lo que no conste se omite o se deja vacío (p. ej. un servicio sin precio va sin "precio"; sin horario, "horario" vacío). Nunca pongas "no consta" ni "N/A" como si fuera un dato.
+- Lo que no conste se omite o se deja vacío (p. ej. un servicio sin precio va sin "precio"; sin horario, "horario" vacío). Nunca pongas "no consta", "N/A", "consultar" ni marcadores entre corchetes como si fueran un dato. Un precio solo va si figura en el material, con su cifra.
+- "horario": con los días y horas exactos que figuran, día por día si hace falta (p. ej. "L-V 9:00-19:00, S 9:00-13:00, D cerrado").
 - Hasta 10 servicios, los más importantes. Si la web no tiene servicios claros, deduce solo los generales evidentes por el rubro, sin precios.
 - Políticas y preguntas frecuentes: solo si se deducen del material (cancelaciones, formas de pago, primera visita, urgencias…). Es mejor 2 reales que 6 inventadas.
-- La secretaria se llama ${pickSecretaryName()} (usa exactamente ese nombre), con un tono acorde al sector y un saludo de WhatsApp de 1-2 frases que menciona el nombre del negocio y pregunta en qué puede ayudar.
+- La secretaria se llama ${pickSecretaryName()} (usa exactamente ese nombre), con un tono acorde al sector y un saludo de WhatsApp de 1-2 frases que menciona el nombre del negocio y pregunta en qué puede ayudar. Sin la sigla "VA" y sin markdown.
 - "datos_cita": 3-5 datos que pide para agendar, en orden, adecuados al negocio.
 - Escribe todo en español.${mk.timezoneRule ? `\n- ${mk.timezoneRule}` : ''}
 
