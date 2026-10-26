@@ -14,8 +14,10 @@ export interface AgentConfig {
 }
 
 export const DEFAULT_TIMEZONE = 'Europe/Madrid'
-/** Zona en la que la secretaria lee "hoy", "mañana" o "el lunes". Fija para todas: el modelo pequeño no sabe calcular fechas,
- *  así que recibe el calendario ya hecho (ver dateContext) y no depende de la zona que la IA haya puesto en la ficha. */
+/** Zona de respaldo en la que la secretaria lee "hoy", "mañana" o "el lunes" cuando la ficha no trae una zona válida. Lo normal
+ *  es usar la del negocio (`negocio.zona_horaria`): una clínica de Miami no puede dar las horas de Buenos Aires. El modelo
+ *  pequeño no sabe calcular fechas, así que siempre recibe el calendario ya hecho (ver dateContext); si la zona que escribió la
+ *  IA no existe, dateContext cae en esta. */
 export const CHAT_TIMEZONE = 'America/Argentina/Buenos_Aires'
 const CALENDAR_DAYS = 14
 
@@ -84,15 +86,15 @@ export function dateContext(now = new Date(), zone: string = CHAT_TIMEZONE): str
     return `- ${label}${i === 0 ? ' (hoy)' : i === 1 ? ' (mañana)' : ''}`
   })
   const today = days[0].slice(2, -' (hoy)'.length)
-  return `Hoy es ${today}/${y} y son las ${dd(get('hour'))}:${dd(get('minute'))} (hora de Buenos Aires).
+  return `Hoy es ${today}/${y} y son las ${dd(get('hour'))}:${dd(get('minute'))} (hora local del negocio).
 
 Calendario de los próximos ${CALENDAR_DAYS} días (la única fuente de fechas):
 ${days.join('\n')}`
 }
 
-/** Compatibilidad: el panel muestra y copia las instrucciones con la fecha de ese momento. La zona de la ficha ya no se usa. */
-export function nowText(_zone?: string, now = new Date()): string {
-  return dateContext(now)
+/** El panel muestra y copia las instrucciones con la fecha de ese momento, en la zona del negocio (o la de respaldo). */
+export function nowText(zone?: string, now = new Date()): string {
+  return dateContext(now, zone || CHAT_TIMEZONE)
 }
 
 /** Un precio solo vale si es un importe real: nada de "[precio]", "consultar" ni campos sin cifras. */
@@ -114,7 +116,7 @@ export function extractBooking(reply: string): { text: string; booking: Booking 
 }
 
 /** Instrucciones del chat a partir de la ficha. `now` es el bloque de dateContext (fecha, hora y calendario). Con `capture` la
- *  secretaria marca los pedidos de turno ([[CITA …]]) para que el servidor los registre; sin él (las que se copian a otra
+ *  secretaria marca los pedidos de cita ([[CITA …]]) para que el servidor los registre; sin él (las que se copian a otra
  *  plataforma) esa marca no existe. */
 export function buildAgentPrompt(c: AgentConfig, now: string, capture = false): string {
   const n = c.negocio
@@ -133,9 +135,9 @@ export function buildAgentPrompt(c: AgentConfig, now: string, capture = false): 
 
 TU TRABAJO
 1. Resolver dudas sobre el negocio con los datos de abajo.
-2. Entender qué necesita la persona y llevarla a pedir un turno (o a dejar sus datos para que el equipo la contacte).
+2. Entender qué necesita la persona y llevarla a pedir una cita (o a dejar sus datos para que el equipo la contacte).
 3. Si la persona solo saluda, responde con tu saludo: «${saludo}» (puedes adaptarlo a la hora del día). En tu primer mensaje preséntate así: «Soy ${c.secretaria.nombre}, del equipo de ${n.nombre}» o «Soy ${c.secretaria.nombre}, la secretaria de ${n.nombre}». Nunca uses la sigla "VA".
-4. Pedir turno: pide ${datos}. Una cosa por mensaje. Cuando tengas todo, resume en una línea (servicio, día con fecha, franja, nombre) y di que le pasas el pedido al equipo, que te confirma el turno por este medio.
+4. Pedir cita: pide ${datos}. Una cosa por mensaje. Cuando tengas todo, resume en una línea (servicio, día con fecha, franja, nombre) y di que le pasas el pedido al equipo, que te confirma la cita por este medio.
 
 FECHAS (obligatorio)
 ${now}
@@ -145,9 +147,9 @@ ${now}
 - No ofrezcas horas que ya pasaron hoy.
 
 AGENDA Y DISPONIBILIDAD
-- No tienes acceso a la agenda real. Nunca digas "tenemos lugar", "hay disponibilidad", "hay turno", "queda agendado" ni "queda confirmado", ni des a entender que un horario está libre.
+- No tienes acceso a la agenda real. Nunca digas "tenemos lugar", "hay disponibilidad", "hay cita", "hay turno", "queda agendado" ni "queda confirmado", ni des a entender que un horario está libre.
 - Antes de ofrecer un día, búscalo en el Horario del negocio. ${horario ? 'Si ese día no atienden, dilo claramente ("los sábados no atendemos") y ofrece el día abierto más cercano del calendario.' : 'El horario no está cargado: no supongas qué días atienden; pregunta qué día y franja prefiere la persona y di que el equipo le confirma.'}
-- Ofrece días y franjas dentro del horario (por ejemplo "el lunes 26/10 por la mañana, entre las 9 y las 13") y aclara que el equipo confirma el turno.
+- Ofrece días y franjas dentro del horario (por ejemplo "el lunes 26/10 por la mañana, entre las 9 y las 13") y aclara que el equipo confirma la cita.
 - Si piden una hora concreta: si está dentro del horario, di que lo anotas como preferencia y que el equipo le confirma si está libre; si está fuera del horario, dilo y ofrece otra franja.
 
 CÓMO ESCRIBES
@@ -159,7 +161,7 @@ CÓMO ESCRIBES
 
 PRECIOS
 - Solo puedes dar los precios que aparecen tal cual en "Servicios y precios". Nunca un precio estimado, un rango aproximado, "desde" que no esté escrito, ni un texto entre corchetes como [precio].
-- Si el servicio no tiene precio en la lista o no aparece, responde: "el precio te lo confirma el equipo", y sigue guiando al turno.
+- Si el servicio no tiene precio en la lista o no aparece, responde: "el precio te lo confirma el equipo", y sigue guiando a la cita.
 
 DATOS DEL NEGOCIO (única fuente de verdad)
 ${[line('Negocio', n.nombre), line('Qué hacemos', n.descripcion), line('Dirección', n.ubicacion), line('Horario', horario || '(no cargado)'), line('Teléfono', n.telefono), line('Web', n.web)].filter(Boolean).join('\n')}
@@ -167,7 +169,7 @@ ${[line('Negocio', n.nombre), line('Qué hacemos', n.descripcion), line('Direcci
 Servicios y precios:
 ${servicios}
 ${politicas ? `\nPolíticas:\n${politicas}\n` : ''}${faq ? `\nPreguntas frecuentes:\n${faq}\n` : ''}
-${capture ? `REGISTRO DE PEDIDOS DE TURNO
+${capture ? `REGISTRO DE PEDIDOS DE CITA
 - Cuando la persona haya aceptado tu resumen y tengas todos los datos, termina ESE mismo mensaje con una línea aparte con este formato exacto: [[CITA {"nombre":"…","telefono":"…","servicio":"…","cuando":"día con fecha del calendario y franja pedida","notas":"…"}]]
 - Escríbela solo una vez por pedido y nunca en otro caso. No la menciones ni la expliques.
 

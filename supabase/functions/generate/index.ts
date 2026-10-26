@@ -10,6 +10,7 @@ import * as P from './prompts.ts'
 import { FetchError, fetchSite } from './fetchSite.ts'
 import { cleanConfig } from '../_shared/agent.ts'
 import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
+import { LIVE_AGENCY, LIVE_CONTENT } from './liveDemo.ts'
 
 // ---------------------------------------------------------------- configuración
 const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-sonnet-5-5'
@@ -30,6 +31,11 @@ const RATE_LIMIT_PER_MINUTE = Number(Deno.env.get('RATE_LIMIT_PER_MINUTE') ?? 10
 const TIMEOUT_MS = Number(Deno.env.get('GENERATION_TIMEOUT_SECONDS') ?? 140) * 1000
 // Cada cuántos segundos se envía un latido al navegador mientras Claude trabaja (Supabase corta las conexiones mudas a los 60 s)
 const HEARTBEAT_MS = Number(Deno.env.get('HEARTBEAT_SECONDS') ?? 8) * 1000
+// Modo directo (clases en vivo): las cuentas de esta lista no llaman a Claude en los tipos de LIVE_CONTENT; esperan unos
+// segundos y reciben el contenido predefinido de liveDemo.ts, que se valida, cobra y guarda igual que una generación normal.
+const LIVE_EMAILS = (Deno.env.get('LIVE_DEMO_EMAILS') ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+const LIVE_MIN_MS = 7000
+const LIVE_MAX_MS = 10000
 
 type Effort = 'low' | 'medium' | 'high'
 // `model` distinto del principal → sin effort ni fallbacks (son parámetros del modelo grande)
@@ -127,6 +133,17 @@ async function complete(def: KindDef, system: string, messages: Array<{ role: 'u
   }
 }
 
+/** Modo directo: espera entre 7 y 10 s (sin pasarse del tiempo máximo) y devuelve el contenido predefinido como si fuera la
+ *  respuesta de Claude. Si el proyecto tiene otro nombre de agencia, se pone en lugar del predefinido. */
+async function liveCompletion(kind: string, agencyName: string | undefined, deadline: number): Promise<Completion> {
+  const wait = LIVE_MIN_MS + Math.random() * (LIVE_MAX_MS - LIVE_MIN_MS)
+  await new Promise((r) => setTimeout(r, Math.max(0, Math.min(wait, deadline - Date.now() - 2000))))
+  let text = JSON.stringify(LIVE_CONTENT[kind])
+  const name = agencyName?.trim()
+  if (name && name !== LIVE_AGENCY) text = text.replaceAll(LIVE_AGENCY, JSON.stringify(name).slice(1, -1))
+  return { text, inputTokens: 0, outputTokens: 0 }
+}
+
 // ---------------------------------------------------------------- contexto del proyecto
 /** Los entregables guardan metadatos internos en `_meta`; a la IA no le hacen falta. */
 function withoutMeta(o: Record<string, unknown> | undefined) {
@@ -219,6 +236,7 @@ Deno.serve(async (req) => {
     if (!def) throw new HttpError(400, 'unknown_kind')
     const params = (body.params && typeof body.params === 'object') ? body.params : {}
     const roadmapId = str(body.roadmap_id, 64, 'roadmap_id')
+    const live = LIVE_EMAILS.includes((auth.user.email ?? '').toLowerCase()) && kind in LIVE_CONTENT
 
     // El proyecto se lee con el token del alumno: la seguridad por filas garantiza que es suyo.
     const { data: roadmap, error: rErr } = await userDb.from('roadmaps').select('*').eq('id', roadmapId).maybeSingle()
@@ -243,7 +261,14 @@ Deno.serve(async (req) => {
         const { count: nDemos } = await userDb.from('agents').select('id', { count: 'exact', head: true }).eq('roadmap_id', roadmapId).eq('source', 'demo')
         if ((nDemos ?? 0) >= MAX_DEMOS_PER_PROJECT) throw new HttpError(409, 'demo_limit', `Máximo ${MAX_DEMOS_PER_PROJECT} demos por proyecto. Borra alguna para crear otra.`)
         const rawUrl = typeof params.url === 'string' ? params.url.trim() : ''
-        if (rawUrl) {
+        if (live) {
+          // Modo directo: la web no se descarga (en directo no puede fallar); se guarda la dirección que se pegó
+          // (la pantalla de demos lee el dominio con new URL: una dirección inválida se guarda como "a mano" para no romperla)
+          let pasted: URL | null = null
+          try { if (rawUrl) pasted = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`) } catch { /* inválida */ }
+          demoOrigin = pasted && pasted.href.length <= 300 ? { tipo: 'url', url: pasted.href } : { tipo: 'manual' }
+          prompt = 'modo directo'
+        } else if (rawUrl) {
           if (rawUrl.length > 300) throw new HttpError(400, 'url_invalid', 'La dirección es demasiado larga')
           try {
             // Se descarga la web ANTES de cobrar: si no se puede abrir, el alumno no paga nada
@@ -281,7 +306,7 @@ Deno.serve(async (req) => {
 
     // Un índice único (roadmap_id, kind) sobre las generaciones en curso impide cobrar dos veces lo mismo a la vez.
     const { data: gen, error: gErr } = await admin.from('generations')
-      .insert({ user_id: userId, roadmap_id: roadmapId, kind, credits_cost: def.cost, model: def.model ?? MODEL }).select('id').single()
+      .insert({ user_id: userId, roadmap_id: roadmapId, kind, credits_cost: def.cost, model: live ? 'modo-directo' : def.model ?? MODEL }).select('id').single()
     if (gErr?.code === '23505') throw new HttpError(409, 'already_running', 'Ya se está generando esto')
     if (gErr || !gen) throw new HttpError(500, 'db_error', gErr?.message)
     generationId = gen.id
@@ -303,7 +328,7 @@ Deno.serve(async (req) => {
           try { const value = extractJson(text); return def.valid(value) ? { ok: true, value } : { ok: false } } catch { return { ok: false } }
         }
         // La respuesta debe ser JSON con la forma que pide la interfaz; si no, un reintento
-        let out = await complete(def, system, messages, left())
+        let out = live ? await liveCompletion(kind, ctx.agencyName, deadline) : await complete(def, system, messages, left())
         let parsed = parse(out.text)
         if (!parsed.ok) {
           const retry = await complete(def, system, [

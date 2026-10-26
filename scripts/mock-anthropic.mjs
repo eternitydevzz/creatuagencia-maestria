@@ -74,7 +74,7 @@ http.createServer((req, res) => {
     // El reintento por JSON inválido añade mensajes al final: la petición se identifica por el primero
     const last = b.messages?.[0]?.content
     const prompt = typeof last === 'string' ? last : J(last)
-    const isChat = /secretaria virtual de/.test(String(b.system))
+    const isChat = /Atiendes a los clientes por WhatsApp/.test(String(b.system)) // primera línea de buildAgentPrompt (_shared/agent.ts)
     let text = isChat ? chatReply(String(b.system), b.messages ?? []) : reply(prompt)
     if (!isChat && BAD_NEXT.count > 0) { BAD_NEXT.count--; text = J({ error: 'forma equivocada' }) }
     const delay = SLOW_NEXT.count > 0 ? (SLOW_NEXT.count--, SLOW_NEXT.ms) : 0

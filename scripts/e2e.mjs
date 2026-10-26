@@ -267,7 +267,7 @@ ok('Rol inventado (system) → 400', (await chat(E.c, ag[0].id, [{ role: 'system
 const longConv = Array.from({ length: 41 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: 'x' }))
 ok('Más de 40 mensajes → 400', (await chat(E.c, ag[0].id, longConv)).status === 400)
 
-const sysReq = log().filter((q) => /secretaria virtual de/.test(q.system_head ?? ''))
+const sysReq = log().filter((q) => /Atiendes a los clientes por WhatsApp/.test(q.system_head ?? ''))
 ok('Las instrucciones se construyen en el servidor con la ficha del negocio', sysReq.length >= 2 && sysReq.every((q) => /Lucía/.test(q.system_head) && /Studio Pulso/.test(q.system_head)))
 ok('El chat usa el modelo pequeño, sin streaming, sin effort ni fallbacks', sysReq.every((q) => /haiku/.test(q.model) && q.stream !== true && q.output_config === undefined && !q.fallbacks))
 
@@ -495,7 +495,7 @@ ok('session.status FAILED actualiza la conexión', (await hook({ event: 'session
 
 const chatB = await chat(W.c, agW.id, [{ role: 'user', content: 'confirmo la cita' }])
 ok('El simulador también detecta la cita y la devuelve aparte (tarjeta)', chatB.status === 200 && chatB.body.booking?.servicio === 'Limpieza dental' && !/\[\[/.test(chatB.body.reply), JSON.stringify(chatB))
-const prompts = log().filter((q) => /secretaria virtual de/.test(q.system_head ?? ''))
+const prompts = log().filter((q) => /Atiendes a los clientes por WhatsApp/.test(q.system_head ?? ''))
 ok('Las instrucciones del chat incluyen el registro de citas', prompts.length > 0)
 
 const dis = await waInvoke(W.c, { action: 'disconnect', connection_id: conn.id })

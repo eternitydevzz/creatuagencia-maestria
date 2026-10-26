@@ -16,7 +16,8 @@ export default function S6Landing({ roadmap, update, refresh }: SectionProps) {
   const offerDone = Object.keys((roadmap.agency_offer.oferta ?? {}) as object).length > 0
   const stale = staleness(roadmap)
   const allDone = done && offerDone && Object.keys(roadmap.ideal_client).length > 0
-  const html = useMemo(() => (done ? renderAgencySite(roadmap.agency_site, contact, agency) : ''), [done, roadmap.agency_site, contact, agency])
+  const custom = typeof roadmap.agency_site.html === 'string' && roadmap.agency_site.html.trim() ? roadmap.agency_site.html : null
+  const html = useMemo(() => (!done ? '' : custom ?? renderAgencySite(roadmap.agency_site, contact, agency)), [done, custom, roadmap.agency_site, contact, agency])
   const setContact = (k: 'whatsapp' | 'email') => (e: React.ChangeEvent<HTMLInputElement>) => update({ agency_contact: { ...contact, [k]: e.target.value } })
 
   return (
@@ -41,7 +42,10 @@ export default function S6Landing({ roadmap, update, refresh }: SectionProps) {
             <span className="flex gap-1.5" aria-hidden><i className="h-3 w-3 rounded-full bg-[#ff5f57]" /><i className="h-3 w-3 rounded-full bg-[#febc2e]" /><i className="h-3 w-3 rounded-full bg-[#28c840]" /></span>
             <span className="flex-1 truncate rounded-md bg-black/30 px-3 py-1 text-center text-xs text-muted">{slug(agency)}.com</span>
           </div>
-          <iframe title="Vista previa de tu landing" srcDoc={html} className="h-[640px] w-full bg-white" sandbox="allow-popups allow-popups-to-escape-sandbox" />
+          {/* Una página propia (modo directo) trae sus animaciones en JavaScript: se le deja ejecutarlo, pero sin allow-same-origin,
+              así que sigue aislada de la app (no ve la sesión ni el almacenamiento). La plantilla no lleva JavaScript. */}
+          <iframe title="Vista previa de tu landing" srcDoc={html} className="h-[640px] w-full bg-white"
+            sandbox={custom ? 'allow-scripts allow-popups allow-popups-to-escape-sandbox' : 'allow-popups allow-popups-to-escape-sandbox'} />
         </div>
       </Deliverable>
 
