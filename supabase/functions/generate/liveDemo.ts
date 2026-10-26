@@ -1,207 +1,210 @@
 // Modo directo: respuestas predefinidas para las cuentas de LIVE_DEMO_EMAILS (clase en directo). En vez de llamar a Claude,
 // `generate` espera unos segundos y devuelve esto, y lo guarda igual que una generación normal (créditos, huella, validación).
-// Salida REAL de Claude generada el 26/10/2026 en producción con el proyecto "MaestrIA Agency" (clínicas dentales en Miami, dólares),
-// revisada y corregida a mano. La demo es Dentist of Aventura (https://dentistofaventura.com/), contrastada con su web.
-// La landing lleva además `html`: la página de Jose (hecha aparte), que la app muestra en lugar de la plantilla.
+// Proyecto "MaestrIA Agency" (clínicas dentales en Miami, dólares). Cliente ideal y oferta: versión 2, escrita con Opus 5.5 y
+// alineada con la tabla de precios del paso 4 y con la landing. Landing (texto) y fichas: salida real de Claude del 26/10/2026,
+// revisada a mano. La landing lleva además `html`: la página de Jose, que la app muestra en lugar de la plantilla.
+// La demo es Dentist of Aventura (https://dentistofaventura.com/), contrastada con su web.
 // "MaestrIA Agency" se sustituye por el nombre de agencia del proyecto si es otro (ver generate/index.ts).
 export const LIVE_AGENCY = "MaestrIA Agency"
 
 export const LIVE_CONTENT: Record<string, unknown> = {
  "ideal_client": {
+  "resumen": "Dueño de una clínica dental privada en Miami (2 a 5 sillones, pacientes hispanos y bilingües) que invierte unos $1,500 al mes en anuncios y deja escapar cerca de $14,400 al mes porque nadie contesta al momento: de noche, el fin de semana ni mientras la recepción atiende la puerta.",
   "avatar": {
-   "nombre": "Dr. Alejandro Ruiz, 44 años, dueño de Sonrisa Brickell Dental (nombre ficticio de ejemplo), clínica con 3 sillones en Brickell",
-   "dia_a_dia": "A las 7:30 a.m. revisa el WhatsApp en el carro y ya tiene 6 mensajes de la noche anterior sin contestar. De 8:30 a.m. a 5:30 p.m. está en el sillón con pacientes y no mira el teléfono; la recepcionista, Marisol, atiende a la vez la puerta, el seguro y las llamadas. A las 6:15 p.m. cierra la clínica, abre Meta Ads y ve 7 leads nuevos del día, de los que solo 5 recibieron respuesta a tiempo. A las 10 p.m. contesta mensajes desde el sofá y piensa que está pagando anuncios para que los pacientes se vayan con otra clínica."
+   "nombre": "Dr. Alejandro Ruiz, 46 años, dueño de Sonrisa Brickell Dental (ficticia): 3 sillones, 2 higienistas y una recepcionista, Marisol, que lo hace todo",
+   "dia_a_dia": "7:40 a. m.: en el carro por la I-95 abre el WhatsApp de la clínica y encuentra 9 mensajes de la noche; tres preguntan cuánto cuesta un implante. De 8:30 a 5:30, sillón tras sillón: el celular vibra en recepción mientras Marisol cobra, verifica un seguro y atiende a una mamá con dos niños. 6:30 p. m.: revisa Meta Ads y ve 11 leads del día; solo 4 recibieron respuesta. 10:15 p. m., en el sofá, contesta los que puede, en español y en inglés, sabiendo que dos de los de implantes ya agendaron en otra clínica de Brickell que contestó antes."
   },
-  "deseos": [
-   "Que cada persona que escriba o llame reciba respuesta en menos de un minuto, a cualquier hora.",
-   "Que mi agenda esté llena de pacientes que de verdad vienen, sin tener que perseguir a nadie.",
-   "Que Marisol se dedique a recibir a los pacientes y no a contestar mensajes todo el día.",
-   "Saber cuánto me cuesta cada paciente nuevo y que el dinero de anuncios rinda más."
-  ],
   "perfil": {
-   "quien": "Odontólogo/a propietario/a, entre 38 y 55 años, muchas veces hispano o bilingüe (Cuba, Colombia, Venezuela, Argentina). Atiende pacientes 7 a 8 horas al día en el sillón y hace de gerente por las noches y los fines de semana. Toma las decisiones él solo o con su socio/a.",
-   "facturacion": "Entre $600,000 y $1,800,000 al año (estimado para clínica privada de 2 a 5 sillones en Miami).",
-   "herramientas": "Software dental (Dentrix, Eaglesoft, Open Dental o Curve), Google Business Profile, Instagram, Facebook, Meta Ads, WhatsApp Business, teléfono fijo de la clínica, a veces Zocdoc o un formulario de contacto sin conexión a nada.",
-   "nivel_digital": "Medio. Tiene web, perfil de Google y redes, y paga anuncios, pero la web suele ser lenta o genérica, no tiene asistente ni automatizaciones y no mide cuántos leads se pierden. Usa WhatsApp Business de forma manual desde un celular.",
-   "como_capta_hoy": "Referidos de pacientes, Google Maps, Instagram y Facebook con unos $1,500 al mes en anuncios (Meta Ads y a veces Google Ads). Falla la respuesta: los leads de la tarde y la noche se contestan al día siguiente, las llamadas perdidas no se devuelven y los presupuestos de implantes y ortodoncia no tienen seguimiento.",
-   "tamano_negocio": "1 sede (a veces 2), 2 a 6 sillones, 1 a 3 dentistas, 2 a 4 personas de recepción y asistentes. Unos 200 contactos nuevos al mes entre llamadas, WhatsApp, formularios y anuncios, y unos 40 pacientes nuevos al mes."
+   "quien": "Odontólogo general o con formación en implantes, de 38 a 58 años, muchas veces hispano o bilingüe (cubano, venezolano, colombiano, argentino). Es dueño, director clínico y gerente a la vez: decide solo o con un socio, y le molesta sentir que paga anuncios para que gane la competencia.",
+   "tamano_negocio": "1 sede (a veces 2), 2 a 5 sillones, 1 a 3 dentistas y 2 a 4 personas entre recepción y asistentes. Unas 200 consultas nuevas al mes y unos 40 pacientes nuevos.",
+   "facturacion": "Entre $700,000 y $2,000,000 al año (estimado para una clínica privada de ese tamaño en Miami). Del 30 al 50 % viene de tratamientos de ticket alto: implantes, ortodoncia invisible y carillas.",
+   "como_capta_hoy": "Referidos y Google Maps, más unos $1,500 al mes en Meta Ads (a veces también Google Ads para \"dental implants Miami\"). El anuncio funciona; lo que falla es lo que pasa después del clic: mensajes que se contestan horas más tarde, llamadas que nadie devuelve y presupuestos de implantes sin seguimiento.",
+   "nivel_digital": "Medio. Tiene web, Instagram con antes y después y WhatsApp Business en un celular compartido, pero sin respuestas automáticas, sin conexión con la agenda y sin medir cuántos leads se pierden.",
+   "herramientas": "Software de gestión dental (Dentrix, Eaglesoft, Open Dental o Curve), Google Business Profile, Meta Ads, WhatsApp Business, el teléfono fijo de recepción y, a veces, un formulario web que llega a un email que nadie revisa."
   },
+  "coste_del_problema": "Estimado con sus números: 200 consultas al mes con un 20 % de cierre = 40 pacientes × $900 = $36,000 al mes. Contestando en segundos a cualquier hora y con seguimiento automático, el cierre sube de forma conservadora 8 puntos (del 20 % al 28 %): 56 pacientes = $50,400 al mes. La diferencia, 16 pacientes, son unos $14,400 al mes que hoy se van a otra clínica ($172,800 al año). Supuesto a la vista: cerca del 35 % de las consultas llega fuera de horario o con la recepción ocupada. El dato real sale de revisar sus últimas 4 semanas de WhatsApp y de llamadas perdidas.",
   "dolores": [
-   "Pago $1,500 al mes en anuncios y no sé cuántos de esos pacientes se me están yendo por no contestar a tiempo.",
-   "Marisol no da abasto: está en la puerta, con los seguros y con el teléfono, y las llamadas se quedan sonando.",
-   "Me escriben a las 9 de la noche por WhatsApp y cuando contesto al día siguiente ya fueron a otra clínica.",
-   "Doy presupuestos de implantes y de ortodoncia y después nadie los llama; se enfrían y se pierden.",
-   "Tengo cientos de pacientes antiguos que no vienen hace más de un año y no tengo tiempo para escribirles.",
-   "La gente cancela o no se presenta y me deja el sillón vacío una hora que ya no recupero.",
-   "Mi página web es lenta y se ve igual que la de todas las clínicas; no sé si me está dando pacientes o no."
+   "Pago $1,500 al mes en anuncios y siento que le regalo pacientes a la clínica de enfrente, porque ellos contestan antes.",
+   "Me escribieron un domingo a las 11 de la noche preguntando por un implante y, cuando contesté el lunes, ya habían agendado en otro lado.",
+   "Marisol no da abasto: cobra, verifica seguros, atiende la puerta y el teléfono suena y suena.",
+   "Doy presupuestos de implantes de $4,000 y nadie los vuelve a llamar; se enfrían y se pierden.",
+   "Tengo cientos de pacientes que no vienen hace más de un año y nunca encuentro tiempo para escribirles.",
+   "Los no shows me dejan el sillón vacío una hora que ya no recupero.",
+   "Me escriben en inglés, en español y en spanglish, y no todo mi equipo responde bien en los dos."
   ],
-  "resumen": "Dueño o dueña de una clínica dental privada en Miami, con 2 a 6 sillones, que paga $1,500 al mes en anuncios y pierde pacientes porque nadie contesta el teléfono ni el WhatsApp a tiempo ni da seguimiento a los presupuestos.",
-  "red_flags": [
-   "Clínica de una sola persona sin recepción y sin anuncios, con menos de 20 contactos nuevos al mes: no hay volumen para que se note el retorno.",
-   "Cadena o franquicia con marketing centralizado (Aspen Dental, Coral Dental, etc.): decide una oficina corporativa, no el dueño.",
-   "Dueño que quiere pagar solo por resultados y no acepta ningún costo de puesta en marcha, o que ya tiene agencia con contrato largo.",
-   "Clínica sin presencia digital ni ganas de tenerla, que dice que \"con el boca a boca me basta\"."
-  ],
-  "donde_esta": [
-   "Google Maps: busca \"dentista Brickell\", \"clínica dental Doral\", \"implantes dentales Coral Gables\", \"ortodoncia Hialeah\" y filtra por negocios con 3,5 a 4,7 estrellas y entre 50 y 400 reseñas.",
-   "Biblioteca de anuncios de Meta (facebook.com/ads/library): busca \"clínica dental Miami\", \"implantes dentales Miami\" y \"dentista Doral\" con país Estados Unidos y mira quién tiene anuncios activos.",
-   "Instagram: hashtags #dentistamiami #sonrisasmiami #implantesdentalesmiami #ortodonciamiami y cuentas de clínicas que publican antes y después.",
-   "Asociaciones: miembros de la Miami-Dade County Dental Society y de la Florida Dental Association, y directorios de la Cámara de Comercio de Miami y de la Cámara de Comercio Latina (CAMACOL).",
-   "Eventos: Florida Dental Convention (Orlando) y Hispanic Dental Association, con listas de expositores y asistentes en LinkedIn."
-  ],
-  "objeciones": [
-   "Los pacientes quieren hablar con una persona, no con un robot.",
-   "Ya pago anuncios y no me ha funcionado; no quiero gastar más para lo mismo.",
-   "No tengo tiempo para aprender o configurar otra herramienta.",
-   "¿Y si el asistente le dice algo mal a un paciente o da un precio que no es?",
-   "¿Esto funciona con mi software de agenda y cumple con la privacidad de los datos de los pacientes (HIPAA)?"
+  "deseos": [
+   "Que ningún paciente se quede sin respuesta, aunque escriba un domingo a medianoche.",
+   "Llegar el lunes y encontrar la agenda llena, no 40 mensajes sin contestar.",
+   "Cerrar más implantes y ortodoncia sin tener que perseguir a nadie yo.",
+   "Saber cuántos pacientes me trae cada dólar que pongo en anuncios."
   ],
   "su_lenguaje": [
    "agenda llena",
    "sillón vacío",
+   "no show",
    "paciente nuevo",
-   "presupuesto sin cerrar",
-   "no show (el que no se presenta)",
+   "presupuesto que se enfría",
    "tratamiento aceptado",
-   "recepción",
    "valoración gratis",
-   "implantes y ortodoncia",
-   "pacientes que no vuelven",
-   "leads",
-   "reactivar pacientes"
+   "implantes y carillas",
+   "pacientes dormidos",
+   "el seguro",
+   "la recepción",
+   "leads"
+  ],
+  "momentos_de_compra": [
+   "De enero a marzo y antes del verano, cuando suben las consultas de ortodoncia invisible y blanqueamiento y la recepción se satura.",
+   "Cuando se va o se enferma la recepcionista y nadie contesta el teléfono.",
+   "Cuando sube el costo por lead de sus anuncios y quiere que cada lead rinda más.",
+   "Cuando abre una segunda sede o suma un dentista y necesita llenar sillones rápido.",
+   "Justo después de leer una reseña de 1 estrella que dice \"nadie contestó\"."
+  ],
+  "objeciones": [
+   "Mis pacientes quieren hablar con una persona, no con un robot.",
+   "¿Y si el asistente dice un precio que no es o promete algo que no hacemos?",
+   "Ya probé un chatbot y fue un desastre: respuestas tontas y pacientes molestos.",
+   "No tengo tiempo para configurar nada ni para aprender otra herramienta.",
+   "¿Cumple con la privacidad de mis pacientes (HIPAA) y funciona con mi software?"
   ],
   "senales_compra": [
-   "Tiene anuncios activos en Meta (aparece en la Biblioteca de anuncios de Facebook) pero el WhatsApp o el formulario no tienen respuesta automática.",
-   "Reseñas en Google con comentarios como \"nadie contestó el teléfono\" o \"tardaron días en responder\".",
-   "Su horario en Google Maps termina a las 5 o 6 p.m. y no tiene atención por chat fuera de horario.",
-   "Su web carga lento, no tiene botón visible de WhatsApp ni de reservar cita, o es una plantilla genérica.",
-   "Ofrece implantes, ortodoncia invisible o carillas (tratamientos de ticket alto) y tiene entre 3 y 6 sillones."
+   "Tiene anuncios activos en la Biblioteca de anuncios de Meta, pero si le escribes un WhatsApp fuera de horario no contesta nadie.",
+   "Reseñas en Google que dicen \"nadie contestó\", \"tardaron días\" o \"no devuelven las llamadas\".",
+   "Ofrece implantes, ortodoncia invisible o carillas (ticket alto) y tiene 3 sillones o más.",
+   "Su horario en Google Maps cierra a las 5 o 6 p. m. y no abre los domingos.",
+   "Publica en Instagram, pero en la bio solo hay un número de teléfono."
   ],
-  "coste_del_problema": "Estimado con supuestos del nicho: llegan 200 consultas al mes × 30 % que no se atiende a tiempo o no recibe seguimiento (60 consultas) × 20 % de cierre actual (12 pacientes) × $900 de ticket medio = $10,800 al mes que se quedan sin facturar, unos $129,600 al año. Además, de esos $1,500 en anuncios, alrededor de $450 al mes se gastan en contactos que nadie atiende bien. Es una estimación: el dato real sale de revisar sus últimas 4 semanas de leads.",
-  "momentos_de_compra": [
-   "Temporada alta de ortodoncia y blanqueamientos: de enero a marzo (propósitos de año nuevo) y de mayo a agosto (antes del verano y de la vuelta a clases).",
-   "Se va o se enferma la recepcionista y la clínica se queda sin quien conteste el teléfono.",
-   "Abre una segunda sede o suma un dentista nuevo y necesita llenar los sillones rápido.",
-   "Revisa el gasto en anuncios al cierre de mes, ve que los leads no se convierten y quiere saber por qué."
+  "red_flags": [
+   "Clínica de un solo dentista, sin recepción y con menos de 20 consultas al mes: no hay volumen para que se note el resultado.",
+   "Cadena o grupo dental con marketing centralizado (tipo Aspen Dental): decide una oficina corporativa, no el dueño.",
+   "Quiere pagar solo por resultados, sin puesta en marcha, o tiene un contrato largo con otra agencia.",
+   "No quiere dar acceso a su WhatsApp ni a su agenda."
+  ],
+  "donde_esta": [
+   "Google Maps: busca \"dentista Brickell\", \"dental implants Doral\", \"ortodoncia invisible Coral Gables\" o \"dentista Hialeah\" y quédate con las que tienen entre 3,8 y 4,7 estrellas y de 50 a 500 reseñas.",
+   "Biblioteca de anuncios de Meta (facebook.com/ads/library): \"implantes dentales Miami\" o \"dentista Miami\", país Estados Unidos. Quien tiene anuncios activos ya paga por leads.",
+   "Instagram: #dentistamiami, #implantesdentalesmiami, #miamidentist y #carillasmiami; cuentas que publican antes y después.",
+   "Prueba de 1 minuto: escríbele a su WhatsApp un domingo por la noche. Si no contesta en 10 minutos, ya tienes tu primera frase de venta.",
+   "Asociaciones y eventos: Florida Dental Association, Hispanic Dental Association y la Cámara de Comercio Latina (CAMACOL)."
   ],
   "preguntas_cualificacion": [
-   "¿Cuántos mensajes, llamadas y formularios nuevos te llegan al mes, más o menos?",
-   "¿Quién contesta cuando estás con un paciente o después de las 6 p.m., y cuánto tarda en responder?",
-   "¿Cuánto inviertes al mes en anuncios y cuántos pacientes nuevos te traen?",
-   "¿Qué pasa con los presupuestos que no se aceptan en el momento: alguien les da seguimiento?",
-   "¿Qué software usas para la agenda y quién decide si se contrata algo nuevo para la clínica?"
-  ]
+   "¿Cuántos mensajes y llamadas nuevas les llegan al mes, más o menos?",
+   "¿Quién contesta un WhatsApp un domingo a las 10 de la noche, y cuánto tarda?",
+   "¿Cuánto invierten al mes en anuncios y cuántos pacientes nuevos les traen?",
+   "¿Qué pasa hoy con un presupuesto de implante que no se acepta en la consulta?",
+   "¿Qué software de agenda usan y quién decide si se contrata algo nuevo?"
+  ],
+  "primer_mensaje": "Hola Dr. Ruiz, soy [tu nombre], de MaestrIA Agency. Anoche a las 10:40 le escribí al WhatsApp de su clínica preguntando por un implante y todavía no tengo respuesta. Ese paciente hoy ya estaría agendando en otra clínica de Brickell. Preparé una demo de cómo contestaría un asistente bilingüe entrenado con sus tratamientos: responde en segundos y agenda la valoración. ¿Le mando el link para que la pruebe desde su celular?"
  },
  "agency_offer": {
   "oferta": {
-   "bonos": [
-    "Guion de 10 respuestas a preguntas frecuentes (precio de valoración, seguros, implantes, ortodoncia) revisado por ti antes de activarse, para que el asistente nunca diga algo que no es",
-    "Configuración confidencial: el asistente no pide datos médicos ni diagnósticos, solo nombre, teléfono y motivo, y deriva a una persona cuando el paciente lo pide",
-    "Llamada de 30 minutos de puesta en marcha en la que lo dejamos listo contigo sin que tengas que aprender ninguna herramienta"
-   ],
-   "nombre": "Cero Leads Perdidos para Clínicas Dentales en Miami: respuesta en 60 segundos en 30 días",
-   "precio": {
-    "setup": "$900",
-    "mensual": "$390/mes",
-    "justificacion": "Con 200 leads al mes, 20 % de conversión y ticket de $900, tu clínica genera unos $36,000 al mes. Si de 7 leads diarios 2 se quedan sin respuesta a tiempo, son 60 al mes: recuperar 3 pacientes más al mes ya son $2,700, siete veces la mensualidad de $390. Una recepcionista extra para cubrir mensajes y llamadas cuesta unos $2,800 al mes y no trabaja a las 9 p.m. ni los domingos.",
-    "valor_total_percibido": "$6,600"
-   },
+   "nombre": "Clínica Siempre Abierta: agenda llena 24/7 para clínicas dentales de Miami en 30 días",
+   "para_quien": "Dueños de clínicas dentales privadas en Miami, con 2 a 5 sillones, que invierten en anuncios y dejan escapar pacientes de noche, el fin de semana y mientras la recepción está ocupada.",
+   "promesa": "En 7 días tu clínica contesta cada WhatsApp en menos de 5 segundos, 24/7, en español y en inglés, y agenda la valoración sola. Meta a 30 días: recuperar hasta 16 pacientes nuevos al mes (unos $14,400 en tratamientos, estimado con tus números).",
+   "mecanismo": "El Sistema Siempre Abierta une tres piezas que hoy trabajan por separado, o no trabajan: 1) una recepcionista IA bilingüe entrenada con tus tratamientos, precios orientativos y seguros, que contesta en segundos y agenda en tu calendario; 2) confirmaciones y recordatorios que reducen los no shows y ofrecen el hueco libre a la lista de espera; 3) seguimiento automático de cada presupuesto y de los pacientes dormidos. No es un chatbot de menús: conversa como tu mejor recepcionista, nunca inventa un precio y pasa la conversación a tu equipo cuando el paciente lo pide. Funciona donde la recepción no llega: a las 11 de la noche, un domingo o en mitad de una limpieza.",
    "incluye": [
     {
-     "entregable": "Asistente de WhatsApp 24/7 que contesta y cualifica en menos de 60 segundos",
-     "que_resuelve": "Se acaban los leads de las 9 p.m. que se van a otra clínica antes de que tú contestes",
-     "valor_percibido": "$2,400"
+     "entregable": "Recepcionista IA 24/7 bilingüe en tu WhatsApp",
+     "que_resuelve": "Cada paciente recibe respuesta en menos de 5 segundos, también de noche y el fin de semana, en español o en inglés",
+     "valor_percibido": "$3,600"
     },
     {
-     "entregable": "Reserva de valoración gratis directamente en tu agenda",
-     "que_resuelve": "Los pacientes quedan agendados sin que tu recepcionista tenga que perseguirlos por mensaje",
-     "valor_percibido": "$900"
+     "entregable": "Agenda conectada: reserva la valoración en tu calendario",
+     "que_resuelve": "El paciente sale de la conversación con cita, sin que tu recepcionista tenga que perseguirlo",
+     "valor_percibido": "$1,500"
     },
     {
-     "entregable": "Seguimiento automático de presupuestos de implantes y ortodoncia (3 mensajes en 7 días)",
-     "que_resuelve": "Los presupuestos dejan de enfriarse y se convierten en tratamientos aceptados",
+     "entregable": "Confirmaciones y recordatorios (48 h y 3 h antes) con lista de espera",
+     "que_resuelve": "Menos no shows: si alguien cancela, el hueco se ofrece a otro paciente",
      "valor_percibido": "$1,200"
     },
     {
-     "entregable": "Recordatorios de cita por WhatsApp (48 h y 3 h antes)",
-     "que_resuelve": "Menos no shows y menos sillones vacíos que no se recuperan",
+     "entregable": "Seguimiento de presupuestos de implantes, ortodoncia y carillas (3 mensajes en 10 días)",
+     "que_resuelve": "Los tratamientos de $4,000 dejan de enfriarse en un cajón",
+     "valor_percibido": "$1,800"
+    },
+    {
+     "entregable": "Reactivación de pacientes dormidos (más de 6 meses sin limpieza)",
+     "que_resuelve": "Pacientes que ya confían en ti vuelven a la agenda sin gastar un dólar más en anuncios",
+     "valor_percibido": "$1,500"
+    },
+    {
+     "entregable": "Informe semanal de 1 página y ajuste del agente cada semana",
+     "que_resuelve": "Sabes cuántas citas trae cada dólar de anuncios y el agente agenda más cada semana",
      "valor_percibido": "$800"
-    },
-    {
-     "entregable": "Respuesta automática a llamadas perdidas con mensaje de WhatsApp en menos de 1 minuto",
-     "que_resuelve": "La llamada que nadie alcanzó a contestar se convierte en una conversación y no en un paciente perdido",
-     "valor_percibido": "$700"
-    },
-    {
-     "entregable": "Informe semanal de 1 página: leads recibidos, contestados, citas agendadas y coste por paciente nuevo",
-     "que_resuelve": "Sabes cuántos leads de tus $1,500 en anuncios se convierten en pacientes",
-     "valor_percibido": "$600"
     }
    ],
-   "promesa": "En 30 días, cada lead que llegue por WhatsApp, formulario o anuncio recibe respuesta en menos de 60 segundos, a cualquier hora, y cada presupuesto de implantes u ortodoncia recibe seguimiento automático. Meta: pasar de 5 de 7 leads contestados a tiempo al día a 7 de 7, y recuperar hasta 6 pacientes nuevos al mes (estimado).",
-   "garantia": "Garantía de 30 días: si en el primer mes el asistente no contesta en menos de 60 segundos al menos el 95 % de los leads que entran, seguimos trabajando sin costo hasta lograrlo. Si al día 30 sigues sin ver ese resultado y has dado acceso a WhatsApp, agenda y anuncios en los primeros 5 días, te devolvemos la mensualidad del primer mes.",
-   "urgencia": "Instalo el sistema en 3 clínicas por semana, porque cada puesta en marcha se hace a mano en 5 días. El precio de lanzamiento de $900 de puesta en marcha y $390/mes es para las primeras 3 clínicas que empiecen este mes; después sube a $1,200 de puesta en marcha y $490/mes.",
-   "mecanismo": "Sistema Respuesta 60: un asistente de IA entrenado con los servicios, horarios y preguntas frecuentes de tu clínica contesta en menos de 60 segundos, cualifica (qué necesita, si tiene seguro, cuándo puede venir) y deja la valoración gratis en tu agenda. Después, mensajes automáticos dan seguimiento a quien pidió presupuesto y no respondió. Funciona donde la recepcionista, un celular manual o una web bonita no llegan: no duerme, no está en la puerta atendiendo seguros y no deja un lead enfriarse hasta mañana.",
-   "pitch_30s": "Doctor, usted paga unos $1,500 al mes en anuncios y de cada 7 leads al día, 2 no reciben respuesta a tiempo. Esos 2 se van a otra clínica antes de que usted salga del sillón. Instalo un asistente que contesta a cada persona en menos de 60 segundos, a cualquier hora, y le agenda la valoración. También da seguimiento a los presupuestos que nadie llama. Si en 30 días no cumple, no paga ese mes. ¿Le muestro cómo quedaría en su clínica?",
+   "garantia": "Garantía Clínica Abierta: si en los primeros 30 días después del lanzamiento el agente no contesta en menos de 5 segundos al 95 % de los mensajes y no agenda al menos 10 valoraciones, trabajamos gratis el mes siguiente hasta lograrlo. Si al día 60 sigues sin verlo, te devolvemos la primera mensualidad. Condiciones: darnos acceso a WhatsApp y a la agenda en las primeras 48 horas y recibir al menos 100 consultas al mes.",
+   "precio": {
+    "setup": "$1,500",
+    "mensual": "$480/mes",
+    "valor_total_percibido": "$10,400",
+    "justificacion": "Por separado, el agente de WhatsApp ($1,200 + $280/mes) y el seguimiento y reactivación ($600 + $200/mes) suman $1,800 + $480/mes: el precio de lanzamiento te ahorra $300 en la puesta en marcha. Tu clínica deja escapar unos $14,400 al mes; la mensualidad es el 3 % de eso y un solo paciente de $900 la cubre casi dos meses. Una recepcionista bilingüe extra en Miami cuesta unos $3,200 al mes (estimado) y no trabaja a las 11 de la noche ni los domingos."
+   },
+   "bonos": [
+    "Campaña de estreno a tu base de pacientes: un mensaje a quienes llevan más de 6 meses sin venir, para que el sistema traiga citas desde la primera semana",
+    "Sistema de reseñas en Google: tras cada visita pide reseña a los pacientes contentos y avisa a tu equipo si alguien quedó molesto",
+    "Guion de urgencias y respuestas aprobado por ti antes del lanzamiento: qué cuenta como urgencia y qué contesta el agente"
+   ],
+   "urgencia": "La puesta en marcha se hace a mano, en 7 días, con cada clínica: por eso solo abrimos 3 clínicas nuevas al mes en Miami. El precio de lanzamiento ($1,500 + $480/mes) es para esas 3 primeras; después la puesta en marcha vuelve a $1,800.",
+   "pitch_30s": "Doctor, usted paga unos $1,500 al mes en anuncios, pero cuando un paciente escribe a las 11 de la noche nadie contesta, y por la mañana ya agendó en otra clínica. Instalamos una recepcionista con IA que contesta en 5 segundos, en español y en inglés, a cualquier hora, y le agenda la valoración. También da seguimiento a cada presupuesto de implante. Está en vivo en 7 días y, si no agenda, el mes siguiente corre por nuestra cuenta. ¿Le muestro una demo con su propia clínica?",
    "objeciones": [
     {
-     "objecion": "Los pacientes quieren hablar con una persona, no con un robot.",
-     "respuesta": "Tiene razón, y por eso el asistente no reemplaza a su recepcionista: contesta lo básico en 60 segundos y agenda la valoración. Cuando el paciente pide hablar con alguien, lo pasa a la recepción con la conversación completa. Hoy, a las 9 p.m., ese paciente no habla con nadie. ¿Prefiere que espere hasta mañana o que reciba respuesta ahora?"
+     "objecion": "Mis pacientes quieren hablar con una persona, no con un robot.",
+     "respuesta": "Tiene razón, y por eso el agente no sustituye a su recepcionista: contesta lo básico en segundos y agenda. Si el paciente pide una persona, pasa la conversación a su equipo con todo el contexto. Hoy, a las 11 de la noche, ese paciente no habla con nadie. ¿Prefiere que espere hasta mañana o que tenga respuesta ahora?"
     },
     {
-     "objecion": "Ya pago anuncios y no me ha funcionado; no quiero gastar más para lo mismo.",
-     "respuesta": "No le pido gastar más en anuncios. Le pido que aproveche los $1,500 que ya paga: si hoy 2 de cada 7 leads diarios se quedan sin respuesta a tiempo, el problema no es el anuncio, es lo que pasa después del clic. Primero arreglamos eso y medimos el coste por paciente nuevo. ¿Cuántos de los leads del mes pasado cree que recibieron respuesta en menos de una hora?"
+     "objecion": "¿Y si dice un precio que no es o promete algo que no hacemos?",
+     "respuesta": "Solo responde con la información que usted aprueba antes del lanzamiento: tratamientos, precios orientativos, seguros y políticas. Lo que no está en esa lista no lo inventa: se lo pasa a su equipo. Además revisamos las conversaciones cada semana. ¿Quiere ver cómo responde a preguntas difíciles en la demo?"
     },
     {
-     "objecion": "No tengo tiempo para aprender o configurar otra herramienta.",
-     "respuesta": "No tiene que aprender nada. Hacemos una llamada de 30 minutos, usted me da acceso a WhatsApp y a su agenda, y yo dejo todo listo en 5 días. Después solo recibe un informe semanal de una página. ¿Qué día de esta semana tiene 30 minutos libres entre pacientes?"
+     "objecion": "Ya probé un chatbot y fue un desastre.",
+     "respuesta": "Los chatbots de menús obligan al paciente a pulsar opciones y se atascan. Esto conversa: entiende el spanglish, las faltas y los mensajes a medias, y responde como su mejor recepcionista. La mejor prueba es que usted mismo le escriba ahora desde su celular. ¿Le paso el link de la demo con su clínica?"
     },
     {
-     "objecion": "¿Y si el asistente le dice algo mal a un paciente o da un precio que no es?",
-     "respuesta": "El asistente solo responde con la información que usted aprueba antes de activarlo: servicios, horarios, valoración gratis y seguros que aceptan. Si le preguntan algo que no está en esa lista, no inventa: dice que la recepción le contestará y avisa a su recepción. Usted revisa las 10 respuestas principales antes del primer día. ¿Le envío el borrador para que lo corrija?"
+     "objecion": "No tengo tiempo para configurar nada.",
+     "respuesta": "No tiene que configurar nada. Hacemos una llamada de 30 minutos, nos da acceso a WhatsApp y a su agenda, y en 7 días está en vivo. Usted solo revisa el guion de respuestas antes del lanzamiento. ¿Qué día de esta semana tiene 30 minutos entre pacientes?"
     },
     {
-     "objecion": "¿Esto funciona con mi software de agenda y cumple con la privacidad de los datos de los pacientes (HIPAA)?",
-     "respuesta": "Se conecta con su calendario o agenda de citas, y antes de empezar confirmamos con qué software trabaja, ya sea Dentrix, Eaglesoft, Open Dental o Curve. El asistente solo recoge nombre, teléfono y motivo de la consulta, nunca historial clínico ni diagnósticos. Si su asesor legal pide un acuerdo de confidencialidad, lo firmamos. ¿Qué software de agenda usa hoy?"
+     "objecion": "¿Cumple con HIPAA y funciona con mi software?",
+     "respuesta": "El agente no pide historiales ni diagnósticos por chat: solo nombre, teléfono, tratamiento de interés y seguro. Definimos con usted qué datos se guardan y quién los ve, y antes de empezar confirmamos la conexión con su software (Dentrix, Eaglesoft, Open Dental o Curve). ¿Qué software de agenda usan hoy?"
     }
-   ],
-   "para_quien": "Para dueños de clínicas dentales privadas en Miami, con 2 a 6 sillones, que pagan anuncios en Meta y dejan leads sin contestar por la tarde y la noche."
+   ]
+  },
+  "oferta_piloto": {
+   "nombre": "Piloto Siempre Abierta: 30 días para ver las citas antes de comprometerte",
+   "que_incluye": "Recepcionista IA bilingüe en tu WhatsApp, agenda de valoraciones, recordatorios e informe de resultados al día 30. En vivo en 7 días.",
+   "precio": "$497 pago único, sin mensualidad durante el piloto",
+   "duracion": "30 días desde el lanzamiento",
+   "paso_a_principal": "Si al día 30 el agente agendó al menos 10 valoraciones, pasas al Sistema Siempre Abierta por $480/mes y los $497 se descuentan de la puesta en marcha (pagas $1,003 en lugar de $1,500). Si no continúas, te quedas con el informe y no debes nada más.",
+   "como_proponerla": "Doctor, no le pido que firme nada largo. Pruebe 30 días por $497: lo dejamos en vivo en una semana, medimos cuántas valoraciones agenda y, si no ve las citas en su agenda, no sigue. ¿Empezamos el lunes?"
   },
   "escalera": [
    {
     "nivel": "Entrada",
-    "nombre": "Piloto Respuesta 60",
-    "precio": "$297 pago único (21 días)",
-    "incluye": "Asistente de WhatsApp 24/7, respuesta a llamadas perdidas, agendado de valoración gratis, seguimiento de presupuestos y informe al día 21.",
-    "para_quien": "Clínicas que dudan y quieren ver resultados antes de comprometerse; son los 2 a 3 primeros clientes."
+    "nombre": "Piloto Siempre Abierta",
+    "precio": "$497 pago único (30 días)",
+    "incluye": "Recepcionista IA bilingüe 24/7, agenda de valoraciones, recordatorios e informe al día 30.",
+    "para_quien": "Clínicas que quieren ver citas reales antes de comprometerse: tus 2 o 3 primeros clientes."
    },
    {
     "nivel": "Principal",
-    "nombre": "Sistema Respuesta 60",
-    "precio": "$900 de puesta en marcha + $390/mes",
-    "incluye": "Asistente de WhatsApp 24/7, agendado de valoración, seguimiento de presupuestos, recordatorios anti no show, respuesta a llamadas perdidas e informe semanal.",
-    "para_quien": "Clínicas con 2 a 6 sillones, unos 200 leads al mes y anuncios activos en Meta."
+    "nombre": "Sistema Siempre Abierta",
+    "precio": "$1,500 de puesta en marcha + $480/mes",
+    "incluye": "Todo el piloto más seguimiento de presupuestos, reactivación de pacientes dormidos, lista de espera, reseñas en Google e informe semanal.",
+    "para_quien": "Clínicas de 2 a 5 sillones con unas 200 consultas al mes y anuncios activos."
    },
    {
     "nivel": "Premium",
-    "nombre": "Clínica Llena Completo",
+    "nombre": "Clínica Llena",
     "precio": "$2,800 de puesta en marcha + $770/mes",
-    "incluye": "Todo el Sistema Respuesta 60 más landing page de alta conversión, campañas de anuncios optimizadas con IA y reactivación de pacientes que no vienen hace más de 12 meses.",
-    "para_quien": "Clínicas que ya vieron resultados con el sistema principal y quieren más leads de calidad y más pacientes antiguos de vuelta."
+    "incluye": "Todo el Sistema Siempre Abierta más una landing de alta conversión y campañas de anuncios con IA optimizadas cada semana.",
+    "para_quien": "Clínicas que ya ven resultados y quieren más pacientes de implantes, ortodoncia y carillas."
    }
   ],
-  "oferta_piloto": {
-   "nombre": "Piloto Respuesta 60: 21 días para dejar de perder leads",
-   "precio": "$297 de pago único, sin mensualidad durante el piloto",
-   "duracion": "21 días",
-   "que_incluye": "Asistente de WhatsApp que contesta y cualifica en menos de 60 segundos, respuesta automática a llamadas perdidas, agendado de valoración gratis y seguimiento automático de presupuestos pendientes. Incluye informe de resultados al día 21.",
-   "como_proponerla": "Doctor, no le pido que firme nada largo. Pruebe 21 días por $297: instalo el asistente en su WhatsApp, medimos cuántos leads contesta a tiempo y cuántas valoraciones agenda. Si no ve la diferencia, no sigue y no me debe nada más. ¿Empezamos el lunes?",
-   "paso_a_principal": "Si al día 21 el asistente contestó en menos de 60 segundos al 95 % o más de los leads y la clínica quiere continuar, pasa al Sistema Respuesta 60 por $390/mes y los $900 de puesta en marcha se reducen a $300, porque la instalación ya está hecha. Si no continúa, se queda con el informe y no debe nada más."
-  },
   "numeros_agencia": {
-   "margen_por_cliente": "Nivel Principal: $390 - $130 = $260/mes por cliente (unos 67 %), más $900 de puesta en marcha con unas 8 horas de trabajo. Nivel Premium: $770/mes con unos $320 de coste entre herramientas, anuncios y horas, es decir, unos $450 de margen.",
-   "coste_entrega_mensual": "Herramientas: unos $70/mes por cliente (plataforma de WhatsApp con IA $40, automatización $20, mensajería y otros $10). Horas: 3 horas al mes por cliente en el nivel Principal (revisión de conversaciones, ajustes e informe), unos $60 si valoras tu hora a $20. Total estimado: $130/mes.",
-   "clientes_para_5000_mes": "Con 6 clientes en Principal ($2,340/mes) y 3 en Premium ($2,310/mes) llegas a $4,650/mes recurrentes, y con un cuarto Premium superas los $5,000. Alternativa: 13 clientes en Principal suman $5,070/mes."
+   "coste_entrega_mensual": "Herramientas: unos $90 al mes por clínica (plataforma de WhatsApp con IA, automatizaciones y mensajería; estimado). Horas: 3 al mes en el plan Principal (revisar conversaciones, ajustar el agente e informe), unos $75 si valoras tu hora en $25. Total estimado: $165 al mes.",
+   "margen_por_cliente": "Principal: $480 − $165 = $315 al mes (66 %), más $1,500 de puesta en marcha por unas 10 horas de trabajo. Premium: $770 − unos $330 = $440 al mes.",
+   "clientes_para_5000_mes": "6 clínicas en Principal ($2,880) + 3 en Premium ($2,310) = $5,190 al mes recurrentes. Solo con Principal: 11 clínicas ($5,280 al mes)."
   }
  },
  "agency_site": {

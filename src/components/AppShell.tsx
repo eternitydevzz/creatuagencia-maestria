@@ -53,8 +53,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span className="font-mono text-xs text-muted"><b className="text-sm text-white">{xp}</b> XP</span>
             </div>
             <div className="hidden items-center gap-2.5 border-l border-white/10 pl-3 lg:flex" title={profile?.email}>
+              {/* Solo el avatar (el email sale al pasar el ratón): con el nombre al lado, en pantallas anchas la cabecera no cabía y los créditos tapaban "Ajustes" */}
               <Avatar name={profile?.full_name ?? profile?.email} />
-              <span className="hidden max-w-[170px] text-left leading-tight 2xl:block"><span className="block truncate text-sm font-bold text-white">{profile?.full_name ?? '…'}</span><span className="block truncate text-xs text-muted">{profile?.email}</span></span>
             </div>
             <button type="button" data-silent onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? 'Silenciar sonidos' : 'Activar sonidos'} title={sound.on ? 'Silenciar sonidos' : 'Activar sonidos'}
               className="rounded-xl p-2 text-muted transition hover:bg-white/5 hover:text-white">{sound.on ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}</button>

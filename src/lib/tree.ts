@@ -9,7 +9,7 @@ const LABELS: Record<string, string> = {
   herramientas: 'Herramientas que usa', coste_del_problema: 'Lo que le cuesta el problema', dolores: 'Dolores (en sus palabras)',
   deseos: 'Lo que quiere', su_lenguaje: 'Su lenguaje (úsalo en tu oferta y tu web)', momentos_de_compra: 'Cuándo está listo para comprar',
   senales_compra: 'Señales de que es buen cliente', red_flags: 'Señales para descartarlo', donde_esta: 'Dónde encontrarlo',
-  preguntas_cualificacion: 'Preguntas para saber si encaja',
+  preguntas_cualificacion: 'Preguntas para saber si encaja', primer_mensaje: 'Primer mensaje para escribirle',
   // oferta
   oferta: 'Oferta principal', nombre: 'Nombre', para_quien: 'Para quién', promesa: 'Promesa', mecanismo: 'Mecanismo', incluye: 'Qué incluye',
   entregable: 'Entregable', que_resuelve: 'Qué resuelve', valor_percibido: 'Valor percibido', garantia: 'Garantía', precio: 'Precio',
@@ -32,7 +32,7 @@ const ORDER = [
   'coste_del_problema', 'dolores', 'deseos', 'su_lenguaje', 'momentos_de_compra',
   'incluye', 'que_incluye', 'entregable', 'que_resuelve', 'valor_percibido', 'para_quien', 'garantia',
   'precio', 'setup', 'mensual', 'valor_total_percibido', 'justificacion', 'duracion', 'bonos', 'urgencia', 'pitch_30s',
-  'objeciones', 'objecion', 'respuesta', 'senales_compra', 'red_flags', 'donde_esta', 'preguntas_cualificacion',
+  'objeciones', 'objecion', 'respuesta', 'senales_compra', 'red_flags', 'donde_esta', 'preguntas_cualificacion', 'primer_mensaje',
   'paso_a_principal', 'como_proponerla', 'oferta_piloto', 'escalera',
   'numeros_agencia', 'coste_entrega_mensual', 'margen_por_cliente', 'clientes_para_5000_mes',
 ]
