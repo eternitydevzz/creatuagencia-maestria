@@ -43,6 +43,13 @@ describe('renderPremiumSite', () => {
     expect(html).not.toContain('92,225,255')
   })
 
+  it('no lleva el símbolo ∞ de Eternity en ningún sitio', () => {
+    const html = renderPremiumSite(SITE, WA, 'Agencia Norte')
+    expect(html).not.toContain('∞')
+    expect(html).not.toContain('M12 12C9.5 8.6') // el dibujo del infinito (logo, carga, separadores, favicon)
+    expect(html).not.toContain('1 + st * st') // la curva del infinito de las partículas del hero
+  })
+
   it('pinta todas las secciones y el titular', () => {
     const html = renderPremiumSite(SITE, WA, 'Agencia Norte')
     for (const id of ['top', 'manifiesto', 'demo', 'servicios', 'proceso', 'resultados', 'faq', 'contacto']) expect(html).toContain(`id="${id}"`)

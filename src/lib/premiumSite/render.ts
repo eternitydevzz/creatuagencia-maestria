@@ -19,7 +19,8 @@ const paint = (s: string, a: Accent) => {
   return s.replace(/5CE1FF/gi, c.hex).replace(/92,\s?225,\s?255/g, c.rgb)
 }
 
-const INF = 'M12 12C9.5 8.6 7.7 7.5 5.8 7.5 3.4 7.5 1.7 9.5 1.7 12s1.7 4.5 4.1 4.5c1.9 0 3.7-1.1 6.2-4.5Zm0 0c2.5 3.4 4.3 4.5 6.2 4.5 2.4 0 4.1-2 4.1-4.5s-1.7-4.5-4.1-4.5c-1.9 0-3.7 1.1-6.2 4.5Z'
+// Marca neutra (un anillo) en lugar del ∞ de Eternity: la página es de la agencia del alumno.
+const INF = 'M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 1 1 0-15Z'
 const ARROW = '<svg aria-hidden="true" class="arrow"><use href="#i-arrow"/></svg>'
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg>'
 const SEP = '<svg viewBox="0 0 24 24"><use href="#inf-d" class="inf-path"/></svg>'

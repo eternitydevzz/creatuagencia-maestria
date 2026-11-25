@@ -47,6 +47,9 @@ export const ordered = (o: JsonObject) => Object.entries(o).filter(([k]) => !k.s
 /** Texto no vacío o undefined. */
 export const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v : undefined)
 
+/** La IA a veces numera el título ("Reel 1 - …") y la tarjeta ya pone el número: se quita para que no salga dos veces. */
+export const stripReelNumber = (t: string): string => t.replace(/^\s*reel\s*\d+\s*[-–—:·.]\s*/i, '').trim() || t
+
 export const label = (k: string) => LABELS[k] ?? k.replace(/_/g, ' ').replace(/^\p{L}/u, (c) => c.toUpperCase())
 
 const TITLE_KEYS = ['titulo', 'nombre', 'objecion', 'entregable']

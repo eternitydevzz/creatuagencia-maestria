@@ -77,7 +77,7 @@
     setTimeout(() => { if (document.documentElement.classList.contains('loading')) finish(); }, 4000);
   }
 
-  /* ---------- Hero: infinito de partículas en 3D ---------- */
+  /* ---------- Hero: órbita de partículas en 3D ---------- */
   const hero = { scrollP: 0 };
   function initHeroCanvas() {
     const canvas = $('#hero-canvas');
@@ -124,8 +124,8 @@
     }
 
     function project(t, ox, oy, oz, spread, A, rot) {
-      const st = Math.sin(t), ct = Math.cos(t), d = 1 + st * st;
-      let x = (A * ct) / d, y = (A * st * ct) / d, z = A * 0.34 * st;
+      const st = Math.sin(t), ct = Math.cos(t);
+      let x = A * 0.66 * ct, y = A * 0.42 * st, z = A * 0.45 * st;
       const k = A * spread * (1 + hero.scrollP * 3.5);
       x += ox * k; y += oy * k; z += oz * k;
       const y2 = y * rot.cX - z * rot.sX, z2 = y * rot.sX + z * rot.cX;
@@ -502,7 +502,7 @@
 
   /* ---------- Efecto "scramble" en el menú ---------- */
   if (!reduced) {
-    const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ∞';
+    const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $$('[data-scramble]').forEach((a) => {
       const original = a.textContent;
       a.addEventListener('mouseenter', () => {
