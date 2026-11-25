@@ -1,4 +1,4 @@
-// Cliente mínimo del servidor de WhatsApp (WAHA, https://waha.devlike.pro). Corre aparte (ver render.yaml / README) y solo lo llaman
+// Cliente mínimo del servidor de WhatsApp (WAHA, https://waha.devlike.pro). Corre aparte (ver README, sección WhatsApp) y solo lo llaman
 // las Edge Functions: la clave y la dirección no llegan nunca al navegador.
 const BASE = (Deno.env.get('WAHA_URL') ?? '').replace(/\/$/, '')
 const KEY = Deno.env.get('WAHA_API_KEY') ?? ''

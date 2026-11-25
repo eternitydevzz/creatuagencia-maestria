@@ -7,9 +7,9 @@
 project_id = "creatuagencia-maestria"
 
 [auth]
-enable_signup = true
-site_url = "https://creatuagencia-maestria.onrender.com"
-additional_redirect_urls = ["https://creatuagencia-maestria.onrender.com", "https://creatuagencia-maestria.onrender.com/reset-password"]
+enable_signup = false
+site_url = "https://creatuagencia-maestria.vercel.app"
+additional_redirect_urls = ["https://creatuagencia-maestria.vercel.app", "https://creatuagencia-maestria.vercel.app/reset-password"]
 minimum_password_length = 10
 
 [auth.email]

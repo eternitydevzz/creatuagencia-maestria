@@ -22,7 +22,7 @@ tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virt
 | Frontend | React 18 + TypeScript + Vite + Tailwind + React Query (`src/`) |
 | Auth y datos | Supabase: Auth (registro abierto con confirmación de email y aprobación manual), Postgres con seguridad por filas (`supabase/migrations/`) |
 | IA | Edge Function `generate` (`supabase/functions/generate/`) → API de Anthropic. **La clave nunca llega al navegador** |
-| Hosting | Render (web estática, `render.yaml`) + Supabase (base de datos, login y función de IA) |
+| Hosting | Vercel (web estática, `vercel.json`; equipo Eternity Group, https://creatuagencia-maestria.vercel.app) + Supabase (base de datos, login y función de IA) |
 
 **Cómo funciona la IA:** el navegador solo manda `{tipo, proyecto, parámetros}`. La función comprueba la sesión, lee el proyecto del alumno
 (con su seguridad por filas), construye el prompt en el servidor (`prompts.ts`), cobra créditos de forma atómica, llama a Claude, guarda el
@@ -101,14 +101,18 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 1. **Supabase**: crea un proyecto en supabase.com → `supabase link --project-ref <ref>` → `supabase db push`.
    En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
    En *Authentication → Providers → Email*: deja activo el email, **"Allow new users to sign up"** activo y **"Confirm email"** activo (lo aplica también `deploy/supabase-prod-auth`).
+   Hoy en producción el registro público está **cerrado** (`[auth] enable_signup = false` en `deploy/supabase-prod-auth`): solo entran las altas que hace un admin.
    Configura un SMTP propio (Resend, Postmark…) para que lleguen las invitaciones.
 2. **Clave de IA**: en el panel de Supabase (*Edge Functions → Secrets*) crea `ANTHROPIC_API_KEY` y `ALLOWED_ORIGIN=https://tu-dominio` (mejor desde el panel que desde la terminal: la clave no queda en el historial). Después despliega: `supabase functions deploy generate && supabase functions deploy agent-chat (y, si usas WhatsApp real, `wa-connect` y `wa-webhook`)`.
    La función responde con un latido mientras Claude trabaja y se corta a los `GENERATION_TIMEOUT_SECONDS` (140 por defecto; el límite de la función es 150 s en Free y 400 s en Pro). Si la IA tarda más, el alumno ve un error y se le devuelven los créditos.
-3. **Web (Render)**: *New → Blueprint* y elige este repo: Render lee `render.yaml` (sitio estático, reglas de reescritura de la SPA y cabeceras). Al crearlo te pide
-   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (Settings → API del proyecto Supabase; la clave anónima es pública por diseño). Cada `git push` a `main` redespliega.
-   Con la URL de Render ya puedes cerrar el paso 1 (Site URL y Redirect URLs) y el paso 2 (`ALLOWED_ORIGIN`).
+3. **Web (Vercel)**: proyecto `creatuagencia-maestria` en el equipo Eternity Group, conectado a este repo. Vercel detecta Vite solo
+   (`pnpm build`, carpeta `dist`) y lee `vercel.json` (reescritura de la SPA y cabeceras). Variables en *Settings → Environment Variables*
+   (Production y Preview): `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (Settings → API del proyecto Supabase; la clave anónima es pública por diseño).
+   Cada `git push` a `main` despliega en producción; las demás ramas generan una preview. Crear el proyecto y las variables de Production
+   necesita rol Member u Owner en el equipo (con Developer no se puede).
+   Con la URL de Vercel cierras el paso 1 (Site URL y Redirect URLs, vía `deploy/supabase-prod-auth`) y el paso 2 (`ALLOWED_ORIGIN`, un solo dominio).
 4. **Alumnos**: `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/invite.mjs csv alumnos.csv` (columnas `email,nombre,creditos`).
    `SITE_URL=https://tu-dominio` es obligatorio (a ese dominio llegan desde el email). Recibirán un email para crear su contraseña. Más créditos: `node scripts/invite.mjs grant ana@correo.com 20 "bonus"`.
 
-**Seguridad:** `SUPABASE_SERVICE_ROLE_KEY` y `ANTHROPIC_API_KEY` son secretos: no van en el frontend, en Render ni en git.
+**Seguridad:** `SUPABASE_SERVICE_ROLE_KEY` y `ANTHROPIC_API_KEY` son secretos: no van en el frontend, en Vercel ni en git.
 Antes de abrir a alumnos, fija un límite de gasto mensual en la consola de Anthropic.
