@@ -5,7 +5,7 @@
 // el ritmo y el tamaño de la conversación para que no pueda usarse como proxy libre hacia Claude.
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders, json } from '../_shared/cors.ts'
+import { corsHeaders, json, withCors } from '../_shared/cors.ts'
 import type { AgentConfig } from '../_shared/agent.ts'
 import { agentReply } from '../_shared/agentReply.ts'
 import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
@@ -44,7 +44,7 @@ function parseMessages(raw: unknown): Turn[] {
   return turns
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
@@ -119,4 +119,4 @@ Deno.serve(async (req) => {
     console.error('[agent-chat]', code, e instanceof Error ? e.message : e)
     return json({ error: code, message }, status)
   }
-})
+}))

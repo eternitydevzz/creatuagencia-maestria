@@ -1,7 +1,7 @@
 // Edge Function `wa-connect`: el alumno vincula un número de WhatsApp a uno de sus agentes (por QR) desde el panel.
 // Acciones: start (crear la sesión), status, qr, disconnect. El servidor de WhatsApp (WAHA) solo se habla desde aquí.
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders, json } from '../_shared/cors.ts'
+import { corsHeaders, json, withCors } from '../_shared/cors.ts'
 import { mapStatus, phoneOf, sessionConfig, waha, wahaConfigured } from '../_shared/waha.ts'
 import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
@@ -11,7 +11,7 @@ class HttpError extends Error {
   constructor(public status: number, public code: string, message?: string) { super(message ?? code) }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
   try {
@@ -110,4 +110,4 @@ Deno.serve(async (req) => {
     console.error('[wa-connect]', code, e instanceof Error ? e.message : e)
     return json({ error: code, message }, status)
   }
-})
+}))

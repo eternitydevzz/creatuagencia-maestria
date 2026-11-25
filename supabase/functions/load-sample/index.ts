@@ -2,14 +2,14 @@
 // cómo queda cada paso sin esperar ni gastar créditos (y para enseñarlo en directo). Los textos son salida real de Claude,
 // generada una vez y guardada en _shared/sample.ts. Se crea una sola vez por cuenta; si ya existe, devuelve el mismo.
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders, json } from '../_shared/cors.ts'
+import { corsHeaders, json, withCors } from '../_shared/cors.ts'
 import { inputsSignature } from '../_shared/signature.ts'
 import { SAMPLE } from '../_shared/sample.ts'
 import { isApproved, NOT_APPROVED_MESSAGE } from '../_shared/approval.ts'
 
 const NAME = 'Ejemplo: Dentia (clínica dental)'
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
   try {
@@ -48,4 +48,4 @@ Deno.serve(async (req) => {
     console.error('[load-sample]', e instanceof Error ? e.message : e)
     return json({ error: 'internal_error', message: 'Error inesperado' }, 500)
   }
-})
+}))

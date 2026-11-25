@@ -3,7 +3,7 @@
 // parámetros acotados; los prompts se construyen en prompts.ts a partir de los datos guardados del proyecto.
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders, json } from '../_shared/cors.ts'
+import { corsHeaders, json, withCors } from '../_shared/cors.ts'
 import { problemLabel } from '../_shared/catalog.ts'
 import { inputsSignature, type DeliverableMeta } from '../_shared/signature.ts'
 import * as P from './prompts.ts'
@@ -171,7 +171,7 @@ function ctxFromRoadmap(r: any): P.Ctx {
 // Dos fases. Antes de llamar a Claude (sesión, validación, cobro) los errores son respuestas HTTP normales. La generación en sí
 // tarda de decenas de segundos a un par de minutos, así que se responde ya con 200 y se manda un latido mientras trabaja; el
 // resultado (o el error, con `status`) llega al final como JSON. Los espacios iniciales no afectan al JSON.
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
@@ -411,4 +411,4 @@ Deno.serve(async (req) => {
     const { status, payload } = await failure(e)
     return json(payload, status)
   }
-})
+}))

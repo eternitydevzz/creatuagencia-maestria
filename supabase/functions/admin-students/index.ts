@@ -4,7 +4,7 @@
 // El rol se comprueba aquí contra la base de datos (nunca se fía de lo que diga el navegador). Las contraseñas temporales se
 // generan en el servidor y se devuelven una sola vez; no se guardan en ningún sitio.
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders, json } from '../_shared/cors.ts'
+import { corsHeaders, json, withCors } from '../_shared/cors.ts'
 import { waha } from '../_shared/waha.ts'
 
 class HttpError extends Error {
@@ -19,7 +19,7 @@ function tempPassword(len = 12): string {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
   try {
@@ -150,4 +150,4 @@ Deno.serve(async (req) => {
     console.error('[admin-students]', code, e instanceof Error ? e.message : e)
     return json({ error: code, message }, status)
   }
-})
+}))
