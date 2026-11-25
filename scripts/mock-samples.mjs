@@ -207,6 +207,37 @@ export const SITE = {
   footer: 'Asistentes de IA para gimnasios boutique y boxes.',
 }
 
+// Landing premium (plantilla de Jose): la que pide la web nueva con params.plantilla = 'premium'
+export const SITE_PREMIUM = {
+  plantilla: 'premium', acento: 'violeta',
+  meta: { title: 'FitIA · Asistentes de IA para gimnasios boutique', description: 'Tu box contesta por WhatsApp en segundos y llena las clases de prueba.' },
+  nav_cta: 'Pedir demo',
+  hero: { chip: 'IA para gimnasios boutique', titulo: 'Tus clases de prueba,', titulo_destacado: 'llenas sin coger el móvil.', subtitulo: 'Un asistente que contesta por WhatsApp en segundos, agenda pruebas y recuerda clases. En marcha en 7 días.', cta: 'Quiero ver mi demo', cta_secundario: 'Ver la demo en vivo',
+    datos: [{ cifra: '24/7', texto: 'También domingos' }, { cifra: '< 30 s', texto: 'Tiempo de respuesta' }, { cifra: '7 días', texto: 'Para estar en marcha' }] },
+  marquee: { acciones: ['Agenda pruebas', 'Confirma clases', 'Recupera socios', 'Responde al momento'], rasgos: ['Sin permanencia', '24/7/365', 'Cero mensajes perdidos', 'Menos bajas'] },
+  manifiesto: { etiqueta: 'El problema', texto: 'Domingo, 21:30. Tres personas preguntan por la clase de prueba. Tú estás cenando.', destacado: 'Tu asistente, no.' },
+  demo: { titulo: 'Domingo, 21:30.', titulo_destacado: 'La prueba ya está agendada.', intro: 'Así atiende el asistente a alguien que quiere probar el box.',
+    pasos: [{ titulo: 'Entiende', texto: 'Detecta qué busca.' }, { titulo: 'Consulta', texto: 'Mira las plazas libres.' }, { titulo: 'Reserva', texto: 'Recoge nombre y teléfono.' }, { titulo: 'Recuerda', texto: 'Envía el recordatorio.' }],
+    negocio: 'Box Norte', asistente: 'Camila',
+    chat: [
+      { de: 'cliente', texto: 'Hola, ¿puedo probar una clase esta semana?', hora: '21:30' },
+      { de: 'agente', texto: 'Hola, soy Camila, de Box Norte. Tengo plaza en:', hora: '21:30', huecos: ['Lun 19:00', 'Mié 7:30', 'Vie 18:00'] },
+      { de: 'cliente', texto: 'El viernes a las 18:00', hora: '21:31' },
+      { de: 'agente', texto: 'Hecho. ¿Me dices tu nombre?', hora: '21:31' },
+      { de: 'cliente', texto: 'Lucas Pérez', hora: '21:31' },
+      { de: 'agente', texto: 'Perfecto, Lucas. Te escribo el jueves para recordártelo.', hora: '21:32' },
+    ],
+    confirmacion: { titulo: 'Prueba confirmada', detalle: 'Vie · 18:00 · Clase de prueba' } },
+  servicios: { titulo: 'Un equipo que', titulo_destacado: 'no se toma descansos.', intro: 'Cada asistente aprende tus horarios, tarifas y tono.',
+    items: [{ titulo: 'Atención 24/7', texto: 'Contesta y agenda pruebas a cualquier hora.' }, { titulo: 'Recordatorios', texto: 'Menos plazas vacías en cada clase.' }, { titulo: 'Reactivación', texto: 'Escribe a quien dejó de venir.' }, { titulo: 'Bonos y cuotas', texto: 'Cualifica a quien pregunta por el bono anual.' }, { titulo: 'Reseñas', texto: 'Pide reseñas a los socios contentos.' }, { titulo: 'Habla como tu box', texto: 'Con tu tono y tus palabras.' }],
+    etiquetas: ['Clase de prueba', 'Bono anual', 'HIIT', 'Entrenamiento personal'] },
+  proceso: { titulo: 'En marcha en', titulo_destacado: '7 días.', pasos: [{ plazo: 'Día 1', titulo: 'Diagnóstico', texto: 'Llamada de 30 minutos.' }, { plazo: 'Días 2-4', titulo: 'Entrenamiento', texto: 'Aprende tu box.' }, { plazo: 'Días 5-6', titulo: 'Pruebas', texto: 'Tu equipo lo prueba.' }, { plazo: 'Día 7', titulo: 'Lanzamiento', texto: 'Empieza a atender.' }] },
+  resultados: { titulo: 'Más pruebas.', titulo_destacado: 'Más socios.', nota: 'Estimaciones del sector', cifras: [{ valor: 30, prefijo: '+', sufijo: '%', texto: 'pruebas agendadas fuera de horario' }, { valor: 25, prefijo: '−', sufijo: '%', texto: 'ausencias a la prueba' }, { valor: 4.8, decimales: 1, sufijo: ' s', texto: 'de respuesta media' }, { valor: 3, sufijo: '/10', texto: 'socios que vuelven' }] },
+  faq: [1, 2, 3, 4, 5, 6].map((i) => ({ pregunta: `¿Pregunta frecuente ${i}?`, respuesta: `Respuesta ${i}.` })),
+  contacto: { titulo: 'Haz que tu box', titulo_destacado: 'no pierda ni una prueba.', texto: 'Te enseñamos cómo contestaría tu asistente.', ventajas: ['Respuesta en 24 h', 'Demo con tus horarios', 'Si en 30 días no agenda 10 pruebas, no pagas'], cta: 'Quiero mi demo' },
+  footer: 'Asistentes de IA para gimnasios boutique y boxes.',
+}
+
 export const AGENT = {
   negocio: { nombre: 'Studio Pulso', rubro: 'gimnasio boutique de entrenamiento en grupo', descripcion: 'Clases reducidas de fuerza y HIIT con entrenador, máximo 10 personas por sesión.', ubicacion: 'Calle Alcalá 142, Madrid', horario: 'L-V 7:00-21:30, S 9:00-14:00', telefono: '612 345 678', web: 'studiopulso.example', zona_horaria: 'Europe/Madrid' },
   servicios: [

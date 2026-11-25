@@ -256,6 +256,56 @@ Devuelve JSON con esta estructura EXACTA:
 "direccion" obligatoria y exactamente uno de los cinco valores. "problema.puntos": 3 · "solucion.beneficios": 4 · "comparativa.filas": 5 (coste al mes, horario de atención, tiempo de respuesta, seguimiento a los que no compran, qué pasa en temporada alta) · "como_funciona.pasos": 3 · "resultados.cifras": 3 · "faq": 5, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
 }
 
+/** Landing premium: los textos para la plantilla de Jose (src/lib/premiumSite/render.ts, tipo PremiumSite en src/lib/types.ts).
+ *  Se usa cuando la web lo pide con params.plantilla = 'premium'; el prompt de arriba queda para la web antigua. */
+export function agencySitePremium(c: Ctx): string {
+  const mk = mkt(c)
+  return `Escribe todos los textos de la landing de venta de "${agencyOf(c)}", dirigida a empresarios de: ${niche0(c)}. Se publican sobre una plantilla premium ya diseñada (oscura, animada, con una demo de WhatsApp en un móvil): tú entregas el copy definitivo, listo para publicar. No escribes HTML.
+El objetivo único de la página es que el visitante pida una demo por el formulario o por WhatsApp.
+
+CONTEXTO
+${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
+
+CÓMO ESCRIBE UNA AGENCIA PREMIUM
+- Sobria y segura. Frases cortas. Nada de exclamaciones, emojis, "revolucionario" ni "soluciones integrales".
+- Habla con el lenguaje del cliente ideal y ataca sus dolores reales. Si un texto serviría igual para otro nicho, está mal.
+- Los títulos van en dos partes: "titulo" (normal) y "titulo_destacado" (se pinta en cursiva con degradado). Juntos, 4-10 palabras. Ej.: "Tu agenda de fisio," + "llena sin coger el teléfono."
+- "hero.subtitulo": cómo se consigue, para quién y en cuánto tiempo (máx. 25 palabras).
+- "hero.datos": 3 cifras cortas que se entiendan solas ("24/7", "< 30 s", "7 días") con un texto de 2-5 palabras.
+- "marquee": frases de 2-4 palabras. "acciones" = lo que hace el asistente para el negocio; "rasgos" = garantías o características.
+- "manifiesto": el problema contado como una escena del día a día del cliente ideal (2-3 frases cortas, con hora o momento concreto) + "destacado", 3-5 palabras que cierran la idea.
+- "demo": una conversación de WhatsApp creíble entre un cliente final típico del negocio (no el empresario) y el asistente de un negocio ficticio del nicho ("negocio": nombre inventado y verosímil, nada de marcas reales; "asistente": nombre de pila). 6 mensajes alternos empezando por el cliente, con horas fuera del horario de atención. El segundo mensaje (del asistente) se presenta y ofrece 3 huecos concretos en "huecos" (formato corto: "Mar 17:30"); el cliente elige uno citando su hora; el asistente pide un dato y cierra con un recordatorio. "confirmacion": lo que se reservó ("Cita confirmada" + "Mar · 17:30 · Servicio"). "pasos": 4 pasos de 2-3 palabras con un texto de una frase (entiende, consulta, reserva, recuerda).
+- "servicios.items": exactamente 6, en este orden: 1) atención 24/7, 2) confirmaciones y recordatorios, 3) reactivación de clientes antiguos, 4) captación de los servicios de más valor del nicho, 5) reseñas, 6) una ventaja propia del nicho. "titulo" 2-5 palabras, "texto" 1-2 frases (máx. 28 palabras). "etiquetas": 4 servicios reales del nicho (1-3 palabras).
+- "proceso.pasos": 4 pasos con plazos realistas ("Día 1", "Días 2-4"…), sacados de la oferta.
+- "resultados.cifras": 4, con "valor" numérico (sin símbolos), "prefijo" ("+", "−" o vacío), "sufijo" ("%", " s", "/10"…) y "decimales" (0 o 1). Son estimaciones del sector: "nota" lo dice en 3-5 palabras ("Estimaciones del sector").
+- "contacto.ventajas": 3 frases cortas; una es la garantía de la oferta tal cual.
+- La oferta, los plazos y la garantía reproducen exactamente la oferta definida.
+- Nunca inventes testimonios, clientes, logos, premios ni casos reales. Cifras que no vienen de la oferta, como estimación.
+- Los CTA son verbos concretos ("Quiero ver mi demo"), nunca "Enviar" ni "Saber más".
+
+ELIGE EL ACENTO ("acento") que mejor le hable al nicho, solo uno de: cian | verde | violeta | ambar | coral.
+cian: tecnología, servicios técnicos, salud moderna · verde: salud, bienestar, finanzas, hogar · violeta: estética, creatividad, formación · ambar: restauración, oficios, inmobiliaria · coral: belleza, ocio, familias.
+
+Devuelve JSON con esta estructura EXACTA (${mk.language}):
+{
+  "plantilla": "premium",
+  "acento": "cian | verde | violeta | ambar | coral",
+  "meta": { "title": "máx. 60 caracteres, con el nicho", "description": "máx. 155 caracteres" },
+  "nav_cta": "1-3 palabras",
+  "hero": { "chip": "3-6 palabras", "titulo": "", "titulo_destacado": "", "subtitulo": "", "cta": "", "cta_secundario": "p. ej. 'Ver la demo en vivo'", "datos": [{ "cifra": "", "texto": "" }] },
+  "marquee": { "acciones": ["(4)"], "rasgos": ["(4)"] },
+  "manifiesto": { "etiqueta": "2-3 palabras, p. ej. 'El problema'", "texto": "", "destacado": "" },
+  "demo": { "titulo": "momento concreto, p. ej. 'Sábado, 22:10.'", "titulo_destacado": "", "intro": "1-2 frases", "pasos": [{ "titulo": "", "texto": "" }], "negocio": "", "asistente": "", "chat": [{ "de": "cliente | agente", "texto": "", "hora": "HH:MM", "huecos": ["solo en el segundo mensaje"] }], "confirmacion": { "titulo": "", "detalle": "" } },
+  "servicios": { "titulo": "", "titulo_destacado": "", "intro": "1-2 frases", "items": [{ "titulo": "", "texto": "" }], "etiquetas": ["(4)"] },
+  "proceso": { "titulo": "", "titulo_destacado": "", "pasos": [{ "plazo": "", "titulo": "", "texto": "" }] },
+  "resultados": { "titulo": "", "titulo_destacado": "", "nota": "", "cifras": [{ "valor": 0, "prefijo": "", "sufijo": "", "decimales": 0, "texto": "" }] },
+  "faq": [{ "pregunta": "", "respuesta": "" }],
+  "contacto": { "titulo": "", "titulo_destacado": "", "texto": "1-2 frases", "ventajas": ["(3)"], "cta": "" },
+  "footer": "1 frase sobre la agencia y el nicho"
+}
+"hero.datos": 3 · "demo.pasos": 4 · "demo.chat": 6 · "servicios.items": 6 · "proceso.pasos": 4 · "resultados.cifras": 4 · "faq": 6, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
+}
+
 // Nombres para la secretaria: los elige el servidor al azar porque, si se deja al modelo, repite casi siempre los mismos
 // (Martina, Mariana…) y diez demos del mismo rubro se notan hechas con plantilla. Válidos en España, Latinoamérica y EEUU.
 const SECRETARY_NAMES = [

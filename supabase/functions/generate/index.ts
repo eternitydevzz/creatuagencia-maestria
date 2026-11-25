@@ -66,6 +66,12 @@ const KINDS: Record<string, KindDef> = {
       && v.servicios.every((x) => isObj(x) && hasText(x.nombre)) && isObj(v.secretaria) && hasText(v.secretaria.nombre) && hasText(v.secretaria.saludo),
   },
 }
+// Landing premium (plantilla de Jose, src/lib/premiumSite): mismo coste que la landing de siempre, otro formato
+const AGENCY_SITE_PREMIUM: KindDef = {
+  cost: 3, effort: 'medium', maxTokens: 20000,
+  valid: (v) => isObj(v) && v.plantilla === 'premium' && isObj(v.hero) && hasText(v.hero.titulo)
+    && isObj(v.demo) && Array.isArray(v.demo.chat) && v.demo.chat.length >= 5 && Array.isArray(v.faq) && v.faq.length >= 6,
+}
 const MAX_DEMOS_PER_PROJECT = 10
 
 class HttpError extends Error {
@@ -232,11 +238,15 @@ Deno.serve(withCors(async (req) => {
     if (raw.length > 120_000) throw new HttpError(413, 'payload_too_large')
     const body = JSON.parse(raw || '{}')
     const kind = str(body.kind, 40, 'kind')
-    const def = KINDS[kind]
-    if (!def) throw new HttpError(400, 'unknown_kind')
+    if (!KINDS[kind]) throw new HttpError(400, 'unknown_kind')
     const params = (body.params && typeof body.params === 'object') ? body.params : {}
+    // Landing premium solo si la web lo pide: la web antigua (sin el parámetro) sigue recibiendo el formato de siempre
+    const premium = kind === 'agency_site' && params.plantilla === 'premium'
+    const def = premium ? AGENCY_SITE_PREMIUM : KINDS[kind]
     const roadmapId = str(body.roadmap_id, 64, 'roadmap_id')
-    const live = LIVE_EMAILS.includes((auth.user.email ?? '').toLowerCase()) && kind in LIVE_CONTENT
+    // Modo directo: el contenido preparado de la landing premium va en su propia clave; si aún no existe, se llama a Claude
+    const liveKey = premium ? 'agency_site_premium' : kind
+    const live = LIVE_EMAILS.includes((auth.user.email ?? '').toLowerCase()) && liveKey in LIVE_CONTENT
 
     // El proyecto se lee con el token del alumno: la seguridad por filas garantiza que es suyo.
     const { data: roadmap, error: rErr } = await userDb.from('roadmaps').select('*').eq('id', roadmapId).maybeSingle()
@@ -255,7 +265,7 @@ Deno.serve(withCors(async (req) => {
       case 'new_niches': prompt = P.newNiches(ctx); break
       case 'ideal_client': prompt = P.idealClient(ctx); break
       case 'agency_offer': prompt = P.agencyOffer(ctx); break
-      case 'agency_site': prompt = P.agencySite(ctx); break
+      case 'agency_site': prompt = premium ? P.agencySitePremium(ctx) : P.agencySite(ctx); break
       case 'agent': prompt = P.agentConfig(ctx); break
       case 'demo_agent': {
         const { count: nDemos } = await userDb.from('agents').select('id', { count: 'exact', head: true }).eq('roadmap_id', roadmapId).eq('source', 'demo')
@@ -328,7 +338,7 @@ Deno.serve(withCors(async (req) => {
           try { const value = extractJson(text); return def.valid(value) ? { ok: true, value } : { ok: false } } catch { return { ok: false } }
         }
         // La respuesta debe ser JSON con la forma que pide la interfaz; si no, un reintento
-        let out = live ? await liveCompletion(kind, ctx.agencyName, deadline) : await complete(def, system, messages, left())
+        let out = live ? await liveCompletion(liveKey, ctx.agencyName, deadline) : await complete(def, system, messages, left())
         let parsed = parse(out.text)
         if (!parsed.ok) {
           const retry = await complete(def, system, [

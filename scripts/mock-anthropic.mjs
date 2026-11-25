@@ -2,7 +2,7 @@
 // Devuelve respuestas de ejemplo según el prompt y registra cada petición en /tmp/mock-anthropic-requests.jsonl.
 import http from 'node:http'
 import fs from 'node:fs'
-import { AGENT, DEMO, IDEAL, OFFER, SITE, SITE_HTML, SITE_SERVICES_HTML } from './mock-samples.mjs'
+import { AGENT, DEMO, IDEAL, OFFER, SITE, SITE_HTML, SITE_PREMIUM, SITE_SERVICES_HTML } from './mock-samples.mjs'
 
 const LOG = '/tmp/mock-anthropic-requests.jsonl'
 const PORT = Number(process.env.PORT ?? 8787)
@@ -21,6 +21,7 @@ function reply(prompt) {
   ]) + '\n```'
   if (/Define el CLIENTE IDEAL de/.test(p)) return J(IDEAL)
   if (/Diseña la OFERTA de/.test(p)) return J(OFFER)
+  if (/"plantilla": "premium"/.test(p)) return J(SITE_PREMIUM)
   if (/textos de la landing de venta/.test(p)) return J(SITE)
   if (/AGENTE DE DEMOSTRACIÓN para un negocio real/.test(p)) return J(DEMO)
   if (/AGENTE DE DEMOSTRACIÓN/.test(p)) return J(AGENT)

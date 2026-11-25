@@ -121,6 +121,9 @@ ok('agency_offer se guarda con oferta, piloto y escalera', r.status === 200 && !
 ok('  la oferta ya no lleva el cliente ideal dentro', rm.agency_offer?.cliente_ideal === undefined)
 r = await call(A.c, 'agency_site', rmA.id); rm = await row()
 ok('agency_site se guarda con hero, comparativa y garantía', r.status === 200 && !!rm.agency_site?.hero?.titulo && rm.agency_site?.comparativa?.filas?.length === 5 && !!rm.agency_site?.garantia?.texto)
+ok('  sin parámetro, la landing sigue en el formato viejo (sin plantilla)', rm.agency_site?.plantilla === undefined)
+r = await call(A.c, 'agency_site', rmA.id, { plantilla: 'premium' }); rm = await row()
+ok('agency_site premium se guarda con plantilla, demo y 6 FAQ', r.status === 200 && rm.agency_site?.plantilla === 'premium' && rm.agency_site?.demo?.chat?.length >= 5 && rm.agency_site?.faq?.length === 6, JSON.stringify(r.body).slice(0, 150))
 for (const k of ['offers', 'proposal', 'sales_kit', 'action_plan', 'demo_prompt', 'cold_scripts', 'landing_prompt', 'gamma_prompt', 'agent_chat'])
   if ((await call(A.c, k, rmA.id)).status !== 400) ok(`Tipo eliminado "${k}" → 400`, false)
 ok('Los tipos eliminados (kit, plan, demos, scripts…) responden 400', true)
@@ -131,7 +134,7 @@ ok('La oferta se escribe con el cliente ideal como contexto', log().some((q) => 
 ok('La landing se escribe con el cliente ideal y la oferta como contexto', log().some((q) => /textos de la landing/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
 
 console.log('\n— Contabilidad de créditos')
-const spent = 1 /* problema */ + 1 /* nichos */ + 2 /* cliente ideal */ + 3 /* oferta */ + 3 /* landing */
+const spent = 1 /* problema */ + 1 /* nichos */ + 2 /* cliente ideal */ + 3 /* oferta */ + 3 /* landing */ + 3 /* landing premium */
 ok(`Créditos gastados = ${spent} (30 → ${30 - spent})`, (await credits(A.id)) === 30 - spent, `saldo real ${await credits(A.id)}`)
 const { data: ledger } = await admin.from('credit_ledger').select('delta,balance_after').eq('user_id', A.id).order('id')
 ok('El libro cuadra con el saldo final', ledger.reduce((s, l) => s + l.delta, 0) === (await credits(A.id)))
