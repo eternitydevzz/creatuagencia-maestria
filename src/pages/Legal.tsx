@@ -37,7 +37,8 @@ export function Privacy() {
         <ul>
           <li><b>Supabase</b> (base de datos, inicio de sesión y funciones del servidor).</li>
           <li><b>Anthropic</b> (modelos de IA): recibe el contenido necesario para generar textos y respuestas.</li>
-          <li><b>Render</b> (alojamiento de la web y del servidor de WhatsApp).</li>
+          <li><b>Vercel</b> (alojamiento de la web).</li>
+          <li><b>Render</b> (alojamiento del servidor de WhatsApp).</li>
           <li><b>WhatsApp / Meta</b>, como red por la que viajan los mensajes del número que vinculas.</li>
         </ul>
         <p>Algunos de estos proveedores están fuera del Espacio Económico Europeo; cuando es así, se apoyan en garantías como las cláusulas contractuales tipo. No vendemos tus datos.</p></section>
