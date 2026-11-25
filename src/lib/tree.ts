@@ -22,6 +22,9 @@ const LABELS: Record<string, string> = {
   negocio: 'Negocio de ejemplo', rubro: 'Rubro', descripcion: 'Descripción', ubicacion: 'Dirección', horario: 'Horario', telefono: 'Teléfono',
   web: 'Web', zona_horaria: 'Zona horaria', servicios: 'Servicios y precios', secretaria: 'La secretaria', tono: 'Tono', saludo: 'Saludo',
   politicas: 'Políticas', faq: 'Preguntas frecuentes', pregunta: 'Pregunta', datos_cita: 'Datos que pide para agendar',
+  // contenido
+  bio: 'Bio de Instagram', reels: 'Guiones de reel', gancho: 'Gancho (0-3 s)', desarrollo: 'Desarrollo', cierre: 'Cierre',
+  texto_pantalla: 'Texto en pantalla', caption: 'Caption', palabra_clave: 'Palabra clave', carruseles: 'Carruseles', diapositivas: 'Diapositivas',
 }
 // Postgres (jsonb) guarda las claves en su propio orden, así que el orden de lectura se fija aquí.
 // Las claves que no aparezcan van al final, en el orden en que llegan. Las que empiezan por _ (metadatos internos) no se muestran.
@@ -35,6 +38,7 @@ const ORDER = [
   'objeciones', 'objecion', 'respuesta', 'senales_compra', 'red_flags', 'donde_esta', 'preguntas_cualificacion', 'primer_mensaje',
   'paso_a_principal', 'como_proponerla', 'oferta_piloto', 'escalera',
   'numeros_agencia', 'coste_entrega_mensual', 'margen_por_cliente', 'clientes_para_5000_mes',
+  'bio', 'reels', 'gancho', 'desarrollo', 'cierre', 'texto_pantalla', 'caption', 'palabra_clave', 'carruseles', 'diapositivas',
 ]
 const rank = (k: string) => { const i = ORDER.indexOf(k); return i === -1 ? ORDER.length : i }
 /** Entradas de un objeto en orden de lectura. */

@@ -238,6 +238,23 @@ export const SITE_PREMIUM = {
   footer: 'Asistentes de IA para gimnasios boutique y boxes.',
 }
 
+// Contenido de Instagram (paso "Tu contenido")
+export const CONTENT = {
+  reels: [
+    { titulo: 'El coste de no contestar', gancho: 'Si tu box recibe 60 mensajes al mes, estás perdiendo unas 9 altas.', desarrollo: 'Te escriben mientras das clase. Cuando contestas, ya se han apuntado en otro sitio. Un asistente contesta en 30 segundos y agenda la prueba.', cierre: 'Comenta AGENDA y te enseño cómo funciona, o escríbeme por WhatsApp.', texto_pantalla: ['60 mensajes al mes', '9 altas perdidas'], caption: 'Cada mensaje sin contestar es una alta que se va. Comenta AGENDA.', palabra_clave: 'AGENDA' },
+    { titulo: 'Domingo por la noche', gancho: 'Domingo, 23:40. Quince WhatsApps sin contestar.', desarrollo: 'El lunes empiezas apagando fuegos. Con un asistente, el lunes llegas y las pruebas ya están agendadas.', cierre: 'Comenta DOMINGO y te mando una demo.', texto_pantalla: ['Domingo 23:40', '15 mensajes'], caption: 'Tu domingo, sin móvil. Comenta DOMINGO.', palabra_clave: 'DOMINGO' },
+    { titulo: 'No quiero un robot', gancho: '"Mis socios no quieren hablar con un robot." Mira esto.', desarrollo: 'El asistente habla como tu box y pasa la conversación a ti cuando hace falta.', cierre: 'Comenta DEMO y lo pruebas tú mismo.', texto_pantalla: ['¿Un robot?', 'Pruébalo'], caption: 'Pruébalo antes de decidir. Comenta DEMO.', palabra_clave: 'DEMO' },
+    { titulo: 'Cómo funciona en 3 pasos', gancho: 'Así contesta tu box sin que cojas el móvil, en 3 pasos.', desarrollo: 'Entiende lo que buscan, mira tus plazas libres y agenda la prueba con recordatorio.', cierre: 'Comenta PASOS y te lo enseño.', texto_pantalla: ['1. Entiende', '2. Consulta', '3. Agenda'], caption: 'Tres pasos, cero mensajes perdidos. Comenta PASOS.', palabra_clave: 'PASOS' },
+    { titulo: 'Oferta piloto', gancho: 'Busco 3 boxes para probar esto 14 días.', desarrollo: 'Lo montamos en una semana. Si en 14 días no agenda 10 pruebas, no pagas.', cierre: 'Comenta PILOTO o escríbeme por WhatsApp.', texto_pantalla: ['3 plazas', '14 días'], caption: 'Solo 3 boxes este mes. Comenta PILOTO.', palabra_clave: 'PILOTO' },
+  ],
+  bio: 'Asistentes de WhatsApp para boxes y gimnasios boutique. Más pruebas agendadas sin coger el móvil. Pide tu demo ↓',
+  carruseles: [
+    { titulo: '5 errores que te hacen perder altas', diapositivas: ['5 errores que te hacen perder altas', 'Contestar a las 3 horas', 'No hacer seguimiento tras la prueba', 'No tener precios claros', 'Depender de tu móvil', 'Comenta ERRORES y te ayudo'], caption: '¿Cuál cometes tú? Comenta ERRORES.' },
+    { titulo: 'Lo que pierdes al mes', diapositivas: ['Lo que pierdes al mes', '60 consultas', '40 % se enfrían', '30 % se habrían apuntado', '65 € al mes por socio', '≈ 470 € al mes', 'Comenta CALCULO'], caption: 'Haz la cuenta con tus números. Comenta CALCULO.' },
+    { titulo: 'Antes y después', diapositivas: ['Antes y después', 'Antes: mensajes a las 23:00', 'Después: pruebas agendadas solas', 'Antes: lunes apagando fuegos', 'Después: agenda llena', 'Comenta CAMBIO'], caption: 'El cambio cabe en una semana. Comenta CAMBIO.' },
+  ],
+}
+
 export const AGENT = {
   negocio: { nombre: 'Studio Pulso', rubro: 'gimnasio boutique de entrenamiento en grupo', descripcion: 'Clases reducidas de fuerza y HIIT con entrenador, máximo 10 personas por sesión.', ubicacion: 'Calle Alcalá 142, Madrid', horario: 'L-V 7:00-21:30, S 9:00-14:00', telefono: '612 345 678', web: 'studiopulso.example', zona_horaria: 'Europe/Madrid' },
   servicios: [

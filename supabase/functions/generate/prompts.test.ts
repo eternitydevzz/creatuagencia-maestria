@@ -1,5 +1,5 @@
 import { assert, assertStringIncludes } from 'jsr:@std/assert@1'
-import { agencySite, agencySitePremium, type Ctx } from './prompts.ts'
+import { agencyContent, agencySite, agencySitePremium, type Ctx } from './prompts.ts'
 
 const ctx = (currency: 'usd' | 'eur'): Ctx => ({
   agencyName: 'Agencia Norte', nichos: ['clínicas de fisioterapia'], problems: ['atencion_leads'], custom: {},
@@ -30,4 +30,17 @@ Deno.test('agencySite (formato viejo) no cambia', () => {
   const p = agencySite(ctx('usd'))
   assertStringIncludes(p, 'tech-blue')
   assertStringIncludes(p, '"direccion"')
+})
+
+Deno.test('agencyContent pide 5 reels, bio y 3 carruseles para el dueño del nicho', () => {
+  const p = agencyContent(ctx('usd'))
+  for (const s of ['"reels"', '"bio"', '"carruseles"', '"gancho"', '"palabra_clave"', '3 segundos', 'Comenta', 'WhatsApp', 'clínicas de fisioterapia']) assertStringIncludes(p, s)
+  assertStringIncludes(p, 'CLIENTE IDEAL YA DEFINIDO')
+  assertStringIncludes(p, 'OFERTA YA DEFINIDA')
+})
+
+Deno.test('agencyContent en euros no habla de dólares ni de EE. UU.', () => {
+  const p = agencyContent(ctx('eur'))
+  assert(!p.includes('$'), 'no debe aparecer el símbolo $')
+  assert(!p.includes('EE. UU.'), 'no debe hablar de EE. UU.')
 })

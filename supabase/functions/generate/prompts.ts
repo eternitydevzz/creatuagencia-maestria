@@ -306,6 +306,52 @@ Devuelve JSON con esta estructura EXACTA (${mk.language}):
 "hero.datos": 3 · "demo.pasos": 4 · "demo.chat": 6 · "servicios.items": 6 · "proceso.pasos": 4 · "resultados.cifras": 4 · "faq": 6, sacadas de las objeciones del cliente ideal. ${jsonOnly}`
 }
 
+/** Contenido para Instagram con el que el alumno consigue sus primeros clientes: 5 reels, bio y 3 carruseles.
+ *  Le habla al DUEÑO del nicho (el cliente del alumno), no a gente que quiere montar una agencia.
+ *  Patrones sacados de reels reales del nicho (ver docs/superpowers/specs/2026-11-25-agencia-real-design.md, sección 7.1). */
+export function agencyContent(c: Ctx): string {
+  const mk = mkt(c)
+  return `Escribe el primer contenido de Instagram de "${agencyOf(c)}" para conseguir sus primeros clientes: empresarios de ${niche0(c)}. El alumno lo graba con el móvil y lo publica esta semana; cada pieza tiene que poder usarse tal cual.
+
+CONTEXTO
+${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
+
+A QUIÉN LE HABLAS
+- Al dueño del negocio del nicho, con su lenguaje, sus dolores y sus cifras (los del cliente ideal). Nunca a gente que quiere montar una agencia ni a otros profesionales del marketing.
+- El objetivo de cada pieza: que el dueño escriba para pedir una demo o la oferta piloto.
+
+REELS (30-60 segundos, para grabar hablando a cámara)
+- "gancho": lo que se dice en los primeros 3 segundos. Tiene que parar el scroll del dueño. Fórmulas que funcionan en este nicho (adáptalas, no las copies):
+  · una escena concreta de su día con hora ("Domingo, 23:40. Tres mensajes preguntando precio y nadie contesta.")
+  · una cifra de lo que pierde ("Si tu clínica recibe 60 mensajes al mes, estás perdiendo unos X al mes.")
+  · "Si tuviera un/a [negocio del nicho], esto es lo primero que haría..."
+  · una objeción en su boca ("'Mis clientes no quieren hablar con un robot.' Mira esto.")
+- "desarrollo": 3-5 frases, el problema y cómo se resuelve, con un ejemplo de su día a día. Sin jerga técnica (nada de "IA generativa", "LLM", "automatización n8n").
+- "cierre": llamada a la acción con "Comenta [PALABRA]" usando la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa para quien no use respuestas automáticas, que le escriban por WhatsApp.
+- "texto_pantalla": 2-4 rótulos cortos (máx. 6 palabras) que aparecen sobre el vídeo.
+- "caption": 2-4 frases + la llamada a la acción. Sin emojis ni hashtags genéricos; como mucho 3 hashtags del nicho y la zona.
+- Los 5 reels atacan ángulos distintos: (1) el coste de no contestar, (2) una escena real del día a día, (3) una objeción respondida, (4) cómo funciona por dentro en 3 pasos, (5) la oferta piloto.
+
+BIO DE INSTAGRAM
+- "bio": máx. 150 caracteres. Para quién es, qué resultado da y qué hacer ahora (pedir la demo por WhatsApp).
+
+CARRUSELES
+- 3 carruseles de 6-8 "diapositivas" (cada una 1-2 frases cortas; la primera es el gancho, la última la llamada a la acción). Temas: (1) errores que le hacen perder clientes, (2) el cálculo de lo que pierde al mes con sus números, (3) antes y después de tener el asistente.
+
+REGLAS
+- ${mk.language}, tuteo, frases cortas, números en lugar de adjetivos.
+- Nunca inventes testimonios, clientes ni casos reales. Cifras que no vienen de la oferta o del cliente ideal, como estimación ("de media", "hasta").
+- La oferta, el precio y la garantía, tal cual están definidos.
+
+Devuelve JSON con esta estructura EXACTA:
+{
+  "reels": [{ "titulo": "nombre interno del reel", "gancho": "", "desarrollo": "", "cierre": "", "texto_pantalla": ["(2-4)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
+  "bio": "",
+  "carruseles": [{ "titulo": "", "diapositivas": ["(6-8)"], "caption": "" }]
+}
+"reels": 5 · "carruseles": 3. ${jsonOnly}`
+}
+
 // Nombres para la secretaria: los elige el servidor al azar porque, si se deja al modelo, repite casi siempre los mismos
 // (Martina, Mariana…) y diez demos del mismo rubro se notan hechas con plantilla. Válidos en España, Latinoamérica y EEUU.
 const SECRETARY_NAMES = [

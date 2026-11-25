@@ -76,6 +76,8 @@ export interface Roadmap {
   selected_problems: string[]; custom_problem_descriptions: Record<string, CustomProblem>
   selected_nichos: string[]; business_metrics: Metrics; pricing_settings: Pricing
   ideal_client: JsonObject; agency_offer: JsonObject; agency_site: AgencySite; agency_contact: AgencyContact
+  /** Contenido de Instagram (forma de AgencyContent); {} hasta que se genera. */
+  agency_content: JsonObject
   current_section: number; visited_sections: number[]; created_at: string; updated_at: string
   /** Agentes del proyecto (solo id y origen): sirve para saber si el paso del agente está hecho. */
   agents?: Array<{ id: string; source: Agent['source'] }>
@@ -100,7 +102,7 @@ export interface Agent {
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */
 export interface Progress {
   selected_problems: string[]; selected_nichos: string[]; business_metrics: Metrics
-  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_agent: boolean; has_demo: boolean; has_whatsapp: boolean; visited_sections: number[]
+  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_content: boolean; has_agent: boolean; has_demo: boolean; has_whatsapp: boolean; visited_sections: number[]
 }
 export interface RoadmapSummary extends Progress {
   id: string; project_name: string; agency_name: string | null; status: Roadmap['status']; updated_at: string
@@ -111,4 +113,12 @@ export type EditablePatch = Partial<Pick<Roadmap,
   'agency_name' | 'selected_problems' | 'custom_problem_descriptions' | 'selected_nichos' | 'business_metrics' |
   'pricing_settings' | 'agency_contact' | 'current_section' | 'visited_sections' | 'status' | 'project_name'>>
 
-export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agent' | 'demo_agent'
+export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agency_content' | 'agent' | 'demo_agent'
+
+/** Contenido de Instagram para conseguir los primeros clientes (paso "Tu contenido"). Lo escribe la IA en el servidor. */
+export interface AgencyContent {
+  reels: Array<{ titulo: string; gancho: string; desarrollo: string; cierre: string; texto_pantalla: string[]; caption: string; palabra_clave: string }> // 5
+  bio: string
+  carruseles: Array<{ titulo: string; diapositivas: string[]; caption: string }> // 3, 6-8 diapositivas
+  _meta?: DeliverableMeta
+}

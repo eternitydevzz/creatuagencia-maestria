@@ -53,6 +53,12 @@ const KINDS: Record<string, KindDef> = {
   ideal_client: { cost: 2, effort: 'medium', maxTokens: 16000, valid: (v) => isObj(v) && hasText(v.resumen) && isObj(v.perfil) && Array.isArray(v.dolores) },
   agency_offer: { cost: 3, effort: 'medium', maxTokens: 20000, valid: (v) => isObj(v) && isObj(v.oferta) && hasText(v.oferta.nombre) && isObj(v.oferta.precio) },
   agency_site: { cost: 3, effort: 'medium', maxTokens: 20000, valid: (v) => isObj(v) && isObj(v.hero) && hasText(v.hero.titulo) },
+  // Contenido de Instagram para conseguir los primeros clientes (5 reels, bio y 3 carruseles)
+  agency_content: {
+    cost: 3, effort: 'medium', maxTokens: 20000,
+    valid: (v) => isObj(v) && Array.isArray(v.reels) && v.reels.length >= 5 && v.reels.every((r) => isObj(r) && hasText(r.gancho) && hasText(r.cierre))
+      && hasText(v.bio) && Array.isArray(v.carruseles) && v.carruseles.length >= 3,
+  },
   agent: {
     cost: 1, model: AGENT_MODEL, maxTokens: 6000,
     valid: (v) => isObj(v) && isObj(v.negocio) && hasText(v.negocio.nombre) && hasText(v.negocio.rubro) && Array.isArray(v.servicios) && v.servicios.length >= 1
@@ -151,6 +157,15 @@ async function liveCompletion(kind: string, agencyName: string | undefined, dead
 }
 
 // ---------------------------------------------------------------- contexto del proyecto
+/** Contenido y anuncios se escriben sobre el cliente ideal y la oferta: sin ellos se responde 409 antes de cobrar nada. */
+function requireOffer(ctx: P.Ctx) {
+  const filled = (o?: Record<string, unknown>) => !!o && Object.keys(o).length > 0
+  const oferta = ctx.agencyOffer?.oferta
+  if (!filled(ctx.idealClient) || !oferta || typeof oferta !== 'object' || !filled(oferta as Record<string, unknown>)) {
+    throw new HttpError(409, 'missing_offer', 'Primero genera tu cliente ideal y tu oferta: el contenido se escribe sobre ellos.')
+  }
+}
+
 /** Los entregables guardan metadatos internos en `_meta`; a la IA no le hacen falta. */
 function withoutMeta(o: Record<string, unknown> | undefined) {
   if (!o) return undefined
@@ -266,6 +281,7 @@ Deno.serve(withCors(async (req) => {
       case 'ideal_client': prompt = P.idealClient(ctx); break
       case 'agency_offer': prompt = P.agencyOffer(ctx); break
       case 'agency_site': prompt = premium ? P.agencySitePremium(ctx) : P.agencySite(ctx); break
+      case 'agency_content': requireOffer(ctx); prompt = P.agencyContent(ctx); break
       case 'agent': prompt = P.agentConfig(ctx); break
       case 'demo_agent': {
         const { count: nDemos } = await userDb.from('agents').select('id', { count: 'exact', head: true }).eq('roadmap_id', roadmapId).eq('source', 'demo')
@@ -363,6 +379,7 @@ Deno.serve(withCors(async (req) => {
           case 'ideal_client': patch.ideal_client = { ...(result as object), _meta: meta() }; break
           case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
           case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
+          case 'agency_content': patch.agency_content = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
         }
         if (kind === 'agent' || kind === 'demo_agent') {
           // Solo se guardan los campos conocidos de la ficha, con tamaños acotados (el texto puede venir de una web ajena)
