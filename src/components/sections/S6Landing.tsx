@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Download, ExternalLink, MessageCircle, Rocket } from 'lucide-react'
 import Deliverable from '@/components/Deliverable'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
-import { renderAgencySite } from '@/lib/agencySite'
+import { siteHtml } from '@/lib/siteHtml'
 import { openHtml, saveFile, slug } from '@/lib/files'
 import { staleness } from '@/lib/freshness'
 import { buildKnowledgeBase } from '@/lib/knowledge'
@@ -16,8 +16,8 @@ export default function S6Landing({ roadmap, update, refresh }: SectionProps) {
   const offerDone = Object.keys((roadmap.agency_offer.oferta ?? {}) as object).length > 0
   const stale = staleness(roadmap)
   const allDone = done && offerDone && Object.keys(roadmap.ideal_client).length > 0
-  const custom = typeof roadmap.agency_site.html === 'string' && roadmap.agency_site.html.trim() ? roadmap.agency_site.html : null
-  const html = useMemo(() => (!done ? '' : custom ?? renderAgencySite(roadmap.agency_site, contact, agency)), [done, custom, roadmap.agency_site, contact, agency])
+  // Premium (plantilla de Jose), página propia o formato de siempre: ver lib/siteHtml.ts
+  const { html, scripts } = useMemo(() => (!done ? { html: '', scripts: false } : siteHtml(roadmap.agency_site, contact, agency)), [done, roadmap.agency_site, contact, agency])
   const setContact = (k: 'whatsapp' | 'email') => (e: React.ChangeEvent<HTMLInputElement>) => update({ agency_contact: { ...contact, [k]: e.target.value } })
 
   return (
@@ -32,7 +32,7 @@ export default function S6Landing({ roadmap, update, refresh }: SectionProps) {
       </div>
 
       <Deliverable missing={!offerDone && `Primero genera tu oferta (paso ${stepNo(5)}): la landing la vende.`} stale={stale.site} done={done} busy={isBusy('agency_site')} cost={3} label="Generar mi landing"
-        pending="La IA escribe todos los textos con tu cliente ideal y tu oferta." onGenerate={() => void run('agency_site')}
+        pending="La IA escribe todos los textos con tu cliente ideal y tu oferta." onGenerate={() => void run('agency_site', { plantilla: 'premium' })}
         actions={<>
           <button type="button" className="btn-ghost" onClick={() => saveFile(`${slug(agency)}-landing.html`, html, 'text/html;charset=utf-8')}><Download className="h-4 w-4" />Descargar .html</button>
           <button type="button" className="btn-ghost" onClick={() => openHtml(html)}><ExternalLink className="h-4 w-4" />Abrir</button>
@@ -42,10 +42,10 @@ export default function S6Landing({ roadmap, update, refresh }: SectionProps) {
             <span className="flex gap-1.5" aria-hidden><i className="h-3 w-3 rounded-full bg-[#ff5f57]" /><i className="h-3 w-3 rounded-full bg-[#febc2e]" /><i className="h-3 w-3 rounded-full bg-[#28c840]" /></span>
             <span className="flex-1 truncate rounded-md bg-black/30 px-3 py-1 text-center text-xs text-muted">{slug(agency)}.com</span>
           </div>
-          {/* Una página propia (modo directo) trae sus animaciones en JavaScript: se le deja ejecutarlo, pero sin allow-same-origin,
-              así que sigue aislada de la app (no ve la sesión ni el almacenamiento). La plantilla no lleva JavaScript. */}
+          {/* La landing premium y la página propia traen sus animaciones en JavaScript: se les deja ejecutarlo, pero sin
+              allow-same-origin, así que siguen aisladas de la app (no ven la sesión ni el almacenamiento). La plantilla antigua no lleva JavaScript. */}
           <iframe title="Vista previa de tu landing" srcDoc={html} className="h-[640px] w-full bg-white"
-            sandbox={custom ? 'allow-scripts allow-popups allow-popups-to-escape-sandbox' : 'allow-popups allow-popups-to-escape-sandbox'} />
+            sandbox={scripts ? 'allow-scripts allow-popups allow-popups-to-escape-sandbox' : 'allow-popups allow-popups-to-escape-sandbox'} />
         </div>
       </Deliverable>
 
