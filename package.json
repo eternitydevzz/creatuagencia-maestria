@@ -18,7 +18,8 @@
     "invite": "node scripts/invite.mjs",
     "mock": "node scripts/mock-anthropic.mjs",
     "mock:waha": "node scripts/mock-waha.mjs",
-    "e2e": "node scripts/e2e.mjs"
+    "e2e": "node scripts/e2e.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -40,6 +41,7 @@
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
+    "vitest": "2.1.9",
     "ws": "^8.22.0"
   },
   "pnpm": {

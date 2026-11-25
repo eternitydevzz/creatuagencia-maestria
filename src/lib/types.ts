@@ -20,6 +20,32 @@ export type JsonObject = { [k: string]: Json }
 
 // ---- landing de la agencia
 export interface AgencyContact { whatsapp?: string; email?: string }
+
+/** Landing premium: la página de Jose (eternity-agency/index.html) como plantilla; la IA solo escribe estos textos.
+ *  Se pinta con lib/premiumSite/render.ts. Las cantidades van en los comentarios (las exige el prompt). */
+export type Accent = 'cian' | 'verde' | 'violeta' | 'ambar' | 'coral'
+export interface PremiumSite {
+  plantilla: 'premium'
+  acento: Accent
+  meta: { title: string; description: string }
+  nav_cta: string
+  hero: { chip: string; titulo: string; titulo_destacado: string; subtitulo: string; cta: string; cta_secundario: string; datos: Array<{ cifra: string; texto: string }> } // datos: 3
+  marquee: { acciones: string[]; rasgos: string[] } // 4 y 4
+  manifiesto: { etiqueta: string; texto: string; destacado: string }
+  demo: {
+    titulo: string; titulo_destacado: string; intro: string; pasos: Array<{ titulo: string; texto: string }> // pasos: 4
+    negocio: string; asistente: string
+    chat: Array<{ de: 'cliente' | 'agente'; texto: string; hora: string; huecos?: string[] }> // 5-7 mensajes
+    confirmacion: { titulo: string; detalle: string }
+  }
+  servicios: { titulo: string; titulo_destacado: string; intro: string; items: Array<{ titulo: string; texto: string }>; etiquetas: string[] } // items 6, etiquetas 4
+  proceso: { titulo: string; titulo_destacado: string; pasos: Array<{ plazo: string; titulo: string; texto: string }> } // 4
+  resultados: { titulo: string; titulo_destacado: string; nota: string; cifras: Array<{ valor: number; prefijo?: string; sufijo?: string; decimales?: number; texto: string }> } // 4
+  faq: Array<{ pregunta: string; respuesta: string }> // 6
+  contacto: { titulo: string; titulo_destacado: string; texto: string; ventajas: string[]; cta: string } // ventajas 3 (una es la garantía)
+  footer: string
+  _meta?: DeliverableMeta
+}
 export interface AgencySite {
   _meta?: DeliverableMeta
   /** Dirección visual con la que se pinta la landing (ver lib/agencySite.ts). Opcional: si no viene, se

@@ -11,8 +11,7 @@
 // publica este archivo tal cual. Todo el movimiento es CSS (`animation-timeline: view()` donde el navegador lo soporte)
 // y respeta `prefers-reduced-motion`.
 import type { AgencySite, AgencyContact } from './types'
-
-const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c)
+import { esc } from './premiumSite/esc'
 
 const initials = (name: string) => {
   const w = name.trim().split(/\s+/).filter(Boolean)

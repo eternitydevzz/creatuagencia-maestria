@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -9,4 +10,6 @@ export default defineConfig({
   // @shared: código que comparten el navegador y la Edge Function (catálogo de problemas y huella de las respuestas)
   resolve: { alias: { '@shared': path('./supabase/functions/_shared'), '@': path('./src') } },
   server: { port: 5173, strictPort: true },
+  // Vitest solo prueba la web; las funciones de Supabase (Deno) se prueban con `deno test`
+  test: { include: ['src/**/*.test.ts'] },
 })
