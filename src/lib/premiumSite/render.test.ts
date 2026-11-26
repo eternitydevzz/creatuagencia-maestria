@@ -37,6 +37,18 @@ describe('renderPremiumSite', () => {
     expect(html).not.toContain('wa.me/"')
   })
 
+  it('lleva el CSS de la plantilla dentro (si no, el test de acento no vería los estilos)', () => {
+    const html = renderPremiumSite(SITE, WA, 'Agencia Norte')
+    const css = html.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? ''
+    expect(css.length).toBeGreaterThan(10000)
+    expect(css).toContain('.inf-path{')
+  })
+
+  it('el acento por defecto (cian) mantiene el color original en el CSS', () => {
+    const html = renderPremiumSite({ ...SITE, acento: 'cian' }, WA, 'Agencia Norte')
+    expect(html.toUpperCase()).toContain('5CE1FF')
+  })
+
   it('el color de acento cambia el cian original', () => {
     const html = renderPremiumSite({ ...SITE, acento: 'verde' }, WA, 'Agencia Norte')
     expect(html.toUpperCase()).not.toContain('5CE1FF')

@@ -11,5 +11,6 @@ export default defineConfig({
   resolve: { alias: { '@shared': path('./supabase/functions/_shared'), '@': path('./src') } },
   server: { port: 5173, strictPort: true },
   // Vitest solo prueba la web; las funciones de Supabase (Deno) se prueban con `deno test`
-  test: { include: ['src/**/*.test.ts'] },
+  // css.include: sin esto Vitest entrega vacío el CSS importado con ?raw y los tests de la landing no lo verían
+  test: { include: ['src/**/*.test.ts'], css: { include: [/premiumSite[\/]premium\.css/] } },
 })
