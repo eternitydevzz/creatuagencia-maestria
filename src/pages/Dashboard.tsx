@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Bot, Check, Eye, Coins, Gem, Globe, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Bot, Check, Clapperboard, Eye, Coins, Gem, Globe, Megaphone, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
 import { SECTIONS, completedCount, computeXp, isSectionDone, levelFor, stepNo } from '@/lib/gamification'
 import { ProgressRing, Skeleton, Spinner, StatusBadge } from '@/components/ui/bits'
@@ -14,6 +14,8 @@ const GAINS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   { icon: UserCheck, title: 'Tu cliente ideal', text: 'Quién es, qué le duele en sus palabras, cuánto pierde y dónde encontrarlo.' },
   { icon: Gem, title: 'Tu oferta', text: 'Promesa, precio anclado en lo que pierde tu cliente, garantía y una oferta piloto.' },
   { icon: Globe, title: 'Tu landing', text: 'Una web de venta premium con tu oferta, lista para descargar y publicar.' },
+  { icon: Clapperboard, title: 'Tu contenido', text: '5 reels listos para grabar, tu bio de Instagram y 3 carruseles para que los dueños de tu nicho te escriban.' },
+  { icon: Megaphone, title: 'Tus anuncios', text: '3 anuncios cortos para Facebook e Instagram y el público al que enseñarlos.' },
   { icon: Bot, title: 'Tu agente de WhatsApp', text: 'Una secretaria con IA que atiende, agenda y que enseñas a tus clientes antes de cobrar.' },
 ]
 
@@ -79,7 +81,7 @@ export default function Dashboard() {
             <p className="eyebrow">Tu centro de control</p>
             <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Bienvenido{first ? `, ${first}` : ''}</h1>
             <p className="mt-2 max-w-xl text-muted">
-              {!latest ? 'Crea tu primer proyecto y en unos minutos tendrás tu cliente ideal, tu oferta, tu landing y un agente de WhatsApp listo para enseñar.'
+              {!latest ? 'Crea tu primer proyecto y en unos minutos tendrás tu cliente ideal, tu oferta, tu landing, tu primer contenido, tus anuncios y un agente de WhatsApp listo para enseñar.'
                 : finished ? `«${latest.project_name}» está completo. Crea una demo para tu próximo cliente.`
                   : <>Vas por el paso <b className="text-white">{stepNo(next.id)}: {next.title}</b> de «{latest.project_name}».</>}
             </p>
@@ -127,7 +129,7 @@ export default function Dashboard() {
 
       <section aria-labelledby="how">
         <h2 id="how" className="mb-4 text-xl font-bold">Qué te llevas</h2>
-        <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GAINS.map(({ icon: Icon, title, text }, i) => (
             <Link key={title} to={latest ? `/roadmap/${latest.id}` : '/roadmap'} className="card card-lift group space-y-3 p-5">
               <div className="flex items-center justify-between"><span className="tile-hero !h-11 !w-11"><Icon className="h-5 w-5" strokeWidth={1.75} /></span><span className="font-mono text-sm text-muted">0{i + 1}</span></div>
