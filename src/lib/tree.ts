@@ -23,7 +23,7 @@ const LABELS: Record<string, string> = {
   web: 'Web', zona_horaria: 'Zona horaria', servicios: 'Servicios y precios', secretaria: 'La secretaria', tono: 'Tono', saludo: 'Saludo',
   politicas: 'Políticas', faq: 'Preguntas frecuentes', pregunta: 'Pregunta', datos_cita: 'Datos que pide para agendar',
   // contenido
-  bio: 'Bio de Instagram', reels: 'Guiones de reel', gancho: 'Gancho (0-3 s)', desarrollo: 'Desarrollo', cierre: 'Cierre',
+  bio: 'Bio de Instagram', reels: 'Guiones de reel', gancho: 'Gancho (0-3 s)', problema: 'Problema', insight: 'Insight', solucion: 'Solución', desarrollo: 'Desarrollo', cierre: 'Cierre',
   texto_pantalla: 'Texto en pantalla', caption: 'Caption', palabra_clave: 'Palabra clave', carruseles: 'Carruseles', diapositivas: 'Diapositivas',
   // anuncios
   anuncios: 'Anuncios', angulo: 'Ángulo', texto_principal: 'Texto principal', titular: 'Titular', boton: 'Botón',
@@ -41,7 +41,7 @@ const ORDER = [
   'objeciones', 'objecion', 'respuesta', 'senales_compra', 'red_flags', 'donde_esta', 'preguntas_cualificacion', 'primer_mensaje',
   'paso_a_principal', 'como_proponerla', 'oferta_piloto', 'escalera',
   'numeros_agencia', 'coste_entrega_mensual', 'margen_por_cliente', 'clientes_para_5000_mes',
-  'bio', 'reels', 'gancho', 'desarrollo', 'cierre', 'texto_pantalla', 'caption', 'palabra_clave', 'carruseles', 'diapositivas',
+  'bio', 'reels', 'gancho', 'problema', 'insight', 'solucion', 'desarrollo', 'cierre', 'texto_pantalla', 'caption', 'palabra_clave', 'carruseles', 'diapositivas',
   'anuncios', 'angulo', 'texto_principal', 'titular', 'boton', 'videos', 'guion', 'publico', 'edad', 'intereses', 'comportamientos', 'notas',
 ]
 const rank = (k: string) => { const i = ORDER.indexOf(k); return i === -1 ? ORDER.length : i }
@@ -52,6 +52,16 @@ export const ordered = (o: JsonObject) => Object.entries(o).filter(([k]) => !k.s
 export const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v : undefined)
 
 /** La IA a veces numera el título ("Reel 1 - …", "Vídeo 2: …") y la tarjeta ya pone el número: se quita para que no salga dos veces. */
+/** Parte central del storytelling de un reel o un vídeo (entre el gancho y el cierre), en orden y sin partes vacías.
+ *  Lo generado antes del cambio a storytelling traía un único `desarrollo` (reels) o `guion` (vídeos): se sigue mostrando. */
+export function storyParts(o: { problema?: unknown; insight?: unknown; solucion?: unknown; desarrollo?: unknown; guion?: unknown }): Array<{ label: string; text: string }> {
+  const parts = ([['Problema', o.problema], ['Insight', o.insight], ['Solución', o.solucion]] as const)
+    .map(([label, v]) => ({ label, text: str(v) })).filter((p): p is { label: 'Problema' | 'Insight' | 'Solución'; text: string } => !!p.text)
+  if (parts.length) return parts
+  const old = str(o.desarrollo) ? { label: 'Desarrollo', text: str(o.desarrollo)! } : str(o.guion) ? { label: 'Guion', text: str(o.guion)! } : null
+  return old ? [old] : []
+}
+
 export const stripItemNumber = (t: string): string => t.replace(/^\s*(reel|v[ií]deo|anuncio|carrusel)\s*\d+\s*[-–—:·.]\s*/i, '').trim() || t
 
 export const label = (k: string) => LABELS[k] ?? k.replace(/_/g, ' ').replace(/^\p{L}/u, (c) => c.toUpperCase())

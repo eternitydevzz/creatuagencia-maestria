@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { stripItemNumber } from './tree'
+import { storyParts, stripItemNumber } from './tree'
+
+describe('storyParts', () => {
+  it('devuelve problema, insight y solución en orden, con su etiqueta', () => {
+    expect(storyParts({ problema: 'P', insight: 'I', solucion: 'S' })).toEqual([
+      { label: 'Problema', text: 'P' }, { label: 'Insight', text: 'I' }, { label: 'Solución', text: 'S' },
+    ])
+  })
+
+  it('se salta las partes vacías', () => {
+    expect(storyParts({ problema: 'P', insight: '  ', solucion: 'S' }).map((p) => p.label)).toEqual(['Problema', 'Solución'])
+  })
+
+  it('con el formato anterior muestra el desarrollo o el guion', () => {
+    expect(storyParts({ desarrollo: 'D' })).toEqual([{ label: 'Desarrollo', text: 'D' }])
+    expect(storyParts({ guion: 'G' })).toEqual([{ label: 'Guion', text: 'G' }])
+  })
+})
 
 describe('stripItemNumber', () => {
   it('quita el "Reel N -" que a veces pone la IA al principio del título', () => {

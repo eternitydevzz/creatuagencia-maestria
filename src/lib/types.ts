@@ -121,13 +121,15 @@ export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 
 /** Anuncios de Meta para conseguir los primeros clientes (paso "Tus anuncios"). Lo escribe la IA en el servidor. */
 export interface AgencyAds {
   anuncios: Array<{ angulo: string; texto_principal: string; titular: string; descripcion: string; boton: string }> // 3
-  videos: Array<{ titulo: string; gancho: string; guion: string; cierre: string }> // 2
+  /** Storytelling de 30-40 s (faceless): gancho → problema → insight → solución → cierre. `guion`: formato anterior. */
+  videos: Array<{ titulo: string; gancho: string; problema?: string; insight?: string; solucion?: string; guion?: string; cierre: string; texto_pantalla?: string[] }> // 2
   publico: { ubicacion: string; edad: string; intereses: string[]; comportamientos: string[]; notas: string }
   _meta?: DeliverableMeta
 }
 
 export interface AgencyContent {
-  reels: Array<{ titulo: string; gancho: string; desarrollo: string; cierre: string; texto_pantalla: string[]; caption: string; palabra_clave: string }> // 5
+  /** Storytelling de 30-40 s (faceless): gancho → problema → insight → solución → cierre. `desarrollo`: formato anterior. */
+  reels: Array<{ titulo: string; gancho: string; problema?: string; insight?: string; solucion?: string; desarrollo?: string; cierre: string; texto_pantalla: string[]; caption: string; palabra_clave: string }> // 5
   bio: string
   carruseles: Array<{ titulo: string; diapositivas: string[]; caption: string }> // 3, 6-8 diapositivas
   _meta?: DeliverableMeta

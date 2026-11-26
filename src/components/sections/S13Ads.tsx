@@ -4,7 +4,7 @@ import Deliverable from '@/components/Deliverable'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { saveFile, slug } from '@/lib/files'
 import { stepNo } from '@/lib/gamification'
-import { str, stripItemNumber } from '@/lib/tree'
+import { storyParts, str, stripItemNumber } from '@/lib/tree'
 import type { AgencyAds } from '@/lib/types'
 
 const texts = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!x.trim()) : [])
@@ -19,7 +19,10 @@ const adText = (a: Ad) => [
   `TEXTO PRINCIPAL:\n${a.texto_principal}`, `TITULAR: ${a.titular}`,
   str(a.descripcion) ? `DESCRIPCIÓN: ${a.descripcion}` : '', str(a.boton) ? `BOTÓN: ${a.boton}` : '',
 ].filter(Boolean).join('\n\n')
-const videoText = (v: AdVideo) => [`GANCHO (0-3 s): ${v.gancho}`, `GUION: ${v.guion}`, `CIERRE: ${v.cierre}`].join('\n\n')
+const videoText = (v: AdVideo) => [
+  `GANCHO (0-3 s): ${v.gancho}`, ...storyParts(v).map((p) => `${p.label.toUpperCase()}: ${p.text}`), `CIERRE: ${v.cierre}`,
+  texts(v.texto_pantalla).length ? `TEXTO EN PANTALLA: ${texts(v.texto_pantalla).join(' · ')}` : '',
+].filter(Boolean).join('\n\n')
 const audienceText = (p: Audience) => [
   str(p.ubicacion) && `Ubicación: ${p.ubicacion}`, str(p.edad) && `Edad: ${p.edad}`,
   texts(p.intereses).length > 0 && `Intereses: ${texts(p.intereses).join(', ')}`,
@@ -86,8 +89,11 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
                     <CopyButton text={videoText(v)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{v.gancho}”</p>
-                  <p className="text-sm leading-relaxed text-text">{v.guion}</p>
+                  {storyParts(v).map((p) => <p key={p.label} className="text-sm leading-relaxed text-text"><b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>{p.text}</p>)}
                   <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{v.cierre}</p>
+                  {texts(v.texto_pantalla).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">{texts(v.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>
+                  )}
                 </article>
               ))}
             </div>

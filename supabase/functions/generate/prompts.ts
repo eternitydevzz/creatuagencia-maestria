@@ -320,15 +320,15 @@ A QUIÉN LE HABLAS
 - Al dueño del negocio del nicho, con su lenguaje, sus dolores y sus cifras (los del cliente ideal). Nunca a gente que quiere montar una agencia ni a otros profesionales del marketing.
 - El objetivo de cada pieza: que el dueño escriba para pedir una demo o la oferta piloto.
 
-REELS (30-60 segundos, para grabar hablando a cámara)
-- "gancho": lo que se dice en los primeros 3 segundos. Tiene que parar el scroll del dueño. Fórmulas que funcionan en este nicho (adáptalas, no las copies):
-  · una escena concreta de su día con hora ("Domingo, 23:40. Tres mensajes preguntando precio y nadie contesta.")
-  · una cifra de lo que pierde ("Si tu clínica recibe 60 mensajes al mes, estás perdiendo unos X al mes.")
-  · "Si tuviera un/a [negocio del nicho], esto es lo primero que haría..."
-  · una objeción en su boca ("'Mis clientes no quieren hablar con un robot.' Mira esto.")
-- "desarrollo": 3-5 frases, el problema y cómo se resuelve, con un ejemplo de su día a día. Sin jerga técnica (nada de "IA generativa", "LLM", "automatización n8n").
-- "cierre": llamada a la acción con "Comenta [PALABRA]" usando la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa para quien no use respuestas automáticas, que le escriban por WhatsApp.
-- "texto_pantalla": 2-4 rótulos cortos (máx. 6 palabras) que aparecen sobre el vídeo.
+REELS (30-40 segundos como mucho; máx. 100 palabras de voz en total)
+- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, una idea por frase, ritmo rápido. Nada de "como ves en cámara".
+- Storytelling básico en 5 partes, en este orden:
+  · "gancho" (0-3 segundos): para el scroll del dueño. Fórmulas que funcionan en este nicho (adáptalas, no las copies): una escena concreta de su día con hora ("Domingo, 23:40. Tres mensajes preguntando precio y nadie contesta."), una cifra de lo que pierde, o una objeción en su boca ("'Mis clientes no quieren hablar con un robot.'").
+  · "problema": 1-2 frases que bajan al dolor real y a lo que le cuesta (de los "dolores" y el coste del problema del cliente ideal).
+  · "insight": 1 frase con lo que el dueño no ve: la causa de fondo o el dato que le cambia la forma de pensar ("No es que no quieran venir: es que el primero que contesta se queda el cliente.").
+  · "solucion": 1-2 frases con lo que cambia con la oferta, en resultados, no en herramientas. Sin jerga técnica (nada de "IA generativa", "LLM", "automatización n8n").
+  · "cierre": la llamada a la acción con "Comenta [PALABRA]" usando la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa, que le escriban por WhatsApp.
+- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras), uno por parte de la historia, para la edición.
 - "caption": 2-4 frases + la llamada a la acción. Sin emojis ni hashtags genéricos; como mucho 3 hashtags del nicho y la zona.
 - Los 5 reels atacan ángulos distintos: (1) el coste de no contestar, (2) una escena real del día a día, (3) una objeción respondida, (4) cómo funciona por dentro en 3 pasos, (5) la oferta piloto.
 
@@ -345,50 +345,49 @@ REGLAS
 
 Devuelve JSON con esta estructura EXACTA:
 {
-  "reels": [{ "titulo": "nombre interno del reel", "gancho": "", "desarrollo": "", "cierre": "", "texto_pantalla": ["(2-4)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
+  "reels": [{ "titulo": "nombre interno del reel, sin número", "gancho": "", "problema": "", "insight": "", "solucion": "", "cierre": "", "texto_pantalla": ["(3-5)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
   "bio": "",
   "carruseles": [{ "titulo": "", "diapositivas": ["(6-8)"], "caption": "" }]
 }
 "reels": 5 · "carruseles": 3. ${jsonOnly}`
 }
 
-/** Anuncios de Meta para conseguir los primeros clientes. Estructura de 7 bloques estudiada en anuncios de una agencia
- *  que vende a negocios locales (diseño, sección 7.2); cada bloque se rellena con el cliente ideal y la oferta del alumno. */
+/** Anuncios de Meta para conseguir los primeros clientes. Cortos y al grano (decisión de Jose, 2026-11-26): texto de 4 líneas
+ *  (dolor, problema, resultado, CTA a WhatsApp) y vídeos faceless de 30-40 s (hook, problema, insight, solución, CTA). */
 export function agencyAds(c: Ctx): string {
   const mk = mkt(c)
-  // En EE. UU. se habla del negocio que trabaja en español, no del origen del dueño: Meta no permite insinuar rasgos personales
-  const who = mk.currency === 'USD' ? `${niche0(c)} en ${mk.country} que trabajan en español` : `${niche0(c)} en ${mk.country}`
   return `Escribe los primeros anuncios de Facebook e Instagram (Meta) de "${agencyOf(c)}" para conseguir sus primeros clientes: dueños de ${niche0(c)}. El alumno los sube al administrador de anuncios esta semana; cada texto tiene que poder pegarse tal cual.
 
 CONTEXTO
 ${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
 
-LA ESTRUCTURA (7 bloques, en este orden). Es la columna de todos los textos principales y de los guiones de vídeo:
-1. Nicho + identidad: a quién va, en una línea que el dueño reconozca al momento ("${who}").
-2. Enemigo: lo que hoy le cuesta dinero al captar clientes, sacado de "perfil.como_capta_hoy" del cliente ideal (p. ej. pagar plataformas que mandan contactos compartidos, depender del boca a boca, contestar tarde). Con nombre y apellidos, como pregunta: "¿Cansado de...?".
-3. "Si tienes un/a [tipo de negocio del nicho], esto es para ti".
-4. Prueba de que se mueve ("Estamos ayudando a..."): la agencia empieza de cero, así que NO puede decir que ya ayuda a nadie. Escribe una versión cierta: que está abriendo plazas para la oferta piloto, para quién y qué consigue ("Estamos ayudando a [nicho] de [zona] a [resultado de la oferta]" solo si la oferta lo respalda como promesa, nunca como caso real).
-5. "Qué te damos": 4 puntos, cada uno con un emoji del nicho, sacados de "oferta.incluye" (el beneficio, no la herramienta).
-6. "Olvídate de": 3 puntos con ❌, sacados de los "dolores" del cliente ideal, en sus palabras.
-7. Escasez: la de "oferta.urgencia", tal cual (cupos, plazas por zona o fecha). Si la urgencia es por zona, ciérralo con "revisa si tu ciudad todavía está disponible". Nunca inventes una escasez que la oferta no tenga.
-Cierra siempre pidiendo que escriban por WhatsApp.
+ANUNCIOS DE TEXTO E IMAGEN (3). Cortos, directos y al grano: se leen enteros sin pulsar "ver más".
+- "texto_principal": exactamente 4 líneas, una frase corta cada una (máx. 15 palabras por línea), separadas por una línea en blanco:
+  1. Dolor: una pregunta que el dueño reconoce al momento, con sus palabras (de los "dolores" del cliente ideal).
+  2. Problema: lo que le cuesta, concreto (clientes, horas o dinero; con sus números si los hay).
+  3. Resultado: lo que consigue con la oferta, el deseo cumplido, en resultados y no en herramientas.
+  4. CTA: "👇 Haz clic aquí abajo y escríbenos por WhatsApp." Si la oferta tiene urgencia ("urgencia"), añádela en esta misma línea, tal cual y en pocas palabras.
+- Sin listas, sin emojis salvo el 👇 del CTA, sin párrafos de presentación.
+- Cada anuncio con un ángulo distinto: (1) el dolor del día a día, (2) lo que pierde al mes con sus números, (3) la oferta piloto y la garantía.
+- "titular": máx. 40 caracteres, el resultado. "descripcion": máx. 30 caracteres.
+- "boton": el botón de Meta para abrir WhatsApp ("Enviar mensaje de WhatsApp").
+- "angulo": nombre interno del ángulo, sin número.
 
-ANUNCIOS DE TEXTO E IMAGEN (3)
-- Cada uno con un ángulo distinto: (1) el enemigo, (2) lo que pierde al mes con sus números, (3) la oferta piloto y la garantía.
-- "texto_principal": los 7 bloques en párrafos cortos. Las 2 primeras líneas tienen que funcionar solas: es lo que se ve antes de "ver más".
-- "titular": máx. 40 caracteres. "descripcion": máx. 30 caracteres.
-- "boton": el botón de Meta que lleve a escribir por WhatsApp (p. ej. "Enviar mensaje de WhatsApp") o, si no encaja, "Más información".
-- "angulo": nombre interno del ángulo.
-
-VÍDEOS (2, 30-45 segundos, el alumno hablando a cámara)
-- "gancho": lo que se dice en los 3 primeros segundos (el bloque 1 o el 2).
-- "guion": los bloques 3 a 7 tal como se dicen en voz alta, frases cortas.
-- "cierre": la llamada a escribir por WhatsApp.
+VÍDEOS (2, 30-40 segundos como mucho; máx. 100 palabras de voz en total)
+- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, una idea por frase, ritmo rápido.
+- Storytelling básico en 5 partes, en este orden:
+  · "gancho" (0-3 segundos): para el scroll del dueño (una escena de su día con hora, una cifra de lo que pierde o una objeción en su boca).
+  · "problema": 1-2 frases que bajan al dolor real y a lo que le cuesta.
+  · "insight": 1 frase con lo que el dueño no ve: la causa de fondo o el dato que le cambia la forma de pensar.
+  · "solucion": 1-2 frases con lo que cambia con la oferta, en resultados.
+  · "cierre": "Haz clic aquí abajo y escríbenos por WhatsApp", con la urgencia de la oferta si la tiene.
+- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras), uno por parte de la historia, para la edición.
+- Los 2 vídeos con ángulos distintos.
 
 PÚBLICO (para crear la campaña)
 - "ubicacion": dónde está el nicho (ciudad o zona y radio sugerido) en ${mk.country}.
 - "edad": rango de edad de los dueños.
-- "intereses" y "comportamientos": opciones de segmentación de Meta pensadas para dueños de este tipo de negocio. Meta cambia a menudo las opciones disponibles: escribe solo las que sean habituales y, en "notas", avisa de que si alguna no aparece se use un público amplio con la ubicación.
+- "intereses" y "comportamientos": solo opciones de segmentación de Meta que conozcas con seguridad (si dudas de que exista, no la pongas). Meta cambia a menudo las opciones disponibles: en "notas", avisa de que si alguna no aparece se use un público amplio con la ubicación.
 - "notas": 2-3 consejos prácticos para la primera campaña (presupuesto diario pequeño para probar, qué anuncio mirar primero, cuándo apagar uno).
 
 REGLAS
@@ -401,7 +400,7 @@ REGLAS
 Devuelve JSON con esta estructura EXACTA:
 {
   "anuncios": [{ "angulo": "", "texto_principal": "", "titular": "", "descripcion": "", "boton": "" }],
-  "videos": [{ "titulo": "nombre interno del vídeo", "gancho": "", "guion": "", "cierre": "" }],
+  "videos": [{ "titulo": "nombre interno del vídeo, sin número", "gancho": "", "problema": "", "insight": "", "solucion": "", "cierre": "", "texto_pantalla": ["(3-5)"] }],
   "publico": { "ubicacion": "", "edad": "", "intereses": [""], "comportamientos": [""], "notas": "" }
 }
 "anuncios": 3 · "videos": 2. ${jsonOnly}`

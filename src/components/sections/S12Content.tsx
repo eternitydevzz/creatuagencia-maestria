@@ -4,7 +4,7 @@ import Deliverable from '@/components/Deliverable'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { saveFile, slug } from '@/lib/files'
 import { stepNo } from '@/lib/gamification'
-import { str, stripItemNumber, treeToText } from '@/lib/tree'
+import { storyParts, str, stripItemNumber, treeToText } from '@/lib/tree'
 import type { AgencyContent } from '@/lib/types'
 
 const texts = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!x.trim()) : [])
@@ -15,7 +15,7 @@ type Carousel = AgencyContent['carruseles'][number]
 
 /** Guion de un reel en texto plano, listo para pegar en las notas del móvil y grabar. */
 const reelText = (r: Reel) => [
-  `GANCHO (0-3 s): ${r.gancho}`, `DESARROLLO: ${r.desarrollo}`, `CIERRE: ${r.cierre}`,
+  `GANCHO (0-3 s): ${r.gancho}`, ...storyParts(r).map((p) => `${p.label.toUpperCase()}: ${p.text}`), `CIERRE: ${r.cierre}`,
   texts(r.texto_pantalla).length ? `TEXTO EN PANTALLA: ${texts(r.texto_pantalla).join(' · ')}` : '', `CAPTION: ${r.caption}`,
 ].filter(Boolean).join('\n\n')
 const carouselText = (c: Carousel) => [...texts(c.diapositivas).map((d, i) => `${i + 1}. ${d}`), '', `CAPTION: ${c.caption}`].join('\n')
@@ -58,7 +58,7 @@ export default function S12Content({ roadmap, refresh }: SectionProps) {
                     <CopyButton text={reelText(r)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{r.gancho}”</p>
-                  <p className="text-sm leading-relaxed text-text">{r.desarrollo}</p>
+                  {storyParts(r).map((p) => <p key={p.label} className="text-sm leading-relaxed text-text"><b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>{p.text}</p>)}
                   <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{r.cierre}</p>
                   {texts(r.texto_pantalla).length > 0 && (
                     <div className="flex flex-wrap gap-1.5">{texts(r.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>

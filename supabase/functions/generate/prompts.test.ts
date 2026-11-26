@@ -39,23 +39,36 @@ Deno.test('agencyContent pide 5 reels, bio y 3 carruseles para el dueño del nic
   assertStringIncludes(p, 'OFERTA YA DEFINIDA')
 })
 
+Deno.test('agencyContent: reels de 30-40 s faceless con hook, problema, insight, solución y CTA', () => {
+  const p = agencyContent(ctx('eur'))
+  for (const s of ['"problema"', '"insight"', '"solucion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras']) assertStringIncludes(p, s)
+  assert(!p.includes('"desarrollo"'), 'el reel ya no tiene un único "desarrollo"')
+})
+
 Deno.test('agencyContent en euros no habla de dólares ni de EE. UU.', () => {
   const p = agencyContent(ctx('eur'))
   assert(!p.includes('$'), 'no debe aparecer el símbolo $')
   assert(!p.includes('EE. UU.'), 'no debe hablar de EE. UU.')
 })
 
-Deno.test('agencyAds sigue los 7 bloques de la estructura de anuncios', () => {
+Deno.test('agencyAds: texto de 4 líneas (dolor, problema, resultado, CTA) sin listas largas', () => {
   const p = agencyAds(ctx('usd'))
-  for (const s of ['Nicho + identidad', 'Enemigo', 'esto es para ti', 'Estamos ayudando', 'Qué te damos', 'Olvídate de', 'Escasez']) assertStringIncludes(p, s)
-  for (const s of ['"anuncios"', '"videos"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"guion"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
+  for (const s of ['4 líneas', 'Dolor', 'Problema', 'Resultado', 'Haz clic aquí abajo y escríbenos', 'WhatsApp']) assertStringIncludes(p, s)
+  for (const s of ['Qué te damos', 'Olvídate de', 'Estamos ayudando']) assert(!p.includes(s), `ya no debe pedir "${s}"`)
+  for (const s of ['"anuncios"', '"videos"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
 })
 
-Deno.test('agencyAds rellena cada bloque con el cliente ideal y la oferta del alumno', () => {
+Deno.test('agencyAds: vídeos de 30-40 s faceless con hook, problema, insight, solución y CTA', () => {
+  const p = agencyAds(ctx('usd'))
+  for (const s of ['"problema"', '"insight"', '"solucion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off']) assertStringIncludes(p, s)
+  assert(!p.includes('"guion"'), 'el vídeo ya no tiene un único "guion"')
+})
+
+Deno.test('agencyAds usa el dolor del cliente ideal y la oferta del alumno', () => {
   const p = agencyAds(ctx('usd'))
   assertStringIncludes(p, 'CLIENTE IDEAL YA DEFINIDO')
   assertStringIncludes(p, 'OFERTA YA DEFINIDA')
-  for (const s of ['como_capta_hoy', 'dolores', 'incluye', 'urgencia']) assertStringIncludes(p, s)
+  for (const s of ['dolores', 'urgencia']) assertStringIncludes(p, s)
   assertStringIncludes(p, 'Nunca inventes')
 })
 
