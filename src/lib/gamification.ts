@@ -4,7 +4,8 @@ import type { Progress, Roadmap } from './types'
 interface SectionDef { id: number; title: string; icon: LucideIcon; heading: string; description: string }
 
 /** El mapa: pasos de preguntas que alimentan los entregables (cliente ideal → oferta → landing) y la secretaria virtual que se enseña a los clientes.
- *  Aquí está todo lo de cada paso (nombre, icono, cabecera); la pantalla de cada uno se enlaza en RoadmapPage con el mismo id. */
+ *  Aquí está todo lo de cada paso (nombre, icono, cabecera); la pantalla de cada uno se enlaza en RoadmapPage con el mismo id.
+ *  Un id nuevo mayor que el último necesita una migración que suba `roadmaps_current_section_check` (hoy admite de 1 a 13). */
 export const SECTIONS = [
   { id: 1, title: 'Problemas que resuelves', icon: Target, heading: 'Detectar problemas', description: '¿Qué problemas del embudo vas a resolver a tus clientes con IA? Elige hasta 4: definen tu oferta.' },
   { id: 11, title: 'Soluciones con IA', icon: Lightbulb, heading: 'Convierte tus problemas en soluciones', description: 'Esto es lo que vendes, y así se lo cuentas al empresario. Cada problema que elegiste, con lo que incluye la solución y el cambio que consigue.' },

@@ -165,6 +165,9 @@ ok('agency_ads se guarda con 3 anuncios, 2 vídeos y el público', r.status === 
 ok('  cuesta 3 créditos', (await credits(A.id)) === beforeAds - 3, `saldo ${await credits(A.id)} vs ${beforeAds - 3}`)
 ok('  recuerda qué oferta usó (offer_at)', !!rm.agency_ads?._meta?.offer_at)
 ok('Los anuncios se escriben con el cliente ideal y la oferta como contexto', log().some((q) => /^Escribe los primeros anuncios/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
+// El paso "Tus anuncios" tiene id 13: la base de datos tiene que aceptarlo como paso actual (si no, la web no guarda nada)
+const { error: saveStep13 } = await A.c.from('roadmaps').update({ current_section: 13, visited_sections: [1, 13] }).eq('id', rmA.id)
+ok('El alumno puede guardar el paso 13 (Tus anuncios) como paso actual', !saveStep13, saveStep13?.message)
 
 console.log('\n— Fallo de la IA → reembolso')
 const bal = await credits(A.id)
