@@ -59,6 +59,13 @@ const KINDS: Record<string, KindDef> = {
     valid: (v) => isObj(v) && Array.isArray(v.reels) && v.reels.length >= 5 && v.reels.every((r) => isObj(r) && hasText(r.gancho) && hasText(r.cierre))
       && hasText(v.bio) && Array.isArray(v.carruseles) && v.carruseles.length >= 3,
   },
+  // Anuncios de Meta para conseguir los primeros clientes (3 de texto e imagen, 2 guiones de vídeo y el público)
+  agency_ads: {
+    cost: 3, effort: 'medium', maxTokens: 20000,
+    valid: (v) => isObj(v) && Array.isArray(v.anuncios) && v.anuncios.length >= 3 && v.anuncios.every((a) => isObj(a) && hasText(a.texto_principal) && hasText(a.titular))
+      && Array.isArray(v.videos) && v.videos.length >= 2 && v.videos.every((x) => isObj(x) && hasText(x.gancho) && hasText(x.guion))
+      && isObj(v.publico) && hasText(v.publico.ubicacion),
+  },
   agent: {
     cost: 1, model: AGENT_MODEL, maxTokens: 6000,
     valid: (v) => isObj(v) && isObj(v.negocio) && hasText(v.negocio.nombre) && hasText(v.negocio.rubro) && Array.isArray(v.servicios) && v.servicios.length >= 1
@@ -162,7 +169,7 @@ function requireOffer(ctx: P.Ctx) {
   const filled = (o?: Record<string, unknown>) => !!o && Object.keys(o).length > 0
   const oferta = ctx.agencyOffer?.oferta
   if (!filled(ctx.idealClient) || !oferta || typeof oferta !== 'object' || !filled(oferta as Record<string, unknown>)) {
-    throw new HttpError(409, 'missing_offer', 'Primero genera tu cliente ideal y tu oferta: el contenido se escribe sobre ellos.')
+    throw new HttpError(409, 'missing_offer', 'Primero genera tu cliente ideal y tu oferta: el contenido y los anuncios se escriben sobre ellos.')
   }
 }
 
@@ -282,6 +289,7 @@ Deno.serve(withCors(async (req) => {
       case 'agency_offer': prompt = P.agencyOffer(ctx); break
       case 'agency_site': prompt = premium ? P.agencySitePremium(ctx) : P.agencySite(ctx); break
       case 'agency_content': requireOffer(ctx); prompt = P.agencyContent(ctx); break
+      case 'agency_ads': requireOffer(ctx); prompt = P.agencyAds(ctx); break
       case 'agent': prompt = P.agentConfig(ctx); break
       case 'demo_agent': {
         const { count: nDemos } = await userDb.from('agents').select('id', { count: 'exact', head: true }).eq('roadmap_id', roadmapId).eq('source', 'demo')
@@ -380,6 +388,7 @@ Deno.serve(withCors(async (req) => {
           case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
           case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
           case 'agency_content': patch.agency_content = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
+          case 'agency_ads': patch.agency_ads = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
         }
         if (kind === 'agent' || kind === 'demo_agent') {
           // Solo se guardan los campos conocidos de la ficha, con tamaños acotados (el texto puede venir de una web ajena)

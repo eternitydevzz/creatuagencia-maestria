@@ -153,6 +153,19 @@ ok('  cuesta 3 créditos', (await credits(A.id)) === beforeContent - 3, `saldo $
 ok('  recuerda qué oferta usó (offer_at)', !!rm.agency_content?._meta?.offer_at)
 ok('El contenido se escribe con el cliente ideal y la oferta como contexto', log().some((q) => /^Escribe el primer contenido/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
 
+console.log('\n— Anuncios de Meta')
+const { error: writeAds } = await A.c.from('roadmaps').update({ agency_ads: { anuncios: [] } }).eq('id', rmNoOffer.id)
+ok('El alumno NO puede escribir los anuncios a mano', !!writeAds, writeAds?.message)
+const beforeAds = await credits(A.id)
+r = await call(A.c, 'agency_ads', rmNoOffer.id)
+ok('Anuncios sin oferta → 409 missing_offer', r.status === 409 && r.body?.error === 'missing_offer', JSON.stringify(r).slice(0, 150))
+ok('  y no se cobra nada', (await credits(A.id)) === beforeAds)
+r = await call(A.c, 'agency_ads', rmA.id); rm = await row()
+ok('agency_ads se guarda con 3 anuncios, 2 vídeos y el público', r.status === 200 && rm.agency_ads?.anuncios?.length === 3 && rm.agency_ads?.videos?.length === 2 && !!rm.agency_ads?.publico?.ubicacion, JSON.stringify(r.body).slice(0, 150))
+ok('  cuesta 3 créditos', (await credits(A.id)) === beforeAds - 3, `saldo ${await credits(A.id)} vs ${beforeAds - 3}`)
+ok('  recuerda qué oferta usó (offer_at)', !!rm.agency_ads?._meta?.offer_at)
+ok('Los anuncios se escriben con el cliente ideal y la oferta como contexto', log().some((q) => /^Escribe los primeros anuncios/.test(q.first_chars) && q.ideal_ctx && q.offer_ctx))
+
 console.log('\n— Fallo de la IA → reembolso')
 const bal = await credits(A.id)
 await fetch(`${MOCK}/__fail?n=6`)   // el SDK reintenta: hacemos fallar todas las peticiones de esta llamada

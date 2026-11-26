@@ -255,6 +255,20 @@ export const CONTENT = {
   ],
 }
 
+// Anuncios de Meta (paso "Tus anuncios")
+export const ADS = {
+  anuncios: [
+    { angulo: 'El enemigo', texto_principal: 'Boxes de CrossFit en España.\n¿Cansado de pagar plataformas que te mandan contactos que ya han escrito a otros tres boxes?\nSi tienes un box, esto es para ti.\nEstamos abriendo 3 plazas para que boxes como el tuyo contesten en 30 segundos y agenden pruebas solos.\nQué te damos:\n🏋️ Asistente de WhatsApp 24/7\n📅 Pruebas agendadas en tu calendario\n🔁 Seguimiento a quien no contesta\n📊 Informe semanal\nOlvídate de:\n❌ Contestar a las 23:00\n❌ Pruebas que no vienen\n❌ Lunes apagando fuegos\nSolo 3 boxes este mes. Escríbenos por WhatsApp.', titular: 'Tu box, contestando en 30 s', descripcion: 'Oferta piloto 14 días', boton: 'Enviar mensaje de WhatsApp' },
+    { angulo: 'Lo que pierdes al mes', texto_principal: 'Si tu box recibe 60 mensajes al mes, estás perdiendo unas 9 altas.\nSi tienes un box, esto es para ti.\nEscríbenos por WhatsApp.', titular: '9 altas perdidas al mes', descripcion: 'Haz la cuenta', boton: 'Enviar mensaje de WhatsApp' },
+    { angulo: 'Oferta piloto', texto_principal: 'Busco 3 boxes para probar esto 14 días. Si no agenda 10 pruebas, no pagas.\nEscríbenos por WhatsApp.', titular: '14 días o no pagas', descripcion: 'Solo 3 plazas', boton: 'Más información' },
+  ],
+  videos: [
+    { titulo: 'Enemigo', gancho: 'Boxes de CrossFit: ¿seguís pagando por contactos compartidos?', guion: 'Si tienes un box, esto es para ti. Abrimos 3 plazas. Te damos un asistente que contesta y agenda. Olvídate de contestar de noche. Solo 3 boxes este mes.', cierre: 'Escríbenos por WhatsApp.' },
+    { titulo: 'Domingo 23:40', gancho: 'Domingo, 23:40. Quince WhatsApps sin contestar.', guion: 'Si tienes un box, esto es para ti. El lunes llegas y las pruebas ya están agendadas. Solo 3 plazas.', cierre: 'Escríbenos por WhatsApp.' },
+  ],
+  publico: { ubicacion: 'Madrid, radio de 25 km', edad: '28-50', intereses: ['CrossFit', 'Pequeñas empresas'], comportamientos: ['Administradores de páginas de empresas'], notas: 'Empieza con 10 € al día durante 5 días. Si alguna segmentación no aparece, usa público amplio con la ubicación.' },
+}
+
 export const AGENT = {
   negocio: { nombre: 'Studio Pulso', rubro: 'gimnasio boutique de entrenamiento en grupo', descripcion: 'Clases reducidas de fuerza y HIIT con entrenador, máximo 10 personas por sesión.', ubicacion: 'Calle Alcalá 142, Madrid', horario: 'L-V 7:00-21:30, S 9:00-14:00', telefono: '612 345 678', web: 'studiopulso.example', zona_horaria: 'Europe/Madrid' },
   servicios: [

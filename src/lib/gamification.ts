@@ -1,4 +1,4 @@
-import { Bot, Building2, Calculator, Clapperboard, Gem, Lightbulb, Globe, MessageCircle, Smartphone, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
+import { Bot, Building2, Calculator, Clapperboard, Gem, Lightbulb, Globe, Megaphone, MessageCircle, Smartphone, Target, UserCheck, Users, type LucideIcon } from 'lucide-react'
 import type { Progress, Roadmap } from './types'
 
 interface SectionDef { id: number; title: string; icon: LucideIcon; heading: string; description: string }
@@ -14,6 +14,7 @@ export const SECTIONS = [
   { id: 5, title: 'Tu oferta', icon: Gem, heading: 'Tu oferta irresistible', description: 'Promesa, mecanismo, precio anclado en lo que pierde tu cliente, garantía y una oferta piloto para conseguir tus primeros clientes sin casos de éxito.' },
   { id: 6, title: 'Tu landing', icon: Globe, heading: 'Tu landing de venta', description: 'Una web premium con tu oferta, lista para publicar. Los botones llevan a tu WhatsApp o a tu email.' },
   { id: 12, title: 'Tu contenido', icon: Clapperboard, heading: 'Tu primer contenido', description: '5 guiones de reel, tu bio de Instagram y 3 carruseles para que los dueños de tu nicho te escriban. Listos para grabar y publicar esta semana.' },
+  { id: 13, title: 'Tus anuncios', icon: Megaphone, heading: 'Tus primeros anuncios', description: '3 anuncios y 2 guiones de vídeo para Facebook e Instagram, con el público al que enseñarlos. Para que los dueños de tu nicho te escriban por WhatsApp.' },
   { id: 7, title: 'Tu agente', icon: Bot, heading: 'Tu agente de WhatsApp', description: 'Una secretaria virtual para un negocio típico de tu nicho: responde, cualifica y agenda a cualquier hora. Es lo que enseñas a tus clientes para que vean el resultado antes de comprar.' },
   { id: 8, title: 'Probar el agente', icon: MessageCircle, heading: 'Pruébalo como si fueras un cliente', description: 'Un WhatsApp de prueba para hablar con tu agente. Intenta romperlo: pregúntale precios, pídele cita, escríbele con faltas.' },
   { id: 9, title: 'Demo para clientes', icon: Building2, heading: 'Una demo para cada cliente', description: 'Pega la web de un negocio (o escribe sus datos) y tendrás su secretaria lista para enseñársela antes de la llamada: "aquí tienes tu agente, pruébalo".' },
@@ -30,7 +31,7 @@ const filled = (o: object | null | undefined) => !!o && Object.keys(o).length > 
 /** Proyecto completo → lo mínimo para calcular el progreso (los listados ya lo traen así). */
 export const progressOf = (r: Roadmap): Progress => ({
   selected_problems: r.selected_problems, selected_nichos: r.selected_nichos, business_metrics: r.business_metrics,
-  has_ideal: filled(r.ideal_client), has_offer: filled(r.agency_offer?.oferta as object | undefined), has_site: filled(r.agency_site), has_content: filled(r.agency_content),
+  has_ideal: filled(r.ideal_client), has_offer: filled(r.agency_offer?.oferta as object | undefined), has_site: filled(r.agency_site), has_content: filled(r.agency_content), has_ads: filled(r.agency_ads),
   has_agent: !!r.agents?.some((a) => a.source === 'niche'), has_demo: !!r.agents?.some((a) => a.source === 'demo'), has_whatsapp: !!r.whatsapp_connections?.some((c) => c.status === 'working'), visited_sections: r.visited_sections,
 })
 
@@ -45,6 +46,7 @@ export function isSectionDone(p: Progress, id: number): boolean {
     case 5: return p.has_offer
     case 6: return p.has_site
     case 12: return p.has_content
+    case 13: return p.has_ads
     case 7: return p.has_agent
     case 8: return p.has_agent && p.visited_sections.includes(8) // probar = haber abierto el chat con un agente creado
     case 9: return p.has_demo

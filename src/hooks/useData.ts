@@ -19,8 +19,8 @@ export function useProfile() {
 
 // Las listas (cabecera, dashboard, proyectos) solo necesitan saber qué pasos lleva hecho cada proyecto:
 // de los entregables (que pesan decenas de KB) se pide únicamente un campo para saber si existen.
-const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,content:agency_content->>bio,visited_sections,agents(id,source),whatsapp_connections(status)'
-type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_content' | 'has_agent' | 'has_demo' | 'has_whatsapp'> & { ideal: string | null; offer: string | null; site: string | null; content: string | null; agents: Array<{ source: string }>; whatsapp_connections: Array<{ status: string }> }
+const SUMMARY_COLUMNS = 'id,project_name,agency_name,status,updated_at,selected_problems,selected_nichos,business_metrics,ideal:ideal_client->>resumen,offer:agency_offer->oferta->>nombre,site:agency_site->hero->>titulo,content:agency_content->>bio,ads:agency_ads->publico->>ubicacion,visited_sections,agents(id,source),whatsapp_connections(status)'
+type SummaryRow = Omit<RoadmapSummary, 'has_ideal' | 'has_offer' | 'has_site' | 'has_content' | 'has_ads' | 'has_agent' | 'has_demo' | 'has_whatsapp'> & { ideal: string | null; offer: string | null; site: string | null; content: string | null; ads: string | null; agents: Array<{ source: string }>; whatsapp_connections: Array<{ status: string }> }
 
 export function useRoadmaps() {
   const { session } = useAuth()
@@ -30,7 +30,7 @@ export function useRoadmaps() {
     queryFn: async (): Promise<RoadmapSummary[]> => {
       const { data, error } = await supabase.from('roadmaps').select(SUMMARY_COLUMNS).order('updated_at', { ascending: false }).returns<SummaryRow[]>()
       if (error) throw error
-      return data.map(({ ideal, offer, site, content, agents, whatsapp_connections, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_content: !!content, has_agent: agents.some((a) => a.source === 'niche'), has_demo: agents.some((a) => a.source === 'demo'), has_whatsapp: whatsapp_connections.some((c) => c.status === 'working') }))
+      return data.map(({ ideal, offer, site, content, ads, agents, whatsapp_connections, ...r }) => ({ ...r, has_ideal: !!ideal, has_offer: !!offer, has_site: !!site, has_content: !!content, has_ads: !!ads, has_agent: agents.some((a) => a.source === 'niche'), has_demo: agents.some((a) => a.source === 'demo'), has_whatsapp: whatsapp_connections.some((c) => c.status === 'working') }))
     },
   })
 }

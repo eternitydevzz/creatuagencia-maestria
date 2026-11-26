@@ -1,5 +1,5 @@
 import { assert, assertStringIncludes } from 'jsr:@std/assert@1'
-import { agencyContent, agencySite, agencySitePremium, type Ctx } from './prompts.ts'
+import { agencyAds, agencyContent, agencySite, agencySitePremium, type Ctx } from './prompts.ts'
 
 const ctx = (currency: 'usd' | 'eur'): Ctx => ({
   agencyName: 'Agencia Norte', nichos: ['clínicas de fisioterapia'], problems: ['atencion_leads'], custom: {},
@@ -43,4 +43,25 @@ Deno.test('agencyContent en euros no habla de dólares ni de EE. UU.', () => {
   const p = agencyContent(ctx('eur'))
   assert(!p.includes('$'), 'no debe aparecer el símbolo $')
   assert(!p.includes('EE. UU.'), 'no debe hablar de EE. UU.')
+})
+
+Deno.test('agencyAds sigue los 7 bloques de la estructura de anuncios', () => {
+  const p = agencyAds(ctx('usd'))
+  for (const s of ['Nicho + identidad', 'Enemigo', 'esto es para ti', 'Estamos ayudando', 'Qué te damos', 'Olvídate de', 'Escasez']) assertStringIncludes(p, s)
+  for (const s of ['"anuncios"', '"videos"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"guion"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
+})
+
+Deno.test('agencyAds rellena cada bloque con el cliente ideal y la oferta del alumno', () => {
+  const p = agencyAds(ctx('usd'))
+  assertStringIncludes(p, 'CLIENTE IDEAL YA DEFINIDO')
+  assertStringIncludes(p, 'OFERTA YA DEFINIDA')
+  for (const s of ['como_capta_hoy', 'dolores', 'incluye', 'urgencia']) assertStringIncludes(p, s)
+  assertStringIncludes(p, 'Nunca inventes')
+})
+
+Deno.test('agencyAds en euros no habla de dólares ni de hispanos en EE. UU.', () => {
+  const p = agencyAds(ctx('eur'))
+  assert(!p.includes('$'), 'no debe aparecer el símbolo $')
+  assert(!p.includes('hispanos en EE. UU.'), 'no debe hablar de hispanos en EE. UU.')
+  assertStringIncludes(p, 'España')
 })

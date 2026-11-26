@@ -352,6 +352,61 @@ Devuelve JSON con esta estructura EXACTA:
 "reels": 5 · "carruseles": 3. ${jsonOnly}`
 }
 
+/** Anuncios de Meta para conseguir los primeros clientes. Estructura de 7 bloques estudiada en anuncios de una agencia
+ *  que vende a negocios locales (diseño, sección 7.2); cada bloque se rellena con el cliente ideal y la oferta del alumno. */
+export function agencyAds(c: Ctx): string {
+  const mk = mkt(c)
+  // En EE. UU. se habla del negocio que trabaja en español, no del origen del dueño: Meta no permite insinuar rasgos personales
+  const who = mk.currency === 'USD' ? `${niche0(c)} en ${mk.country} que trabajan en español` : `${niche0(c)} en ${mk.country}`
+  return `Escribe los primeros anuncios de Facebook e Instagram (Meta) de "${agencyOf(c)}" para conseguir sus primeros clientes: dueños de ${niche0(c)}. El alumno los sube al administrador de anuncios esta semana; cada texto tiene que poder pegarse tal cual.
+
+CONTEXTO
+${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
+
+LA ESTRUCTURA (7 bloques, en este orden). Es la columna de todos los textos principales y de los guiones de vídeo:
+1. Nicho + identidad: a quién va, en una línea que el dueño reconozca al momento ("${who}").
+2. Enemigo: lo que hoy le cuesta dinero al captar clientes, sacado de "perfil.como_capta_hoy" del cliente ideal (p. ej. pagar plataformas que mandan contactos compartidos, depender del boca a boca, contestar tarde). Con nombre y apellidos, como pregunta: "¿Cansado de...?".
+3. "Si tienes un/a [tipo de negocio del nicho], esto es para ti".
+4. Prueba de que se mueve ("Estamos ayudando a..."): la agencia empieza de cero, así que NO puede decir que ya ayuda a nadie. Escribe una versión cierta: que está abriendo plazas para la oferta piloto, para quién y qué consigue ("Estamos ayudando a [nicho] de [zona] a [resultado de la oferta]" solo si la oferta lo respalda como promesa, nunca como caso real).
+5. "Qué te damos": 4 puntos, cada uno con un emoji del nicho, sacados de "oferta.incluye" (el beneficio, no la herramienta).
+6. "Olvídate de": 3 puntos con ❌, sacados de los "dolores" del cliente ideal, en sus palabras.
+7. Escasez: la de "oferta.urgencia", tal cual (cupos, plazas por zona o fecha). Si la urgencia es por zona, ciérralo con "revisa si tu ciudad todavía está disponible". Nunca inventes una escasez que la oferta no tenga.
+Cierra siempre pidiendo que escriban por WhatsApp.
+
+ANUNCIOS DE TEXTO E IMAGEN (3)
+- Cada uno con un ángulo distinto: (1) el enemigo, (2) lo que pierde al mes con sus números, (3) la oferta piloto y la garantía.
+- "texto_principal": los 7 bloques en párrafos cortos. Las 2 primeras líneas tienen que funcionar solas: es lo que se ve antes de "ver más".
+- "titular": máx. 40 caracteres. "descripcion": máx. 30 caracteres.
+- "boton": el botón de Meta que lleve a escribir por WhatsApp (p. ej. "Enviar mensaje de WhatsApp") o, si no encaja, "Más información".
+- "angulo": nombre interno del ángulo.
+
+VÍDEOS (2, 30-45 segundos, el alumno hablando a cámara)
+- "gancho": lo que se dice en los 3 primeros segundos (el bloque 1 o el 2).
+- "guion": los bloques 3 a 7 tal como se dicen en voz alta, frases cortas.
+- "cierre": la llamada a escribir por WhatsApp.
+
+PÚBLICO (para crear la campaña)
+- "ubicacion": dónde está el nicho (ciudad o zona y radio sugerido) en ${mk.country}.
+- "edad": rango de edad de los dueños.
+- "intereses" y "comportamientos": opciones de segmentación de Meta pensadas para dueños de este tipo de negocio. Meta cambia a menudo las opciones disponibles: escribe solo las que sean habituales y, en "notas", avisa de que si alguna no aparece se use un público amplio con la ubicación.
+- "notas": 2-3 consejos prácticos para la primera campaña (presupuesto diario pequeño para probar, qué anuncio mirar primero, cuándo apagar uno).
+
+REGLAS
+- ${mk.language}, tuteo, frases cortas, números en lugar de adjetivos.
+- Nunca inventes testimonios, clientes, casos ni resultados ya conseguidos. Cifras que no vienen de la oferta o del cliente ideal, como estimación ("de media", "hasta").
+- La oferta, el precio y la garantía, tal cual están definidos.
+- Sin jerga técnica ("IA generativa", "LLM", "automatización n8n").
+- Ojo con las normas de Meta: no hables del dueño señalando rasgos personales ("¿Eres hispano?", "¿Tienes deudas?"); habla del negocio.
+
+Devuelve JSON con esta estructura EXACTA:
+{
+  "anuncios": [{ "angulo": "", "texto_principal": "", "titular": "", "descripcion": "", "boton": "" }],
+  "videos": [{ "titulo": "nombre interno del vídeo", "gancho": "", "guion": "", "cierre": "" }],
+  "publico": { "ubicacion": "", "edad": "", "intereses": [""], "comportamientos": [""], "notas": "" }
+}
+"anuncios": 3 · "videos": 2. ${jsonOnly}`
+}
+
 // Nombres para la secretaria: los elige el servidor al azar porque, si se deja al modelo, repite casi siempre los mismos
 // (Martina, Mariana…) y diez demos del mismo rubro se notan hechas con plantilla. Válidos en España, Latinoamérica y EEUU.
 const SECRETARY_NAMES = [

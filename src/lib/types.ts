@@ -78,6 +78,8 @@ export interface Roadmap {
   ideal_client: JsonObject; agency_offer: JsonObject; agency_site: AgencySite; agency_contact: AgencyContact
   /** Contenido de Instagram (forma de AgencyContent); {} hasta que se genera. */
   agency_content: JsonObject
+  /** Anuncios de Meta (forma de AgencyAds); {} hasta que se genera. */
+  agency_ads: JsonObject
   current_section: number; visited_sections: number[]; created_at: string; updated_at: string
   /** Agentes del proyecto (solo id y origen): sirve para saber si el paso del agente está hecho. */
   agents?: Array<{ id: string; source: Agent['source'] }>
@@ -102,7 +104,7 @@ export interface Agent {
 /** Lo mínimo de un proyecto para saber cuántos pasos lleva hecho (las listas no descargan los entregables enteros). */
 export interface Progress {
   selected_problems: string[]; selected_nichos: string[]; business_metrics: Metrics
-  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_content: boolean; has_agent: boolean; has_demo: boolean; has_whatsapp: boolean; visited_sections: number[]
+  has_ideal: boolean; has_offer: boolean; has_site: boolean; has_content: boolean; has_ads: boolean; has_agent: boolean; has_demo: boolean; has_whatsapp: boolean; visited_sections: number[]
 }
 export interface RoadmapSummary extends Progress {
   id: string; project_name: string; agency_name: string | null; status: Roadmap['status']; updated_at: string
@@ -113,9 +115,17 @@ export type EditablePatch = Partial<Pick<Roadmap,
   'agency_name' | 'selected_problems' | 'custom_problem_descriptions' | 'selected_nichos' | 'business_metrics' |
   'pricing_settings' | 'agency_contact' | 'current_section' | 'visited_sections' | 'status' | 'project_name'>>
 
-export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agency_content' | 'agent' | 'demo_agent'
+export type GenerationKind = 'custom_problem' | 'new_niches' | 'ideal_client' | 'agency_offer' | 'agency_site' | 'agency_content' | 'agency_ads' | 'agent' | 'demo_agent'
 
 /** Contenido de Instagram para conseguir los primeros clientes (paso "Tu contenido"). Lo escribe la IA en el servidor. */
+/** Anuncios de Meta para conseguir los primeros clientes (paso "Tus anuncios"). Lo escribe la IA en el servidor. */
+export interface AgencyAds {
+  anuncios: Array<{ angulo: string; texto_principal: string; titular: string; descripcion: string; boton: string }> // 3
+  videos: Array<{ titulo: string; gancho: string; guion: string; cierre: string }> // 2
+  publico: { ubicacion: string; edad: string; intereses: string[]; comportamientos: string[]; notas: string }
+  _meta?: DeliverableMeta
+}
+
 export interface AgencyContent {
   reels: Array<{ titulo: string; gancho: string; desarrollo: string; cierre: string; texto_pantalla: string[]; caption: string; palabra_clave: string }> // 5
   bio: string
