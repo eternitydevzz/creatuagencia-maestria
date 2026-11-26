@@ -1,11 +1,14 @@
 # MaestrIA · Constructor de Agencia IA
 
-Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 11 pasos y entrega
-tres cosas para vender (cliente ideal, oferta, landing) más una secretaria virtual de WhatsApp para enseñar a los clientes:
+Plataforma para que los alumnos monten su agencia de IA con ayuda de IA real (Claude). El **Mapa de Ruta** tiene 13 pasos y entrega
+cinco cosas para vender (cliente ideal, oferta, landing, contenido y anuncios) más una secretaria virtual de WhatsApp para enseñar a los clientes:
 
 1. Problemas que resuelves · 2. **Soluciones con IA** (cada problema convertido en la solución que vendes) · 3. Tu agencia y tu nicho · 4. **Precios**: deslizadores con las consultas, la inversión en anuncios y el ticket de un negocio típico, y la tabla de lo que puedes cobrar (`_shared/pricing.ts`, la misma que usa la oferta)
-5. **Cliente ideal** · 6. **Oferta** (usa el cliente ideal y los precios de referencia) · 7. **Landing** de venta premium (usa los dos anteriores)
-8. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 9. **Probar el agente**: simulador de WhatsApp para hablar con ella · 10. **Demo para clientes**: pega la web de un negocio (o escribe sus datos) y sale su propia secretaria · 11. **Conectar WhatsApp** (beta): vincula un número por QR y el agente contesta de verdad
+5. **Cliente ideal** · 6. **Oferta** (usa el cliente ideal y los precios de referencia) · 7. **Landing** de venta premium: la plantilla de Jose (`src/lib/premiumSite/`) rellenada con un JSON que escribe la IA
+8. **Tu contenido**: 5 reels faceless de 30-40 s, cada uno con un formato distinto (experto, diálogo con objeción, mito vs realidad, lista rápida, escena), bio de Instagram y 3 carruseles · 9. **Tus anuncios**: 3 anuncios de Meta de 4 líneas (sirven también como guion hablado) y el público
+10. **Tu agente**: ficha de un negocio típico del nicho + una secretaria que atiende, cualifica y agenda · 11. **Probar el agente**: simulador de WhatsApp para hablar con ella · 12. **Demo para clientes**: pega la web de un negocio (o escribe sus datos) y sale su propia secretaria · 13. **Conectar WhatsApp** (beta): vincula un número por QR y el agente contesta de verdad
+
+Contenido y anuncios necesitan el cliente ideal y la oferta: sin ellos la función responde `409 missing_offer` antes de cobrar.
 
 ## Cómo está organizado
 
@@ -34,23 +37,30 @@ resultado en el proyecto y, si algo falla, **devuelve los créditos**.
 |---|---|
 | 1 | problema personalizado, sugerir nichos |
 | 2 | cliente ideal |
-| 3 | oferta, landing |
+| 3 | oferta, landing, contenido, anuncios |
 | 1 | agente (ficha del negocio de ejemplo), demo para un cliente |
 
 Los entregables usan `ANTHROPIC_MODEL` (Sonnet 5.5 por defecto); `ANTHROPIC_THINKING=off` quita el razonamiento y es la palanca
-más grande de velocidad (mídelo con `scripts/latency.sql`). El chat con el agente (paso 8) no cuesta créditos: usa un modelo
+más grande de velocidad (mídelo con `scripts/latency.sql`). El chat con el agente (paso 11) no cuesta créditos: usa un modelo
 pequeño (`AGENT_MODEL`, Haiku por defecto) y está limitado por ritmo
 (`AGENT_CHAT_PER_MINUTE`, `AGENT_CHAT_PER_HOUR`) y por tamaño de conversación (40 mensajes).
 
-Cada alumno recibe **30 créditos** al darse de alta (`app_settings.initial_credits`): el mapa completo cuesta unos 10, así que
-da para regenerar cada entregable varias veces. Se ajustan con `scripts/invite.mjs`.
+Cada alumno recibe **30 créditos** al darse de alta (`app_settings.initial_credits`): el mapa completo cuesta 15 (cliente ideal 2,
+oferta 3, landing 3, contenido 3, anuncios 3 y agente 1), así que da para regenerar varios entregables. Se ajustan con `scripts/invite.mjs`.
+
+### Modo directo (clase en directo)
+Las cuentas de `LIVE_DEMO_EMAILS` (secreto de la función, emails separados por comas) no llaman a Claude: `generate` espera 7-10 s y
+devuelve lo preparado en `supabase/functions/generate/liveDemo.ts` (`LIVE_CONTENT`), con el nombre de la agencia del alumno. Cobra
+créditos y queda registrado con el modelo `modo-directo`. La landing premium sale de `agency_site_premium` cuando la web pide
+`plantilla: 'premium'`; sin ese parámetro sale `agency_site` (con el HTML de Jose), para versiones antiguas de la web.
+El valor de un secreto no se puede leer, solo sustituir: para añadir una cuenta hay que escribir la lista completa.
 
 ### Agentes: cómo funcionan
 - La ficha del negocio (servicios, precios, horario, políticas, preguntas frecuentes, nombre y tono de la secretaria) se genera con `generate` (tipo `agent`) y se guarda en la tabla `agents`.
 - Las **instrucciones del chat** no se guardan: `supabase/functions/_shared/agent.ts` las construye a partir de la ficha (la Edge Function `agent-chat` las usa para responder y el navegador las muestra para copiarlas).
 - La **demo desde una URL** (`demo_agent`) descarga la web en el servidor (`generate/fetchSite.ts`) y la IA extrae la ficha usando solo lo que consta. Defensas contra SSRF: solo http/https en 80/443, sin usuario en la URL, se resuelve el DNS y se rechazan IP privadas, de bucle local, de enlace local y de metadatos de la nube, las redirecciones (máx. 3) se validan una a una, y hay límite de tiempo (20 s), de tamaño (1,5 MB) y solo HTML. Si la descarga falla no se cobra. Las fichas se limpian y se acotan antes de guardarse (el texto de una web ajena acaba dentro de las instrucciones del chat). Máximo 10 demos por proyecto. `FETCH_ALLOW_HOSTS` es solo para pruebas locales: en producción, vacío.
 - `agent-chat` es sin estado: el navegador envía la conversación y recibe la siguiente respuesta. Las conversaciones no se guardan.
-- **Link público de una demo** (paso 10, "Que la pruebe el dueño"): el alumno crea un link `…/d/<código>` y su prospecto habla con su secretaria desde el móvil, sin cuenta. El código es aleatorio (128 bits), vence a los 7 días y se puede renovar (código nuevo) o desactivar. Solo se comparten demos, nunca el agente de ejemplo del nicho. Sin cuenta solo se ve el nombre del negocio, de la secretaria y de la agencia (`public_demo`); la ficha y las instrucciones nunca salen del servidor. Topes por link: `DEMO_LINK_PER_MINUTE` (8) y `DEMO_LINK_PER_DAY` (80), además del total por hora del alumno (`AGENT_CHAT_PER_HOUR`). El mensaje se registra antes de contar, así que una ráfaga en paralelo no se salta el tope, y si la base falla el chat se corta en lugar de quedarse sin límite.
+- **Link público de una demo** (paso 12, "Que la pruebe el dueño"): el alumno crea un link `…/d/<código>` y su prospecto habla con su secretaria desde el móvil, sin cuenta. El código es aleatorio (128 bits), vence a los 7 días y se puede renovar (código nuevo) o desactivar. Solo se comparten demos, nunca el agente de ejemplo del nicho. Sin cuenta solo se ve el nombre del negocio, de la secretaria y de la agencia (`public_demo`); la ficha y las instrucciones nunca salen del servidor. Topes por link: `DEMO_LINK_PER_MINUTE` (8) y `DEMO_LINK_PER_DAY` (80), además del total por hora del alumno (`AGENT_CHAT_PER_HOUR`). El mensaje se registra antes de contar, así que una ráfaga en paralelo no se salta el tope, y si la base falla el chat se corta en lugar de quedarse sin límite.
 
 ### WhatsApp real (beta): servidor WAHA
 Vincular un número por QR necesita un servidor siempre encendido que mantenga la sesión de WhatsApp Web: **WAHA** (imagen `devlikeapro/waha:noweb`, sin navegador, ligera). Es una vía **no oficial** de Meta: puede acabar en el bloqueo del número. Por eso el agente solo responde (nunca inicia conversaciones), tiene topes por día y por chat, y se calla si el dueño contesta desde su móvil.
@@ -110,7 +120,7 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
    (Production y Preview): `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (Settings → API del proyecto Supabase; la clave anónima es pública por diseño).
    Cada `git push` a `main` despliega en producción; las demás ramas generan una preview. Crear el proyecto y las variables de Production
    necesita rol Member u Owner en el equipo (con Developer no se puede).
-   Con la URL de Vercel cierras el paso 1 (Site URL y Redirect URLs, vía `deploy/supabase-prod-auth`) y el paso 2 (`ALLOWED_ORIGIN`, un solo dominio).
+   Con la URL de Vercel cierras el paso 1 (Site URL y Redirect URLs, vía `deploy/supabase-prod-auth`) y el paso 2 (`ALLOWED_ORIGIN`: un dominio o varios separados por comas, p. ej. producción y una preview de Vercel mientras se prueba una rama).
 4. **Alumnos**: `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/invite.mjs csv alumnos.csv` (columnas `email,nombre,creditos`).
    `SITE_URL=https://tu-dominio` es obligatorio (a ese dominio llegan desde el email). Recibirán un email para crear su contraseña. Más créditos: `node scripts/invite.mjs grant ana@correo.com 20 "bonus"`.
 
