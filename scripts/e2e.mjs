@@ -171,6 +171,32 @@ ok('Los anuncios se escriben con el cliente ideal y la oferta como contexto', lo
 const { error: saveStep13 } = await A.c.from('roadmaps').update({ current_section: 13, visited_sections: [1, 13] }).eq('id', rmA.id)
 ok('El alumno puede guardar el paso 13 (Tus anuncios) como paso actual', !saveStep13, saveStep13?.message)
 
+console.log('\n— Modo directo (cuenta de LIVE_DEMO_EMAILS: respuestas preparadas, sin llamar a Claude)')
+const LIVE_EMAIL = 'directo@test.local' // la de LIVE_DEMO_EMAILS en el entorno local de pruebas
+{ const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 }); const old = list?.users?.find((u) => u.email === LIVE_EMAIL); if (old) await admin.auth.admin.deleteUser(old.id) }
+const { data: dU, error: dErr } = await admin.auth.admin.createUser({ email: LIVE_EMAIL, password: 'Prueba-Local-12345', email_confirm: true, user_metadata: { full_name: 'Alumno Directo' } })
+if (dErr) throw dErr
+{ const { error } = await admin.rpc('approve_student', { p_user: dU.user.id }); if (error) throw error }
+const LV = { id: dU.user.id, c: client() }
+{ const { error } = await LV.c.auth.signInWithPassword({ email: LIVE_EMAIL, password: 'Prueba-Local-12345' }); if (error) throw error }
+LV.c._uid = LV.id
+const { data: rmLV } = await LV.c.from('roadmaps').insert({ project_name: 'Directo', agency_name: 'Agencia Directo', user_id: LV.id }).select().single()
+const rowLV = async () => (await admin.from('roadmaps').select('*').eq('id', rmLV.id).single()).data
+const logBeforeLive = log().length
+for (const k of ['ideal_client', 'agency_offer']) { r = await call(LV.c, k, rmLV.id); ok(`Directo: ${k} → 200`, r.status === 200, JSON.stringify(r).slice(0, 150)) }
+r = await call(LV.c, 'agency_site', rmLV.id, { plantilla: 'premium' }); let dRow = await rowLV()
+ok('Directo: landing con plantilla premium → la preparada premium (sin html)', r.status === 200 && dRow.agency_site?.plantilla === 'premium' && !dRow.agency_site?.html && dRow.agency_site?.demo?.chat?.length >= 5, JSON.stringify(r).slice(0, 150))
+ok('  con el nombre de la agencia del alumno, no "MaestrIA Agency"', !JSON.stringify(dRow.agency_site).includes('MaestrIA Agency') && JSON.stringify(dRow.agency_site).includes('Agencia Directo'))
+r = await call(LV.c, 'agency_site', rmLV.id); dRow = await rowLV()
+ok('Directo: landing sin parámetro → la de siempre, con el html de Jose', r.status === 200 && !!dRow.agency_site?.html)
+r = await call(LV.c, 'agency_content', rmLV.id); dRow = await rowLV()
+ok('Directo: contenido preparado (5 reels con formato y guion, bio y 3 carruseles)', r.status === 200 && dRow.agency_content?.reels?.length === 5 && dRow.agency_content.reels.every((x) => x.formato && x.guion) && !!dRow.agency_content.bio && dRow.agency_content.carruseles?.length === 3, JSON.stringify(r).slice(0, 150))
+r = await call(LV.c, 'agency_ads', rmLV.id); dRow = await rowLV()
+ok('Directo: anuncios preparados (3 y el público, sin vídeos)', r.status === 200 && dRow.agency_ads?.anuncios?.length === 3 && !!dRow.agency_ads?.publico?.ubicacion && !('videos' in dRow.agency_ads), JSON.stringify(r).slice(0, 150))
+const { data: gD } = await admin.from('generations').select('kind,model').eq('user_id', LV.id)
+ok('Directo: las 6 generaciones quedan como "modo-directo"', gD?.length === 6 && gD.every((g) => g.model === 'modo-directo'), JSON.stringify(gD))
+ok('Directo: no se llamó a Claude (el simulador no recibió nada)', log().length === logBeforeLive, `${log().length - logBeforeLive} peticiones`)
+
 console.log('\n— Fallo de la IA → reembolso')
 const bal = await credits(A.id)
 await fetch(`${MOCK}/__fail?n=6`)   // el SDK reintenta: hacemos fallar todas las peticiones de esta llamada

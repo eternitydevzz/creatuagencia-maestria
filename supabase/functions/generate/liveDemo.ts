@@ -4,10 +4,426 @@
 // alineada con la tabla de precios del paso 4 y con la landing. Landing (texto) y fichas: salida real de Claude del 26/10/2026,
 // revisada a mano. La landing lleva además `html`: la página de Jose, que la app muestra en lugar de la plantilla.
 // La demo es Dentist of Aventura (https://dentistofaventura.com/), contrastada con su web.
+// agency_site_premium (landing con la plantilla de Jose), agency_content (5 reels con formatos distintos, bio y 3 carruseles) y
+// agency_ads (3 anuncios y el público): salida real de Claude del 26/11/2026 con este mismo cliente ideal y esta oferta, aprobada por Jose.
 // "MaestrIA Agency" se sustituye por el nombre de agencia del proyecto si es otro (ver generate/index.ts).
 export const LIVE_AGENCY = "MaestrIA Agency"
 
 export const LIVE_CONTENT: Record<string, unknown> = {
+ "agency_site_premium": {
+  "faq": [
+   {
+    "pregunta": "Mis pacientes quieren hablar con una persona, no con un robot.",
+    "respuesta": "Tienen razón. El agente no sustituye a tu recepción: contesta lo básico en segundos y agenda. Si el paciente pide una persona, pasa la conversación a tu equipo con todo el contexto."
+   },
+   {
+    "pregunta": "¿Y si dice un precio que no es o promete algo que no hacemos?",
+    "respuesta": "Solo responde con lo que tú apruebas antes del lanzamiento: tratamientos, precios orientativos, seguros y políticas. Lo demás no lo inventa: lo pasa a tu equipo. Revisamos las conversaciones cada semana."
+   },
+   {
+    "pregunta": "Ya probé un chatbot y fue un desastre.",
+    "respuesta": "Los chatbots de menús se atascan. Esto conversa: entiende spanglish, faltas y mensajes a medias. La mejor prueba es que le escribas tú desde tu celular en la demo."
+   },
+   {
+    "pregunta": "No tengo tiempo para configurar nada.",
+    "respuesta": "No configuras nada. Hacemos una llamada de 30 minutos, nos das acceso a WhatsApp y a tu agenda, y en 7 días está en vivo. Solo revisas el guion de respuestas."
+   },
+   {
+    "pregunta": "¿Cumple con HIPAA y funciona con mi software?",
+    "respuesta": "El agente no pide historiales ni diagnósticos por chat: solo nombre, teléfono, tratamiento de interés y seguro. Definimos contigo qué datos se guardan y quién los ve, y confirmamos la conexión con Dentrix, Eaglesoft, Open Dental o Curve."
+   },
+   {
+    "pregunta": "¿Cuánto cuesta y qué pasa si no funciona?",
+    "respuesta": "$1,500 de puesta en marcha + $480/mes, precio de lanzamiento para 3 clínicas al mes. Si en 30 días no contesta en menos de 5 segundos al 95 % de los mensajes y no agenda 10 valoraciones, trabajamos gratis el mes siguiente."
+   }
+  ],
+  "demo": {
+   "chat": [
+    {
+     "de": "cliente",
+     "hora": "23:05",
+     "texto": "Hola, ¿cuánto cuesta un implante? Me falta una muela hace meses."
+    },
+    {
+     "de": "agente",
+     "hora": "23:05",
+     "texto": "Hola, soy Valeria, de Clínica Dental Bayshore. El costo depende de cada caso y lo define el doctor en una valoración gratis. Tengo estos huecos:",
+     "huecos": [
+      "Mar 17:30",
+      "Mié 10:00",
+      "Jue 16:15"
+     ]
+    },
+    {
+     "de": "cliente",
+     "hora": "23:06",
+     "texto": "El martes a las 17:30 me viene bien."
+    },
+    {
+     "de": "agente",
+     "hora": "23:06",
+     "texto": "Listo, martes 17:30 para tu valoración de implantes. ¿Me dices tu nombre completo y si tienes seguro dental?"
+    },
+    {
+     "de": "cliente",
+     "hora": "23:07",
+     "texto": "Carlos Méndez, tengo Cigna."
+    },
+    {
+     "de": "agente",
+     "hora": "23:07",
+     "texto": "Gracias, Carlos. Quedas agendado. Te escribo el domingo y el martes 3 horas antes para recordártelo."
+    }
+   ],
+   "intro": "Así contesta la recepcionista IA cuando tu clínica está cerrada. Tú duermes y el paciente sale con la valoración agendada.",
+   "pasos": [
+    {
+     "texto": "Lee el mensaje en español, inglés o spanglish y detecta qué tratamiento busca.",
+     "titulo": "Entiende"
+    },
+    {
+     "texto": "Revisa tu agenda y los huecos libres para valoraciones.",
+     "titulo": "Consulta"
+    },
+    {
+     "texto": "Agenda la cita en tu calendario sin que la recepción intervenga.",
+     "titulo": "Reserva"
+    },
+    {
+     "texto": "Confirma 48 h y 3 h antes, y ofrece el hueco si alguien cancela.",
+     "titulo": "Recuerda"
+    }
+   ],
+   "titulo": "Domingo, 23:05.",
+   "negocio": "Clínica Dental Bayshore",
+   "asistente": "Valeria",
+   "confirmacion": {
+    "titulo": "Cita confirmada",
+    "detalle": "Mar · 17:30 · Valoración de implantes"
+   },
+   "titulo_destacado": "Un paciente pregunta por un implante."
+  },
+  "hero": {
+   "cta": "Quiero ver mi demo",
+   "chip": "Para clínicas dentales de Miami",
+   "datos": [
+    {
+     "cifra": "24/7",
+     "texto": "Respuesta, también domingos"
+    },
+    {
+     "cifra": "< 5 s",
+     "texto": "Para contestar cada mensaje"
+    },
+    {
+     "cifra": "7 días",
+     "texto": "Hasta estar en vivo"
+    }
+   ],
+   "titulo": "Tu agenda llena,",
+   "subtitulo": "Una recepcionista con IA bilingüe contesta cada WhatsApp en 5 segundos y agenda la valoración. Para clínicas de 2 a 5 sillones, en vivo en 7 días.",
+   "cta_secundario": "Ver la demo en vivo",
+   "titulo_destacado": "también a las 11 de la noche."
+  },
+  "meta": {
+   "title": "IA para clínicas dentales en Miami | MaestrIA Agency",
+   "description": "Recepcionista IA bilingüe que contesta en 5 segundos, agenda valoraciones y da seguimiento a presupuestos. En vivo en 7 días para clínicas dentales de Miami."
+  },
+  "acento": "cian",
+  "footer": "MaestrIA Agency instala recepcionistas con IA bilingües para clínicas dentales privadas de Miami.",
+  "marquee": {
+   "rasgos": [
+    "Español e inglés",
+    "Conectado a tu agenda",
+    "Sin inventar precios",
+    "Pasa a tu equipo"
+   ],
+   "acciones": [
+    "Contesta en segundos",
+    "Agenda valoraciones",
+    "Recuerda citas",
+    "Reactiva pacientes dormidos"
+   ]
+  },
+  "nav_cta": "Quiero mi demo",
+  "proceso": {
+   "pasos": [
+    {
+     "plazo": "Día 1",
+     "texto": "Nos cuentas tus tratamientos, seguros y horarios. Nos das acceso a tu WhatsApp y a tu agenda.",
+     "titulo": "Llamada de 30 minutos"
+    },
+    {
+     "plazo": "Días 2-4",
+     "texto": "La entrenamos con tus tratamientos, precios orientativos y políticas, y conectamos tu software de agenda.",
+     "titulo": "Entrenamos tu recepcionista IA"
+    },
+    {
+     "plazo": "Días 5-6",
+     "texto": "Apruebas qué contesta, qué es una urgencia y cuándo pasa la conversación a tu equipo.",
+     "titulo": "Tú revisas el guion"
+    },
+    {
+     "plazo": "Día 7",
+     "texto": "Contesta cada mensaje en menos de 5 segundos. Lanzamos la campaña a tus pacientes dormidos y ajustamos cada semana.",
+     "titulo": "En vivo"
+    }
+   ],
+   "titulo": "De la llamada al primer paciente",
+   "titulo_destacado": "en 7 días."
+  },
+  "contacto": {
+   "cta": "Quiero ver mi demo",
+   "texto": "Te mostramos cómo contestaría tu recepcionista IA a un paciente de implantes. Solo abrimos 3 clínicas nuevas al mes en Miami.",
+   "titulo": "Pide tu demo",
+   "ventajas": [
+    "Garantía Clínica Abierta: si en los primeros 30 días el agente no contesta en menos de 5 segundos al 95 % de los mensajes y no agenda al menos 10 valoraciones, trabajamos gratis el mes siguiente hasta lograrlo. Si al día 60 sigues sin verlo, te devolvemos la primera mensualidad.",
+    "En vivo en 7 días, con una llamada de 30 minutos.",
+    "Precio de lanzamiento $1,500 + $480/mes para las 3 primeras clínicas; después la puesta en marcha vuelve a $1,800."
+   ],
+   "titulo_destacado": "con tu propia clínica."
+  },
+  "plantilla": "premium",
+  "servicios": {
+   "intro": "Seis piezas que trabajan donde Marisol no llega: de noche, el fin de semana y mientras cobra, verifica un seguro y atiende la puerta.",
+   "items": [
+    {
+     "texto": "Responde en menos de 5 segundos, en español o en inglés, a cualquier hora, y agenda la valoración en tu calendario.",
+     "titulo": "Atención 24/7 bilingüe"
+    },
+    {
+     "texto": "Confirma 48 h y 3 h antes de la cita. Si alguien cancela, el hueco se ofrece a la lista de espera.",
+     "titulo": "Menos no shows"
+    },
+    {
+     "texto": "Escribe a quienes llevan más de 6 meses sin limpieza y los devuelve a tu agenda sin gastar más en anuncios.",
+     "titulo": "Pacientes dormidos"
+    },
+    {
+     "texto": "Da seguimiento a cada presupuesto con 3 mensajes en 10 días, para que los tratamientos de $4,000 no se enfríen.",
+     "titulo": "Implantes y ortodoncia"
+    },
+    {
+     "texto": "Tras cada visita pide reseña a los pacientes contentos y avisa a tu equipo si alguien quedó molesto.",
+     "titulo": "Reseñas en Google"
+    },
+    {
+     "texto": "Tú apruebas qué cuenta como urgencia y qué contesta el agente antes del lanzamiento. Nada sale sin tu visto bueno.",
+     "titulo": "Guion de urgencias"
+    }
+   ],
+   "titulo": "Una recepción que",
+   "etiquetas": [
+    "Implantes",
+    "Ortodoncia invisible",
+    "Carillas",
+    "Valoración gratis"
+   ],
+   "titulo_destacado": "nunca se desborda."
+  },
+  "manifiesto": {
+   "texto": "Domingo, 11:00 p. m.: un paciente te escribe por un implante. Nadie contesta. El lunes a las 8:30 ya agendó en otra clínica de Brickell, y tú pagaste el anuncio que se lo llevó.",
+   "etiqueta": "El problema",
+   "destacado": "Pagas el anuncio, otro cobra"
+  },
+  "resultados": {
+   "nota": "Estimaciones del sector",
+   "cifras": [
+    {
+     "texto": "Para contestar cada mensaje",
+     "valor": 5,
+     "sufijo": " s",
+     "prefijo": "<",
+     "decimales": 0
+    },
+    {
+     "texto": "Pacientes nuevos al mes (meta a 30 días)",
+     "valor": 16,
+     "sufijo": "",
+     "prefijo": "+",
+     "decimales": 0
+    },
+    {
+     "texto": "En tratamientos recuperados al mes",
+     "valor": 14.4,
+     "sufijo": "k $",
+     "prefijo": "+",
+     "decimales": 1
+    },
+    {
+     "texto": "Del dinero que se escapa cuesta la mensualidad",
+     "valor": 3,
+     "sufijo": " %",
+     "prefijo": "",
+     "decimales": 0
+    }
+   ],
+   "titulo": "Lo que esperamos",
+   "titulo_destacado": "con tus números."
+  }
+ },
+ "agency_content": {
+  "bio": "Recepcionista IA para clínicas dentales de Miami: responde en 5 segundos, 24/7, y agenda la valoración. Pide tu demo por WhatsApp.",
+  "reels": [
+   {
+    "guion": "Uno: escribirle a mi propio WhatsApp un domingo a medianoche.\nSi nadie contesta en minutos, ya sé dónde se van los pacientes.\nDos: revisar cuántos mensajes de implantes quedaron sin respuesta esta semana.\nTres: poner un asistente que conteste al instante, de noche y domingos.\nMis anuncios ya traen pacientes; lo que falla es la respuesta.",
+    "cierre": "Comenta ABIERTA y te mando la demo, o escríbenos por WhatsApp si prefieres.",
+    "gancho": "Si tuviera una clínica dental en Miami, esto es lo primero que haría.",
+    "titulo": "Primer paso del dueño",
+    "caption": "Antes de gastar más en anuncios, haz la prueba: escríbele a tu propia clínica un domingo por la noche. Si nadie contesta, ahí se te está yendo el paciente. Tenemos un Piloto de 30 días por $497 para que lo veas con citas reales. Comenta ABIERTA o escríbenos por WhatsApp. #dentistamiami #implantesdentalesmiami",
+    "formato": "Experto",
+    "palabra_clave": "ABIERTA",
+    "texto_pantalla": [
+     "Domingo, 11:40 p. m.",
+     "¿Quién contesta?",
+     "Revisa tus mensajes sin respuesta",
+     "El anuncio ya funciona"
+    ]
+   },
+   {
+    "guion": "Tienes razón. Por eso no reemplaza a Marisol.\nPero son las 11 de la noche. ¿Quién contesta ahora?\nNadie. Y el paciente agenda en otra clínica.\nEntonces contesta lo básico y agenda la valoración.\n¿Y si el paciente pide una persona?\nPasa la conversación a tu equipo, con todo el contexto.",
+    "cierre": "Comenta PERSONA y te enseño cómo suena con tu clínica, o háblanos por WhatsApp.",
+    "gancho": "Mis pacientes quieren hablar con una persona, no con un robot.",
+    "titulo": "Pacientes quieren una persona",
+    "caption": "La duda es válida: tu paciente quiere trato humano. El asistente no reemplaza a tu recepción, cubre las horas en que nadie puede contestar y te pasa al paciente cuando lo pide. Comenta PERSONA y te mostramos cómo suena con tu clínica, o escríbenos por WhatsApp. #dentistamiami",
+    "formato": "Diálogo con objeción",
+    "palabra_clave": "PERSONA",
+    "texto_pantalla": [
+     "\"Quieren una persona\"",
+     "Tienes razón",
+     "11 p. m.: nadie contesta",
+     "Pasa a tu equipo con contexto"
+    ]
+   },
+   {
+    "guion": "La realidad: el anuncio ya trae el mensaje.\nLo que pierdes es lo que pasa después del clic.\nUn paciente escribe por un implante a las 10 de la noche.\nTú contestas el lunes. Él ya agendó en otra clínica.\nPagaste $1,500 al mes para regalarle pacientes a la competencia.\nAntes de subir el presupuesto, arregla la respuesta.",
+    "cierre": "Comenta RESPUESTA y te muestro cómo arreglarlo, o escríbenos directo por WhatsApp.",
+    "gancho": "Te han dicho que más anuncios traen más pacientes. Mentira.",
+    "titulo": "Más anuncios no es la solución",
+    "caption": "Si tus anuncios generan mensajes pero la agenda no se llena, el problema no es el anuncio. Es el tiempo que tardas en contestar. Comenta RESPUESTA y te enseñamos cómo contestar en segundos, o escríbenos por WhatsApp. #dentistamiami #implantesdentalesmiami",
+    "formato": "Mito vs realidad",
+    "palabra_clave": "RESPUESTA",
+    "texto_pantalla": [
+     "Mito: más anuncios",
+     "Realidad: respuesta tardía",
+     "El clic ya lo pagaste",
+     "Arregla la respuesta primero"
+    ]
+   },
+   {
+    "guion": "Uno: contestar los mensajes de implantes al día siguiente.\nTe cuesta el paciente: ya escribió a otra clínica.\nDos: mandar el presupuesto y no volver a escribir.\nTe cuesta un tratamiento de $4,000 que se enfría.\nTres: no confirmar la cita. Es una hora de sillón vacío.\nLos tres se arreglan sin contratar a nadie más.",
+    "cierre": "Comenta SILLON y te enseño cómo se arreglan, o mándanos un WhatsApp cuando puedas.",
+    "gancho": "Tres errores que te dejan el sillón vacío cada semana.",
+    "titulo": "Tres errores del sillón vacío",
+    "caption": "Contestar tarde, no dar seguimiento y no confirmar citas vacía el sillón sin que lo notes. Son tres fugas que se tapan con un sistema, no con más trabajo para tu equipo. Comenta SILLON y te mostramos cómo, o escríbenos por WhatsApp. #dentistamiami",
+    "formato": "Lista rápida",
+    "palabra_clave": "SILLON",
+    "texto_pantalla": [
+     "Error 1: respuesta tardía",
+     "Error 2: presupuesto sin seguimiento",
+     "Error 3: cita sin confirmar",
+     "Los tres tienen arreglo"
+    ]
+   },
+   {
+    "guion": "Tú estás en pleno sillón, con una limpieza a medias.\nEn el WhatsApp, alguien pregunta por carillas y espera.\nNadie contesta. A las 6 ya escribió a otra clínica.\nAhora imagina el mismo día con Clínica Siempre Abierta.\nEl mensaje recibe respuesta en 5 segundos, en español o inglés.\nY cuando sales del sillón, la valoración ya está agendada.",
+    "cierre": "Comenta DEMO y la probamos con tu clínica, o escríbenos por WhatsApp hoy.",
+    "gancho": "Son las 14:30 y Marisol cobra mientras el teléfono no para de sonar.",
+    "titulo": "Martes a las 14:30",
+    "caption": "Es un martes normal en una clínica con recepción ocupada. La diferencia es si el paciente que pregunta por carillas recibe respuesta ahora o se va con otra clínica. Comenta DEMO y te mostramos cómo funcionaría con la tuya, o escríbenos por WhatsApp. #dentistamiami #miamidentist",
+    "formato": "Escena",
+    "palabra_clave": "DEMO",
+    "texto_pantalla": [
+     "14:30 en recepción",
+     "El paciente espera",
+     "Mismo día, otro final",
+     "Valoración ya agendada"
+    ]
+   }
+  ],
+  "carruseles": [
+   {
+    "titulo": "Errores que te hacen perder pacientes",
+    "caption": "Estos cuatro errores se repiten en casi cualquier clínica ocupada de Miami, y ninguno es culpa de tu equipo: es falta de tiempo. Comenta ERRORES o escríbenos por WhatsApp y te enseñamos cómo cerrarlos. #dentistamiami",
+    "diapositivas": [
+     "4 errores que le regalan pacientes a la clínica de enfrente.",
+     "Error 1: contestar el WhatsApp de la noche a la mañana siguiente. El paciente de implantes ya agendó en otro lado.",
+     "Error 2: dejar todo en manos de la recepción. Marisol cobra, verifica seguros y atiende la puerta mientras el teléfono suena.",
+     "Error 3: mandar un presupuesto de $4,000 y no volver a escribir. Se enfría en un cajón.",
+     "Error 4: no escribir a los pacientes dormidos. Ya confían en ti y nadie los llama.",
+     "Los cuatro tienen arreglo, y ninguno es gastar más en anuncios.",
+     "Comenta ERRORES o escríbenos por WhatsApp y te mostramos una demo con tu clínica."
+    ]
+   },
+   {
+    "titulo": "Cuánto pierdes al mes sin contestar a tiempo",
+    "caption": "Casi nadie mide cuántos pacientes pierde por responder tarde, y por eso el problema no se ve. Haz la cuenta con tus propios números. Comenta CUENTA o escríbenos por WhatsApp y la hacemos juntos. #dentistamiami #implantesdentalesmiami",
+    "diapositivas": [
+     "¿Cuánto dinero se te va cada mes por no contestar a tiempo? Hagamos la cuenta.",
+     "Paso 1: cuenta los leads que te llegaron este mes entre anuncios, WhatsApp y llamadas.",
+     "Paso 2: cuenta cuántos recibieron respuesta en menos de una hora. Los demás se enfriaron.",
+     "Paso 3: ponle precio. Un solo paciente de implantes vale más que tu mensualidad de anuncios.",
+     "Suma las noches, los domingos y los ratos en que recepción está ocupada.",
+     "Para una clínica como la tuya, la fuga ronda los $14,400 al mes.",
+     "Escríbenos por WhatsApp o comenta CUENTA y calculamos tu número exacto, sin costo."
+    ]
+   },
+   {
+    "titulo": "Tu clínica antes y después del asistente",
+    "caption": "No cambia a tu equipo: cambia lo que pasa cuando tu equipo no puede contestar. Mira el antes y el después y dime cuál versión de tu clínica prefieres. Comenta ANTES o escríbenos por WhatsApp. #dentistamiami #miamidentist",
+    "diapositivas": [
+     "Tu clínica antes y después de tener recepcionista IA 24/7.",
+     "Antes: 9 mensajes esperan el lunes y tú los contestas desde el carro.\nDespués: cada mensaje recibe respuesta en 5 segundos.",
+     "Antes: el paciente de implantes que escribió el domingo ya agendó en otro lado.\nDespués: sale de la conversación con la valoración agendada.",
+     "Antes: Marisol cobra, verifica seguros y no llega al teléfono.\nDespués: contesta lo básico el asistente y ella atiende a quien tiene enfrente.",
+     "Antes: presupuestos de implantes que nadie vuelve a llamar.\nDespués: tres mensajes de seguimiento en diez días.",
+     "Antes: pacientes dormidos que nunca escribes.\nDespués: vuelven a la agenda sin pagar más en anuncios.",
+     "Antes: sillones vacíos por cancelaciones.\nDespués: el hueco se ofrece a la lista de espera.",
+     "Comenta ANTES o escríbenos por WhatsApp y te mostramos la demo con tu clínica."
+    ]
+   }
+  ]
+ },
+ "agency_ads": {
+  "publico": {
+   "edad": "35 a 60 años",
+   "notas": "Meta cambia a menudo sus opciones de segmentación: si algún interés o comportamiento no aparece, usa un público amplio con la ubicación y el rango de edad. Empieza con un presupuesto de $10 a $15 al día durante 5 a 7 días y deja que los tres anuncios compitan en el mismo conjunto. Mira primero cuál genera más conversaciones de WhatsApp a menor costo, y apaga cualquier anuncio que haya gastado unos $30 sin recibir ningún mensaje. Contesta cada mensaje tú mismo en menos de 5 minutos: si el anuncio habla de responder rápido, tu respuesta es la primera prueba.",
+   "intereses": [
+    "Odontología",
+    "Pequeñas empresas",
+    "Publicidad en Facebook",
+    "Marketing digital"
+   ],
+   "ubicacion": "Miami-Dade, Florida, Estados Unidos: Miami, Brickell, Coral Gables, Doral, Hialeah y Miami Beach, con radio de 25 millas (40 km) desde el centro de Miami",
+   "comportamientos": [
+    "Propietarios de pequeñas empresas",
+    "Administradores de páginas de Facebook"
+   ]
+  },
+  "anuncios": [
+   {
+    "boton": "Enviar mensaje de WhatsApp",
+    "angulo": "El dolor del día a día",
+    "titular": "Responde a tus pacientes en segundos",
+    "descripcion": "Clínica Siempre Abierta",
+    "texto_principal": "¿Tu recepción cobra, verifica seguros y el WhatsApp sigue sin respuesta?\n\nCada mensaje sin contestar es un paciente nuevo que agenda en otra clínica.\n\nCon Clínica Siempre Abierta, cada paciente recibe respuesta en segundos y agenda su valoración.\n\n👇 Haz clic aquí abajo y escríbenos por WhatsApp. Solo tres clínicas nuevas al mes."
+   },
+   {
+    "boton": "Enviar mensaje de WhatsApp",
+    "angulo": "Lo que se te escapa sin darte cuenta",
+    "titular": "Agenda llena, también de noche",
+    "descripcion": "Dentistas en Miami",
+    "texto_principal": "¿Cuántos pacientes te escriben un domingo por la noche y nunca llegan a tu agenda?\n\nPagas anuncios para que escriban, y a la mañana siguiente ya agendaron en otra clínica.\n\nCon Clínica Siempre Abierta, el lunes encuentras la agenda llena, no mensajes sin contestar.\n\n👇 Haz clic aquí abajo y escríbenos por WhatsApp. Solo tres clínicas nuevas al mes."
+   },
+   {
+    "boton": "Enviar mensaje de WhatsApp",
+    "angulo": "Oferta piloto y garantía",
+    "titular": "Piloto de 30 días por $497",
+    "descripcion": "Garantía Clínica Abierta",
+    "texto_principal": "¿Quieres ver citas reales en tu clínica antes de comprometerte con nada?\n\nEl Piloto Siempre Abierta cuesta $497 por 30 días, sin mensualidad.\n\nCon la Garantía Clínica Abierta, si no agenda valoraciones, trabajamos gratis el mes siguiente.\n\n👇 Haz clic aquí abajo y escríbenos por WhatsApp. Solo tres clínicas nuevas al mes."
+   }
+  ]
+ },
  "ideal_client": {
   "resumen": "Dueño de una clínica dental privada en Miami (2 a 5 sillones, pacientes hispanos y bilingües) que invierte unos $1,500 al mes en anuncios y deja escapar cerca de $14,400 al mes porque nadie contesta al momento: de noche, el fin de semana ni mientras la recepción atiende la puerta.",
   "avatar": {
