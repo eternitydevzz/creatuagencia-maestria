@@ -11,7 +11,7 @@ const texts = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is s
 const items = <T,>(v: unknown): T[] => (Array.isArray(v) ? v.filter((x) => !!x && typeof x === 'object') as T[] : [])
 
 type Ad = AgencyAds['anuncios'][number]
-type AdVideo = AgencyAds['videos'][number]
+type AdVideo = NonNullable<AgencyAds['videos']>[number]
 type Audience = Partial<AgencyAds['publico']>
 
 /** Un anuncio con los nombres de los campos del administrador de anuncios de Meta, listo para pegar. */
@@ -50,7 +50,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
 
   return (
     <Deliverable missing={!offerDone && `Primero genera tu oferta (paso ${stepNo(5)}): los anuncios la venden.`} done={done} busy={isBusy('agency_ads')} cost={3} label="Generar mis anuncios"
-      pending="La IA escribe 3 anuncios, 2 guiones de vídeo y el público, con tu cliente ideal y tu oferta." onGenerate={() => void run('agency_ads')}
+      pending="La IA escribe 3 anuncios cortos (para publicar o leer en un vídeo) y el público, con tu cliente ideal y tu oferta." onGenerate={() => void run('agency_ads')}
       actions={<>
         <CopyButton text={all} label="Copiar todo" />
         <button type="button" className="btn-ghost" onClick={() => saveFile(`${slug(agency)}-anuncios.md`, all, 'text/markdown;charset=utf-8')}><Download className="h-4 w-4" />Descargar .md</button>
@@ -59,6 +59,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
         {ads.length > 0 && (
           <section className="space-y-3">
             <h3 className="eyebrow flex items-center gap-2"><Megaphone className="h-3.5 w-3.5" />3 anuncios para Facebook e Instagram</h3>
+            <p className="text-sm text-muted">Úsalos como texto del anuncio o léelos en voz en off para un anuncio en vídeo.</p>
             <div className="grid gap-3 lg:grid-cols-3">
               {ads.map((a, i) => (
                 <article key={`${a.angulo}-${i}`} className="card flex flex-col gap-3 p-5">
@@ -80,7 +81,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
 
         {videos.length > 0 && (
           <section className="space-y-3">
-            <h3 className="eyebrow flex items-center gap-2"><Video className="h-3.5 w-3.5" />2 guiones de vídeo</h3>
+            <h3 className="eyebrow flex items-center gap-2"><Video className="h-3.5 w-3.5" />Guiones de vídeo (versión anterior)</h3>
             <div className="grid gap-3 lg:grid-cols-2">
               {videos.map((v, i) => (
                 <article key={`${v.titulo}-${i}`} className="card space-y-3 p-5">

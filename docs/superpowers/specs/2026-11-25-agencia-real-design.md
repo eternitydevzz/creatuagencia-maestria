@@ -144,6 +144,10 @@ persona** (escena con hora y un cliente de ejemplo, tensión, giro y salida), en
 etiquetas; el arco anterior queda como guía, no como casillas. Como mucho una cifra por pieza y sin coletillas ("estimado").
 Las personas de las escenas son ejemplos de situaciones típicas, nunca "un cliente mío". Los anuncios suenan a persona, no a informe.
 
+**Revisión 3 (2026-11-26):** los 5 reels salían iguales (misma plantilla de escena). Ahora cada reel usa un **formato distinto**
+de la investigación: Experto ("Si tuviera…"), Diálogo con objeción, Mito vs realidad, Lista rápida y Escena. Los **guiones de
+vídeo de anuncio se quitan**: a Jose le gustan los 3 anuncios cortos también como guion hablado, así que valen para las dos cosas.
+
 ## 8. Límites y riesgos
 
 - **Una sola base de datos (la de producción)**: las Edge Functions se despliegan directamente en producción. Cambiar el

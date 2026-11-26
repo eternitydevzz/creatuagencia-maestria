@@ -54,7 +54,7 @@ export default function S12Content({ roadmap, refresh }: SectionProps) {
               {reels.map((r, i) => (
                 <article key={`${r.titulo}-${i}`} className="card space-y-3 p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-muted">Reel {i + 1} · {stripItemNumber(String(r.titulo ?? ''))}</p>
+                    <p className="text-sm font-semibold text-muted">Reel {i + 1}{str(r.formato) ? <span className="pill ml-2">{r.formato}</span> : null} · {stripItemNumber(String(r.titulo ?? ''))}</p>
                     <CopyButton text={reelText(r)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{r.gancho}”</p>

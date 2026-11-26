@@ -55,22 +55,28 @@ const offerBlock = (c: Ctx) => filled(c.agencyOffer)
   ? `\n- OFERTA YA DEFINIDA (úsala tal cual: mismos nombres, cifras, precios y garantía; no la reinventes):\n${JSON.stringify(c.agencyOffer).slice(0, 7000)}`
   : `\n- (La oferta aún no está definida: deduce una coherente con el nicho y los problemas.)`
 
-/** Cómo se cuentan los reels y los vídeos de anuncio (decisión de Jose, 2026-11-26): faceless, 30-40 s, una historia en
- *  segunda persona que conecta, no una plantilla por casillas. El ejemplo de tono es el que Jose aprobó. */
-const STORY = `- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, ritmo rápido, como habla una persona y no como un folleto.
-- Cuéntalo como una historia, no como una lista de argumentos. En segunda persona, con una escena concreta del día del dueño: una hora, un lugar, un cliente con nombre de ejemplo y lo que le pasa.
-- El arco, sin etiquetas y sin que se note la plantilla: el gancho te mete en la escena → la tensión crece (lo que se le escapa al dueño) → un giro que le hace ver algo que no veía → la salida (lo que cambia en su día a día con la oferta; nunca herramientas ni jerga técnica como "IA generativa", "LLM" o "n8n") → el cierre.
-- Emoción antes que datos: que el dueño piense "esto me pasa a mí".
-- LÍMITE DURO DE LARGO: entre "gancho", "guion" y "cierre" suman 70-90 palabras (30-40 segundos leídos en voz alta). Cuéntalas antes de responder; si te pasas, recorta escenas, no el giro.
+/** Cómo se escriben los reels (decisiones de Jose, 2026-11-26): faceless, 30-40 s, y cada uno con un FORMATO distinto.
+ *  Con una sola plantilla de historia los cinco salían iguales. Los formatos salen de la investigación (diseño, sección 7.1). */
+const REELS = `- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, ritmo rápido, como habla una persona y no como un folleto.
+- Cada reel usa un FORMATO distinto, en este orden; ninguno se parece a otro ni repite la misma idea de fondo:
+  1. Experto: "Si tuviera un/a [negocio del nicho], esto es lo primero que haría..." y 2-3 pasos concretos que el dueño puede entender.
+  2. Diálogo con objeción: el dueño dice su duda en voz alta (p. ej. "¿y si mi cliente quiere hablar conmigo?") y se le responde en directo, como una conversación corta de dos voces.
+  3. Mito vs realidad: "Te han dicho que [creencia común del nicho]. La realidad es..." y por qué.
+  4. Lista rápida: "3 errores que [consecuencia que le duele]" y cada error en una línea, con lo que le cuesta.
+  5. Escena: un momento concreto del día del dueño contado en segunda persona ("Son las 14:30 y...") que acaba en lo que cambia con la oferta.
+- Emoción y situaciones que el dueño reconozca antes que datos; nunca herramientas ni jerga técnica como "IA generativa", "LLM" o "n8n".
+- LÍMITE DURO DE LARGO: entre "gancho", "guion" y "cierre" suman 70-90 palabras (30-40 segundos leídos en voz alta). Cuéntalas antes de responder.
+- "formato": el nombre del formato (Experto, Diálogo con objeción, Mito vs realidad, Lista rápida o Escena).
 - "gancho": la primera frase (0-3 segundos), la que para el scroll.
-- "guion": el resto de la historia hasta antes del cierre, en 5-7 líneas de máx. 12 palabras (cada línea es una toma de la edición).
+- "guion": el resto hasta antes del cierre, en 5-7 líneas de máx. 12 palabras (cada línea es una toma de la edición).
 - "cierre": una sola frase.
-- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras) para la edición.
-- Ejemplo del tono y del largo buscados, de OTRO nicho (un taller mecánico; inventa tu propia escena para el nicho del alumno, no copies esta): "Sábado, 10:20. Estás debajo de un coche con las manos llenas de grasa. / El móvil suena en el banco. No puedes cogerlo. / Es Javier: se le ha encendido una luz y quiere traerlo hoy. / A las 10:25 llama a otro taller. Se lo cogen. / Tú le devuelves la llamada a la una. 'Ya está, gracias.' / No pierdes clientes por trabajar mal. Los pierdes por no poder coger el teléfono."`
+- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras) para la edición.`
 
-/** Honestidad sin coletillas: las escenas son situaciones típicas y las cifras, pocas y seguras (si no, no hay cifra). */
-const HONEST = `- Nunca inventes testimonios, clientes, casos reales ni resultados ya conseguidos. Las personas de las escenas son ejemplos de una situación típica, nunca "un cliente mío".
-- Como mucho una cifra por pieza, y solo si sale de la oferta o del cliente ideal. Si una cifra no es segura, no la pongas y cuenta la escena. Nada de coletillas como "estimado", "según el sector" u "objetivo estimado".`
+/** Honestidad sin coletillas: las escenas son situaciones típicas y las cifras, pocas y seguras (si no, no hay cifra).
+ *  Manda sobre la regla general de systemFor ("números en lugar de adjetivos", "de media en el sector"), que aquí sonaba a robot. */
+const HONEST = `- Estas reglas mandan sobre las generales de cifras y estimaciones.
+- Nunca inventes testimonios, clientes, casos reales ni resultados ya conseguidos. Las personas que aparezcan son ejemplos de una situación típica, nunca "un cliente mío".
+- Como mucho una cifra por pieza, y solo si sale de la oferta o del cliente ideal. Si una cifra no es segura, no la pongas. Nada de coletillas como "estimado", "según el sector" u "objetivo estimado".`
 
 /** Rol común de todas las generaciones (va como system prompt). */
 export const systemFor = (c: Ctx): string => { const mk = mkt(c); return `Eres el motor de generación de MaestrIA. Escribes como el director comercial de una agencia de automatización con IA que factura más de ${mk.agencyYear} al año vendiendo a pymes. Lo que generas lo usa un alumno que empieza de cero para vender HOY: cada texto tiene que poder copiarse y usarse tal cual, sin retocar.
@@ -338,11 +344,9 @@ A QUIÉN LE HABLAS
 - El objetivo de cada pieza: que el dueño escriba para pedir una demo o la oferta piloto.
 
 REELS (30-40 segundos como mucho; máx. 100 palabras de voz en total)
-${STORY}
+${REELS}
 - "cierre": "Comenta [PALABRA]" con la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa, escribir por WhatsApp, dicho como una invitación natural. Cada reel lo dice con palabras distintas: nada de repetir la misma frase cinco veces.
 - "caption": 2-4 frases + la llamada a la acción. Sin emojis ni hashtags genéricos; como mucho 3 hashtags del nicho y la zona.
-- Los 5 reels cuentan historias distintas: (1) el cliente que se va con otro porque nadie le contestó, (2) un día normal del dueño que se le complica, (3) la objeción que tiene el dueño ("mis clientes no quieren hablar con una máquina"), (4) cómo cambia su día cuando ya no tiene que estar pendiente del móvil, (5) la oferta piloto contada como una invitación, no como una tarifa.
-
 BIO DE INSTAGRAM
 - "bio": máx. 150 caracteres. Para quién es, qué resultado da y qué hacer ahora (pedir la demo por WhatsApp).
 
@@ -356,7 +360,7 @@ ${HONEST}
 
 Devuelve JSON con esta estructura EXACTA:
 {
-  "reels": [{ "titulo": "nombre interno del reel, sin número", "gancho": "", "guion": "una frase por línea", "cierre": "", "texto_pantalla": ["(3-5)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
+  "reels": [{ "titulo": "nombre interno del reel, sin número", "formato": "", "gancho": "", "guion": "una frase por línea", "cierre": "", "texto_pantalla": ["(3-5)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
   "bio": "",
   "carruseles": [{ "titulo": "", "diapositivas": ["(6-8)"], "caption": "" }]
 }
@@ -372,7 +376,7 @@ export function agencyAds(c: Ctx): string {
 CONTEXTO
 ${baseContext(c)}${idealClientBlock(c)}${offerBlock(c)}
 
-ANUNCIOS DE TEXTO E IMAGEN (3). Cortos, directos y al grano: se leen enteros sin pulsar "ver más".
+ANUNCIOS (3). Cortos, directos y al grano: se leen enteros sin pulsar "ver más". Cada uno vale a la vez como texto del anuncio y como guion para leer en voz alta en un anuncio en vídeo, así que tiene que sonar natural dicho de viva voz.
 - "texto_principal": exactamente 4 líneas, una frase corta cada una (máx. 15 palabras por línea), separadas por una línea en blanco:
   1. Dolor: una pregunta que el dueño reconoce al momento, con sus palabras (de los "dolores" del cliente ideal).
   2. Problema: lo que le cuesta, concreto (clientes, horas o dinero; con sus números si los hay).
@@ -385,11 +389,6 @@ ANUNCIOS DE TEXTO E IMAGEN (3). Cortos, directos y al grano: se leen enteros sin
 - "titular": máx. 40 caracteres, el resultado. "descripcion": máx. 30 caracteres.
 - "boton": el botón de Meta para abrir WhatsApp ("Enviar mensaje de WhatsApp").
 - "angulo": nombre interno del ángulo, sin número.
-
-VÍDEOS (2, 30-40 segundos como mucho; máx. 100 palabras de voz en total)
-${STORY}
-- "cierre": "Haz clic aquí abajo y escríbenos por WhatsApp", con la urgencia de la oferta si la tiene, dicho con naturalidad.
-- Los 2 vídeos cuentan historias distintas.
 
 PÚBLICO (para crear la campaña)
 - "ubicacion": dónde está el nicho (ciudad o zona y radio sugerido) en ${mk.country}.
@@ -407,10 +406,9 @@ ${HONEST}
 Devuelve JSON con esta estructura EXACTA:
 {
   "anuncios": [{ "angulo": "", "texto_principal": "", "titular": "", "descripcion": "", "boton": "" }],
-  "videos": [{ "titulo": "nombre interno del vídeo, sin número", "gancho": "", "guion": "una frase por línea", "cierre": "", "texto_pantalla": ["(3-5)"] }],
   "publico": { "ubicacion": "", "edad": "", "intereses": [""], "comportamientos": [""], "notas": "" }
 }
-"anuncios": 3 · "videos": 2. ${jsonOnly}`
+"anuncios": 3. ${jsonOnly}`
 }
 
 // Nombres para la secretaria: los elige el servidor al azar porque, si se deja al modelo, repite casi siempre los mismos

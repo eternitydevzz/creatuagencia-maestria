@@ -39,9 +39,14 @@ Deno.test('agencyContent pide 5 reels, bio y 3 carruseles para el dueño del nic
   assertStringIncludes(p, 'OFERTA YA DEFINIDA')
 })
 
-Deno.test('agencyContent: reels de 30-40 s faceless contados como una historia en segunda persona', () => {
+Deno.test('agencyContent: cada reel usa un formato distinto (no 5 veces la misma historia)', () => {
   const p = agencyContent(ctx('eur'))
-  for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras', 'segunda persona', 'una cifra']) assertStringIncludes(p, s)
+  for (const s of ['"formato"', 'Experto', 'Si tuviera', 'Diálogo con objeción', 'Mito vs realidad', 'Lista rápida', 'Escena']) assertStringIncludes(p, s)
+})
+
+Deno.test('agencyContent: reels de 30-40 s faceless', () => {
+  const p = agencyContent(ctx('eur'))
+  for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras', 'una cifra']) assertStringIncludes(p, s)
   // Límite duro de largo: la primera versión con historia salió de 126-142 palabras (50-57 s)
   for (const s of ['70-90 palabras', '5-7 líneas', 'una sola frase']) assertStringIncludes(p, s)
   // El ejemplo de tono es de otro nicho: con uno de fisioterapia, Claude lo copiaba casi literal en proyectos de fisioterapia
@@ -59,13 +64,14 @@ Deno.test('agencyAds: texto de 4 líneas (dolor, problema, resultado, CTA) sin l
   const p = agencyAds(ctx('usd'))
   for (const s of ['4 líneas', 'Dolor', 'Problema', 'Resultado', 'Haz clic aquí abajo y escríbenos', 'WhatsApp']) assertStringIncludes(p, s)
   for (const s of ['Qué te damos', 'Olvídate de', 'Estamos ayudando']) assert(!p.includes(s), `ya no debe pedir "${s}"`)
-  for (const s of ['"anuncios"', '"videos"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
+  for (const s of ['"anuncios"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
 })
 
-Deno.test('agencyAds: vídeos de 30-40 s faceless contados como una historia en segunda persona', () => {
+Deno.test('agencyAds: los 3 anuncios valen también como guion hablado; ya no hay guiones de vídeo aparte', () => {
   const p = agencyAds(ctx('usd'))
-  for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', 'segunda persona']) assertStringIncludes(p, s)
-  for (const s of ['"problema"', '"insight"', '"solucion"']) assert(!p.includes(s), `el vídeo ya no se escribe por casillas (${s})`)
+  assertStringIncludes(p, 'leer en voz alta')
+  assert(!p.includes('"videos"'), 'no debe pedir guiones de vídeo aparte')
+  assert(!p.includes('"guion"'), 'no debe pedir guiones de vídeo aparte')
 })
 
 Deno.test('agencyAds: anuncios humanos, sin coletillas de estimación', () => {

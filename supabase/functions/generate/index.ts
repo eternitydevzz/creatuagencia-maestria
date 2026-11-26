@@ -59,11 +59,10 @@ const KINDS: Record<string, KindDef> = {
     valid: (v) => isObj(v) && Array.isArray(v.reels) && v.reels.length >= 5 && v.reels.every((r) => isObj(r) && hasText(r.gancho) && hasText(r.guion) && hasText(r.cierre))
       && hasText(v.bio) && Array.isArray(v.carruseles) && v.carruseles.length >= 3,
   },
-  // Anuncios de Meta para conseguir los primeros clientes (3 de texto e imagen, 2 guiones de vídeo y el público)
+  // Anuncios de Meta para conseguir los primeros clientes: 3 anuncios (texto y, a la vez, guion hablado) y el público
   agency_ads: {
     cost: 3, effort: 'medium', maxTokens: 20000,
     valid: (v) => isObj(v) && Array.isArray(v.anuncios) && v.anuncios.length >= 3 && v.anuncios.every((a) => isObj(a) && hasText(a.texto_principal) && hasText(a.titular))
-      && Array.isArray(v.videos) && v.videos.length >= 2 && v.videos.every((x) => isObj(x) && hasText(x.gancho) && hasText(x.guion) && hasText(x.cierre))
       && isObj(v.publico) && hasText(v.publico.ubicacion),
   },
   agent: {
@@ -388,7 +387,12 @@ Deno.serve(withCors(async (req) => {
           case 'agency_offer': patch.agency_offer = { ...(result as object), _meta: meta({ ideal_at: rm.ideal_client?._meta?.generated_at ?? null }) }; break
           case 'agency_site': patch.agency_site = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
           case 'agency_content': patch.agency_content = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
-          case 'agency_ads': patch.agency_ads = { ...(result as object), _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }; break
+          case 'agency_ads': {
+            // Los guiones de vídeo aparte se quitaron (Jose, 2026-11-26): si el modelo los manda igualmente, no se guardan
+            const { videos: _videos, ...ads } = result as Record<string, unknown>
+            patch.agency_ads = { ...ads, _meta: meta({ offer_at: rm.agency_offer?._meta?.generated_at ?? null }) }
+            break
+          }
         }
         if (kind === 'agent' || kind === 'demo_agent') {
           // Solo se guardan los campos conocidos de la ficha, con tamaños acotados (el texto puede venir de una web ajena)
