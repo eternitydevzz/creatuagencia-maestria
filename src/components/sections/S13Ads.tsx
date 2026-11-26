@@ -4,7 +4,7 @@ import Deliverable from '@/components/Deliverable'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { saveFile, slug } from '@/lib/files'
 import { stepNo } from '@/lib/gamification'
-import { str } from '@/lib/tree'
+import { str, stripItemNumber } from '@/lib/tree'
 import type { AgencyAds } from '@/lib/types'
 
 const texts = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!x.trim()) : [])
@@ -29,8 +29,8 @@ const audienceText = (p: Audience) => [
 
 /** Todo en Markdown, con sus propias etiquetas (en tree.ts "ubicacion" significa la dirección de un negocio). */
 const allText = (ads: Ad[], videos: AdVideo[], p: Audience) => [
-  '# Anuncios', ...ads.map((a, i) => `## Anuncio ${i + 1} · ${a.angulo}\n\n${adText(a)}`),
-  '# Guiones de vídeo', ...videos.map((v, i) => `## Vídeo ${i + 1} · ${v.titulo}\n\n${videoText(v)}`),
+  '# Anuncios', ...ads.map((a, i) => `## Anuncio ${i + 1} · ${stripItemNumber(String(a.angulo ?? ''))}\n\n${adText(a)}`),
+  '# Guiones de vídeo', ...videos.map((v, i) => `## Vídeo ${i + 1} · ${stripItemNumber(String(v.titulo ?? ''))}\n\n${videoText(v)}`),
   '# Público', audienceText(p),
 ].join('\n\n')
 
@@ -60,7 +60,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
               {ads.map((a, i) => (
                 <article key={`${a.angulo}-${i}`} className="card flex flex-col gap-3 p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-muted">Anuncio {i + 1} · {a.angulo}</p>
+                    <p className="text-sm font-semibold text-muted">Anuncio {i + 1} · {stripItemNumber(String(a.angulo ?? ''))}</p>
                     <CopyButton text={adText(a)} />
                   </div>
                   <p className="whitespace-pre-line text-sm leading-relaxed text-text">{a.texto_principal}</p>
@@ -82,7 +82,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
               {videos.map((v, i) => (
                 <article key={`${v.titulo}-${i}`} className="card space-y-3 p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-muted">Vídeo {i + 1} · {v.titulo}</p>
+                    <p className="text-sm font-semibold text-muted">Vídeo {i + 1} · {stripItemNumber(String(v.titulo ?? ''))}</p>
                     <CopyButton text={videoText(v)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{v.gancho}”</p>
