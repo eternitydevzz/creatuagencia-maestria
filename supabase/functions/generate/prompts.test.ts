@@ -42,6 +42,10 @@ Deno.test('agencyContent pide 5 reels, bio y 3 carruseles para el dueño del nic
 Deno.test('agencyContent: reels de 30-40 s faceless contados como una historia en segunda persona', () => {
   const p = agencyContent(ctx('eur'))
   for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras', 'segunda persona', 'una cifra']) assertStringIncludes(p, s)
+  // Límite duro de largo: la primera versión con historia salió de 126-142 palabras (50-57 s)
+  for (const s of ['70-90 palabras', '5-7 líneas', 'una sola frase']) assertStringIncludes(p, s)
+  // El ejemplo de tono es de otro nicho: con uno de fisioterapia, Claude lo copiaba casi literal en proyectos de fisioterapia
+  assert(!p.includes('Laura'), 'el ejemplo de tono no debe ser el de la clínica de fisioterapia')
   for (const s of ['"problema"', '"insight"', '"solucion"', '"desarrollo"']) assert(!p.includes(s), `el reel ya no se escribe por casillas (${s})`)
 })
 

@@ -61,10 +61,12 @@ const STORY = `- Se hacen faceless: voz en off sobre imágenes y rótulos, con e
 - Cuéntalo como una historia, no como una lista de argumentos. En segunda persona, con una escena concreta del día del dueño: una hora, un lugar, un cliente con nombre de ejemplo y lo que le pasa.
 - El arco, sin etiquetas y sin que se note la plantilla: el gancho te mete en la escena → la tensión crece (lo que se le escapa al dueño) → un giro que le hace ver algo que no veía → la salida (lo que cambia en su día a día con la oferta; nunca herramientas ni jerga técnica como "IA generativa", "LLM" o "n8n") → el cierre.
 - Emoción antes que datos: que el dueño piense "esto me pasa a mí".
+- LÍMITE DURO DE LARGO: entre "gancho", "guion" y "cierre" suman 70-90 palabras (30-40 segundos leídos en voz alta). Cuéntalas antes de responder; si te pasas, recorta escenas, no el giro.
 - "gancho": la primera frase (0-3 segundos), la que para el scroll.
-- "guion": el resto de la historia hasta antes del cierre, una frase por línea (cada línea es una toma de la edición).
+- "guion": el resto de la historia hasta antes del cierre, en 5-7 líneas de máx. 12 palabras (cada línea es una toma de la edición).
+- "cierre": una sola frase.
 - "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras) para la edición.
-- Ejemplo del tono buscado, para una clínica de fisioterapia (adáptalo al nicho; no lo copies): "Martes, 11:04. Estás con las manos en la espalda de un paciente. / Tu móvil vibra. Lo ignoras, claro. / Es Laura. Lleva tres días con la lumbar y quiere cita hoy. / A las 11:09 escribe a otra clínica. Le contestan en un minuto. Reserva allí. / Tú lo ves a las nueve de la noche. Ya no contesta. / No es culpa tuya: no puedes tratar y contestar a la vez. Pero tu paciente no elige a la mejor fisio. Elige a la que contesta primero."`
+- Ejemplo del tono y del largo buscados, de OTRO nicho (un taller mecánico; inventa tu propia escena para el nicho del alumno, no copies esta): "Sábado, 10:20. Estás debajo de un coche con las manos llenas de grasa. / El móvil suena en el banco. No puedes cogerlo. / Es Javier: se le ha encendido una luz y quiere traerlo hoy. / A las 10:25 llama a otro taller. Se lo cogen. / Tú le devuelves la llamada a la una. 'Ya está, gracias.' / No pierdes clientes por trabajar mal. Los pierdes por no poder coger el teléfono."`
 
 /** Honestidad sin coletillas: las escenas son situaciones típicas y las cifras, pocas y seguras (si no, no hay cifra). */
 const HONEST = `- Nunca inventes testimonios, clientes, casos reales ni resultados ya conseguidos. Las personas de las escenas son ejemplos de una situación típica, nunca "un cliente mío".
@@ -379,7 +381,7 @@ ANUNCIOS DE TEXTO E IMAGEN (3). Cortos, directos y al grano: se leen enteros sin
 - Sin listas, sin emojis salvo el 👇 del CTA, sin párrafos de presentación.
 - Escrito como hablaría una persona que entiende su negocio, no como un informe: una situación que reconoce, no una tabla de datos.
 - Cada anuncio con un ángulo distinto: (1) el dolor del día a día, (2) lo que se le escapa sin darse cuenta (los clientes que escriben y nunca llegan), (3) la oferta piloto y la garantía.
-- Ejemplo del tono buscado, para una clínica de fisioterapia (adáptalo; no lo copies): "¿Estás tratando y el móvil no para de sonar? / Cuando sales a las 14:30, ese paciente ya escribió a otra clínica. / Con [nombre de la oferta], cada mensaje recibe respuesta en menos de un minuto. / 👇 Haz clic aquí abajo y escríbenos por WhatsApp."
+- Ejemplo del tono buscado, de OTRO nicho (un taller mecánico; escribe el tuyo para el nicho del alumno, no copies este): "¿Estás debajo de un coche y el teléfono no para de sonar? / Cuando sales a cogerlo, ese cliente ya ha llamado a otro taller. / Con [nombre de la oferta], cada mensaje recibe respuesta en menos de un minuto. / 👇 Haz clic aquí abajo y escríbenos por WhatsApp."
 - "titular": máx. 40 caracteres, el resultado. "descripcion": máx. 30 caracteres.
 - "boton": el botón de Meta para abrir WhatsApp ("Enviar mensaje de WhatsApp").
 - "angulo": nombre interno del ángulo, sin número.
