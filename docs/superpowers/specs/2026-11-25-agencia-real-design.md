@@ -133,6 +133,12 @@ concreto, tree service, pintura, HVAC, contratistas), todos en formato vídeo:
 Cómo se rellena con los datos del alumno: enemigo ← `ideal_client.perfil.como_capta_hoy`; "olvídate de" ←
 `ideal_client.dolores`; "qué te damos" ← `agency_offer.oferta.incluye`; escasez ← `agency_offer.oferta.urgencia`.
 
+**Cambio de Jose (2026-11-26), sustituye a lo anterior tras ver la primera versión real:** los anuncios tienen que ser
+mucho más cortos y al grano. Texto de **4 líneas** (dolor → problema → resultado → CTA "👇 Haz clic aquí abajo y
+escríbenos por WhatsApp"), sin listas, y el clic va **directo a WhatsApp**. Los vídeos de anuncio y los reels duran
+**30-40 s como mucho**, se hacen **faceless** (voz en off + rótulos, edición viral con IA) y siguen un storytelling básico:
+**hook → problema → insight → solución → CTA**.
+
 ## 8. Límites y riesgos
 
 - **Una sola base de datos (la de producción)**: las Edge Functions se despliegan directamente en producción. Cambiar el
