@@ -55,6 +55,21 @@ const offerBlock = (c: Ctx) => filled(c.agencyOffer)
   ? `\n- OFERTA YA DEFINIDA (úsala tal cual: mismos nombres, cifras, precios y garantía; no la reinventes):\n${JSON.stringify(c.agencyOffer).slice(0, 7000)}`
   : `\n- (La oferta aún no está definida: deduce una coherente con el nicho y los problemas.)`
 
+/** Cómo se cuentan los reels y los vídeos de anuncio (decisión de Jose, 2026-11-26): faceless, 30-40 s, una historia en
+ *  segunda persona que conecta, no una plantilla por casillas. El ejemplo de tono es el que Jose aprobó. */
+const STORY = `- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, ritmo rápido, como habla una persona y no como un folleto.
+- Cuéntalo como una historia, no como una lista de argumentos. En segunda persona, con una escena concreta del día del dueño: una hora, un lugar, un cliente con nombre de ejemplo y lo que le pasa.
+- El arco, sin etiquetas y sin que se note la plantilla: el gancho te mete en la escena → la tensión crece (lo que se le escapa al dueño) → un giro que le hace ver algo que no veía → la salida (lo que cambia en su día a día con la oferta; nunca herramientas ni jerga técnica como "IA generativa", "LLM" o "n8n") → el cierre.
+- Emoción antes que datos: que el dueño piense "esto me pasa a mí".
+- "gancho": la primera frase (0-3 segundos), la que para el scroll.
+- "guion": el resto de la historia hasta antes del cierre, una frase por línea (cada línea es una toma de la edición).
+- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras) para la edición.
+- Ejemplo del tono buscado, para una clínica de fisioterapia (adáptalo al nicho; no lo copies): "Martes, 11:04. Estás con las manos en la espalda de un paciente. / Tu móvil vibra. Lo ignoras, claro. / Es Laura. Lleva tres días con la lumbar y quiere cita hoy. / A las 11:09 escribe a otra clínica. Le contestan en un minuto. Reserva allí. / Tú lo ves a las nueve de la noche. Ya no contesta. / No es culpa tuya: no puedes tratar y contestar a la vez. Pero tu paciente no elige a la mejor fisio. Elige a la que contesta primero."`
+
+/** Honestidad sin coletillas: las escenas son situaciones típicas y las cifras, pocas y seguras (si no, no hay cifra). */
+const HONEST = `- Nunca inventes testimonios, clientes, casos reales ni resultados ya conseguidos. Las personas de las escenas son ejemplos de una situación típica, nunca "un cliente mío".
+- Como mucho una cifra por pieza, y solo si sale de la oferta o del cliente ideal. Si una cifra no es segura, no la pongas y cuenta la escena. Nada de coletillas como "estimado", "según el sector" u "objetivo estimado".`
+
 /** Rol común de todas las generaciones (va como system prompt). */
 export const systemFor = (c: Ctx): string => { const mk = mkt(c); return `Eres el motor de generación de MaestrIA. Escribes como el director comercial de una agencia de automatización con IA que factura más de ${mk.agencyYear} al año vendiendo a pymes. Lo que generas lo usa un alumno que empieza de cero para vender HOY: cada texto tiene que poder copiarse y usarse tal cual, sin retocar.
 
@@ -321,16 +336,10 @@ A QUIÉN LE HABLAS
 - El objetivo de cada pieza: que el dueño escriba para pedir una demo o la oferta piloto.
 
 REELS (30-40 segundos como mucho; máx. 100 palabras de voz en total)
-- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, una idea por frase, ritmo rápido. Nada de "como ves en cámara".
-- Storytelling básico en 5 partes, en este orden:
-  · "gancho" (0-3 segundos): para el scroll del dueño. Fórmulas que funcionan en este nicho (adáptalas, no las copies): una escena concreta de su día con hora ("Domingo, 23:40. Tres mensajes preguntando precio y nadie contesta."), una cifra de lo que pierde, o una objeción en su boca ("'Mis clientes no quieren hablar con un robot.'").
-  · "problema": 1-2 frases que bajan al dolor real y a lo que le cuesta (de los "dolores" y el coste del problema del cliente ideal).
-  · "insight": 1 frase con lo que el dueño no ve: la causa de fondo o el dato que le cambia la forma de pensar ("No es que no quieran venir: es que el primero que contesta se queda el cliente.").
-  · "solucion": 1-2 frases con lo que cambia con la oferta, en resultados, no en herramientas. Sin jerga técnica (nada de "IA generativa", "LLM", "automatización n8n").
-  · "cierre": la llamada a la acción con "Comenta [PALABRA]" usando la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa, que le escriban por WhatsApp.
-- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras), uno por parte de la historia, para la edición.
+${STORY}
+- "cierre": "Comenta [PALABRA]" con la "palabra_clave" (una palabra en mayúsculas, p. ej. "AGENDA") y, como alternativa, escribir por WhatsApp, dicho como una invitación natural. Cada reel lo dice con palabras distintas: nada de repetir la misma frase cinco veces.
 - "caption": 2-4 frases + la llamada a la acción. Sin emojis ni hashtags genéricos; como mucho 3 hashtags del nicho y la zona.
-- Los 5 reels atacan ángulos distintos: (1) el coste de no contestar, (2) una escena real del día a día, (3) una objeción respondida, (4) cómo funciona por dentro en 3 pasos, (5) la oferta piloto.
+- Los 5 reels cuentan historias distintas: (1) el cliente que se va con otro porque nadie le contestó, (2) un día normal del dueño que se le complica, (3) la objeción que tiene el dueño ("mis clientes no quieren hablar con una máquina"), (4) cómo cambia su día cuando ya no tiene que estar pendiente del móvil, (5) la oferta piloto contada como una invitación, no como una tarifa.
 
 BIO DE INSTAGRAM
 - "bio": máx. 150 caracteres. Para quién es, qué resultado da y qué hacer ahora (pedir la demo por WhatsApp).
@@ -339,13 +348,13 @@ CARRUSELES
 - 3 carruseles de 6-8 "diapositivas" (cada una 1-2 frases cortas; la primera es el gancho, la última la llamada a la acción). Temas: (1) errores que le hacen perder clientes, (2) el cálculo de lo que pierde al mes con sus números, (3) antes y después de tener el asistente.
 
 REGLAS
-- ${mk.language}, tuteo, frases cortas, números en lugar de adjetivos.
-- Nunca inventes testimonios, clientes ni casos reales. Cifras que no vienen de la oferta o del cliente ideal, como estimación ("de media", "hasta").
+- ${mk.language}, tuteo, frases cortas, como habla una persona.
+${HONEST}
 - La oferta, el precio y la garantía, tal cual están definidos.
 
 Devuelve JSON con esta estructura EXACTA:
 {
-  "reels": [{ "titulo": "nombre interno del reel, sin número", "gancho": "", "problema": "", "insight": "", "solucion": "", "cierre": "", "texto_pantalla": ["(3-5)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
+  "reels": [{ "titulo": "nombre interno del reel, sin número", "gancho": "", "guion": "una frase por línea", "cierre": "", "texto_pantalla": ["(3-5)"], "caption": "", "palabra_clave": "UNA PALABRA" }],
   "bio": "",
   "carruseles": [{ "titulo": "", "diapositivas": ["(6-8)"], "caption": "" }]
 }
@@ -368,21 +377,17 @@ ANUNCIOS DE TEXTO E IMAGEN (3). Cortos, directos y al grano: se leen enteros sin
   3. Resultado: lo que consigue con la oferta, el deseo cumplido, en resultados y no en herramientas.
   4. CTA: "👇 Haz clic aquí abajo y escríbenos por WhatsApp." Si la oferta tiene urgencia ("urgencia"), añádela en esta misma línea, tal cual y en pocas palabras.
 - Sin listas, sin emojis salvo el 👇 del CTA, sin párrafos de presentación.
-- Cada anuncio con un ángulo distinto: (1) el dolor del día a día, (2) lo que pierde al mes con sus números, (3) la oferta piloto y la garantía.
+- Escrito como hablaría una persona que entiende su negocio, no como un informe: una situación que reconoce, no una tabla de datos.
+- Cada anuncio con un ángulo distinto: (1) el dolor del día a día, (2) lo que se le escapa sin darse cuenta (los clientes que escriben y nunca llegan), (3) la oferta piloto y la garantía.
+- Ejemplo del tono buscado, para una clínica de fisioterapia (adáptalo; no lo copies): "¿Estás tratando y el móvil no para de sonar? / Cuando sales a las 14:30, ese paciente ya escribió a otra clínica. / Con [nombre de la oferta], cada mensaje recibe respuesta en menos de un minuto. / 👇 Haz clic aquí abajo y escríbenos por WhatsApp."
 - "titular": máx. 40 caracteres, el resultado. "descripcion": máx. 30 caracteres.
 - "boton": el botón de Meta para abrir WhatsApp ("Enviar mensaje de WhatsApp").
 - "angulo": nombre interno del ángulo, sin número.
 
 VÍDEOS (2, 30-40 segundos como mucho; máx. 100 palabras de voz en total)
-- Se hacen faceless: voz en off sobre imágenes y rótulos, con edición viral hecha con IA. Escribe para el oído: frases cortas, una idea por frase, ritmo rápido.
-- Storytelling básico en 5 partes, en este orden:
-  · "gancho" (0-3 segundos): para el scroll del dueño (una escena de su día con hora, una cifra de lo que pierde o una objeción en su boca).
-  · "problema": 1-2 frases que bajan al dolor real y a lo que le cuesta.
-  · "insight": 1 frase con lo que el dueño no ve: la causa de fondo o el dato que le cambia la forma de pensar.
-  · "solucion": 1-2 frases con lo que cambia con la oferta, en resultados.
-  · "cierre": "Haz clic aquí abajo y escríbenos por WhatsApp", con la urgencia de la oferta si la tiene.
-- "texto_pantalla": 3-5 rótulos cortos (máx. 6 palabras), uno por parte de la historia, para la edición.
-- Los 2 vídeos con ángulos distintos.
+${STORY}
+- "cierre": "Haz clic aquí abajo y escríbenos por WhatsApp", con la urgencia de la oferta si la tiene, dicho con naturalidad.
+- Los 2 vídeos cuentan historias distintas.
 
 PÚBLICO (para crear la campaña)
 - "ubicacion": dónde está el nicho (ciudad o zona y radio sugerido) en ${mk.country}.
@@ -391,8 +396,8 @@ PÚBLICO (para crear la campaña)
 - "notas": 2-3 consejos prácticos para la primera campaña (presupuesto diario pequeño para probar, qué anuncio mirar primero, cuándo apagar uno).
 
 REGLAS
-- ${mk.language}, tuteo, frases cortas, números en lugar de adjetivos.
-- Nunca inventes testimonios, clientes, casos ni resultados ya conseguidos. Cifras que no vienen de la oferta o del cliente ideal, como estimación ("de media", "hasta").
+- ${mk.language}, tuteo, frases cortas.
+${HONEST}
 - La oferta, el precio y la garantía, tal cual están definidos.
 - Sin jerga técnica ("IA generativa", "LLM", "automatización n8n").
 - Ojo con las normas de Meta: no hables del dueño señalando rasgos personales ("¿Eres hispano?", "¿Tienes deudas?"); habla del negocio.
@@ -400,7 +405,7 @@ REGLAS
 Devuelve JSON con esta estructura EXACTA:
 {
   "anuncios": [{ "angulo": "", "texto_principal": "", "titular": "", "descripcion": "", "boton": "" }],
-  "videos": [{ "titulo": "nombre interno del vídeo, sin número", "gancho": "", "problema": "", "insight": "", "solucion": "", "cierre": "", "texto_pantalla": ["(3-5)"] }],
+  "videos": [{ "titulo": "nombre interno del vídeo, sin número", "gancho": "", "guion": "una frase por línea", "cierre": "", "texto_pantalla": ["(3-5)"] }],
   "publico": { "ubicacion": "", "edad": "", "intereses": [""], "comportamientos": [""], "notas": "" }
 }
 "anuncios": 3 · "videos": 2. ${jsonOnly}`

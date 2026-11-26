@@ -139,6 +139,11 @@ escríbenos por WhatsApp"), sin listas, y el clic va **directo a WhatsApp**. Los
 **30-40 s como mucho**, se hacen **faceless** (voz en off + rótulos, edición viral con IA) y siguen un storytelling básico:
 **hook → problema → insight → solución → CTA**.
 
+**Revisión 2 (2026-11-26):** la primera versión sonaba mecánica. Reels y vídeos se cuentan como **una historia en segunda
+persona** (escena con hora y un cliente de ejemplo, tensión, giro y salida), en un `guion` seguido (una frase por línea) y sin
+etiquetas; el arco anterior queda como guía, no como casillas. Como mucho una cifra por pieza y sin coletillas ("estimado").
+Las personas de las escenas son ejemplos de situaciones típicas, nunca "un cliente mío". Los anuncios suenan a persona, no a informe.
+
 ## 8. Límites y riesgos
 
 - **Una sola base de datos (la de producción)**: las Edge Functions se despliegan directamente en producción. Cambiar el

@@ -12,9 +12,16 @@ describe('storyParts', () => {
     expect(storyParts({ problema: 'P', insight: '  ', solucion: 'S' }).map((p) => p.label)).toEqual(['Problema', 'Solución'])
   })
 
-  it('con el formato anterior muestra el desarrollo o el guion', () => {
-    expect(storyParts({ desarrollo: 'D' })).toEqual([{ label: 'Desarrollo', text: 'D' }])
-    expect(storyParts({ guion: 'G' })).toEqual([{ label: 'Guion', text: 'G' }])
+  it('el guion (formato actual) se muestra seguido y sin etiqueta', () => {
+    expect(storyParts({ guion: 'Línea 1\nLínea 2' })).toEqual([{ label: '', text: 'Línea 1\nLínea 2' }])
+  })
+
+  it('el guion manda sobre las partes sueltas si vienen las dos', () => {
+    expect(storyParts({ guion: 'G', problema: 'P' })).toEqual([{ label: '', text: 'G' }])
+  })
+
+  it('con el primer formato muestra el desarrollo, sin etiqueta', () => {
+    expect(storyParts({ desarrollo: 'D' })).toEqual([{ label: '', text: 'D' }])
   })
 })
 

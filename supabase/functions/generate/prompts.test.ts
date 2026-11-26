@@ -39,10 +39,10 @@ Deno.test('agencyContent pide 5 reels, bio y 3 carruseles para el dueño del nic
   assertStringIncludes(p, 'OFERTA YA DEFINIDA')
 })
 
-Deno.test('agencyContent: reels de 30-40 s faceless con hook, problema, insight, solución y CTA', () => {
+Deno.test('agencyContent: reels de 30-40 s faceless contados como una historia en segunda persona', () => {
   const p = agencyContent(ctx('eur'))
-  for (const s of ['"problema"', '"insight"', '"solucion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras']) assertStringIncludes(p, s)
-  assert(!p.includes('"desarrollo"'), 'el reel ya no tiene un único "desarrollo"')
+  for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', '100 palabras', 'segunda persona', 'una cifra']) assertStringIncludes(p, s)
+  for (const s of ['"problema"', '"insight"', '"solucion"', '"desarrollo"']) assert(!p.includes(s), `el reel ya no se escribe por casillas (${s})`)
 })
 
 Deno.test('agencyContent en euros no habla de dólares ni de EE. UU.', () => {
@@ -58,10 +58,16 @@ Deno.test('agencyAds: texto de 4 líneas (dolor, problema, resultado, CTA) sin l
   for (const s of ['"anuncios"', '"videos"', '"publico"', '"texto_principal"', '"titular"', '"descripcion"', '"boton"', '"intereses"', '"comportamientos"']) assertStringIncludes(p, s)
 })
 
-Deno.test('agencyAds: vídeos de 30-40 s faceless con hook, problema, insight, solución y CTA', () => {
+Deno.test('agencyAds: vídeos de 30-40 s faceless contados como una historia en segunda persona', () => {
   const p = agencyAds(ctx('usd'))
-  for (const s of ['"problema"', '"insight"', '"solucion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off']) assertStringIncludes(p, s)
-  assert(!p.includes('"guion"'), 'el vídeo ya no tiene un único "guion"')
+  for (const s of ['"guion"', '"cierre"', '30-40 segundos', 'faceless', 'voz en off', 'segunda persona']) assertStringIncludes(p, s)
+  for (const s of ['"problema"', '"insight"', '"solucion"']) assert(!p.includes(s), `el vídeo ya no se escribe por casillas (${s})`)
+})
+
+Deno.test('agencyAds: anuncios humanos, sin coletillas de estimación', () => {
+  const p = agencyAds(ctx('usd'))
+  for (const s of ['una cifra', 'como hablaría una persona']) assertStringIncludes(p, s)
+  for (const s of ['Objetivo estimado', '"de media"']) assert(!p.includes(s), `no debe empujar a escribir "${s}"`)
 })
 
 Deno.test('agencyAds usa el dolor del cliente ideal y la oferta del alumno', () => {

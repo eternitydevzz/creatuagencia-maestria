@@ -56,14 +56,14 @@ const KINDS: Record<string, KindDef> = {
   // Contenido de Instagram para conseguir los primeros clientes (5 reels, bio y 3 carruseles)
   agency_content: {
     cost: 3, effort: 'medium', maxTokens: 20000,
-    valid: (v) => isObj(v) && Array.isArray(v.reels) && v.reels.length >= 5 && v.reels.every((r) => isObj(r) && hasText(r.gancho) && hasText(r.problema) && hasText(r.solucion) && hasText(r.cierre))
+    valid: (v) => isObj(v) && Array.isArray(v.reels) && v.reels.length >= 5 && v.reels.every((r) => isObj(r) && hasText(r.gancho) && hasText(r.guion) && hasText(r.cierre))
       && hasText(v.bio) && Array.isArray(v.carruseles) && v.carruseles.length >= 3,
   },
   // Anuncios de Meta para conseguir los primeros clientes (3 de texto e imagen, 2 guiones de vídeo y el público)
   agency_ads: {
     cost: 3, effort: 'medium', maxTokens: 20000,
     valid: (v) => isObj(v) && Array.isArray(v.anuncios) && v.anuncios.length >= 3 && v.anuncios.every((a) => isObj(a) && hasText(a.texto_principal) && hasText(a.titular))
-      && Array.isArray(v.videos) && v.videos.length >= 2 && v.videos.every((x) => isObj(x) && hasText(x.gancho) && hasText(x.problema) && hasText(x.solucion) && hasText(x.cierre))
+      && Array.isArray(v.videos) && v.videos.length >= 2 && v.videos.every((x) => isObj(x) && hasText(x.gancho) && hasText(x.guion) && hasText(x.cierre))
       && isObj(v.publico) && hasText(v.publico.ubicacion),
   },
   agent: {

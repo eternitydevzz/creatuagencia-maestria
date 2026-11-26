@@ -20,7 +20,7 @@ const adText = (a: Ad) => [
   str(a.descripcion) ? `DESCRIPCIÓN: ${a.descripcion}` : '', str(a.boton) ? `BOTÓN: ${a.boton}` : '',
 ].filter(Boolean).join('\n\n')
 const videoText = (v: AdVideo) => [
-  `GANCHO (0-3 s): ${v.gancho}`, ...storyParts(v).map((p) => `${p.label.toUpperCase()}: ${p.text}`), `CIERRE: ${v.cierre}`,
+  `GANCHO (0-3 s): ${v.gancho}`, ...storyParts(v).map((p) => `${(p.label || 'Guion').toUpperCase()}:\n${p.text}`), `CIERRE: ${v.cierre}`,
   texts(v.texto_pantalla).length ? `TEXTO EN PANTALLA: ${texts(v.texto_pantalla).join(' · ')}` : '',
 ].filter(Boolean).join('\n\n')
 const audienceText = (p: Audience) => [
@@ -89,7 +89,7 @@ export default function S13Ads({ roadmap, refresh }: SectionProps) {
                     <CopyButton text={videoText(v)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{v.gancho}”</p>
-                  {storyParts(v).map((p) => <p key={p.label} className="text-sm leading-relaxed text-text"><b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>{p.text}</p>)}
+                  {storyParts(v).map((p) => <p key={p.label || 'guion'} className="whitespace-pre-line text-sm leading-relaxed text-text">{p.label && <b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>}{p.text}</p>)}
                   <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{v.cierre}</p>
                   {texts(v.texto_pantalla).length > 0 && (
                     <div className="flex flex-wrap gap-1.5">{texts(v.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>

@@ -15,7 +15,7 @@ type Carousel = AgencyContent['carruseles'][number]
 
 /** Guion de un reel en texto plano, listo para pegar en las notas del móvil y grabar. */
 const reelText = (r: Reel) => [
-  `GANCHO (0-3 s): ${r.gancho}`, ...storyParts(r).map((p) => `${p.label.toUpperCase()}: ${p.text}`), `CIERRE: ${r.cierre}`,
+  `GANCHO (0-3 s): ${r.gancho}`, ...storyParts(r).map((p) => `${(p.label || 'Guion').toUpperCase()}:\n${p.text}`), `CIERRE: ${r.cierre}`,
   texts(r.texto_pantalla).length ? `TEXTO EN PANTALLA: ${texts(r.texto_pantalla).join(' · ')}` : '', `CAPTION: ${r.caption}`,
 ].filter(Boolean).join('\n\n')
 const carouselText = (c: Carousel) => [...texts(c.diapositivas).map((d, i) => `${i + 1}. ${d}`), '', `CAPTION: ${c.caption}`].join('\n')
@@ -58,7 +58,7 @@ export default function S12Content({ roadmap, refresh }: SectionProps) {
                     <CopyButton text={reelText(r)} />
                   </div>
                   <p className="text-lg font-bold leading-snug text-white">“{r.gancho}”</p>
-                  {storyParts(r).map((p) => <p key={p.label} className="text-sm leading-relaxed text-text"><b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>{p.text}</p>)}
+                  {storyParts(r).map((p) => <p key={p.label || 'guion'} className="whitespace-pre-line text-sm leading-relaxed text-text">{p.label && <b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>}{p.text}</p>)}
                   <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{r.cierre}</p>
                   {texts(r.texto_pantalla).length > 0 && (
                     <div className="flex flex-wrap gap-1.5">{texts(r.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>

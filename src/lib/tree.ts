@@ -52,14 +52,13 @@ export const ordered = (o: JsonObject) => Object.entries(o).filter(([k]) => !k.s
 export const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v : undefined)
 
 /** La IA a veces numera el título ("Reel 1 - …", "Vídeo 2: …") y la tarjeta ya pone el número: se quita para que no salga dos veces. */
-/** Parte central del storytelling de un reel o un vídeo (entre el gancho y el cierre), en orden y sin partes vacías.
- *  Lo generado antes del cambio a storytelling traía un único `desarrollo` (reels) o `guion` (vídeos): se sigue mostrando. */
+/** Cuerpo de un reel o un vídeo (entre el gancho y el cierre). Hoy es un `guion` seguido, una frase por línea, y se muestra
+ *  sin etiqueta. Lo generado antes se sigue viendo: partes sueltas (problema/insight/solución) o un `desarrollo` único. */
 export function storyParts(o: { problema?: unknown; insight?: unknown; solucion?: unknown; desarrollo?: unknown; guion?: unknown }): Array<{ label: string; text: string }> {
-  const parts = ([['Problema', o.problema], ['Insight', o.insight], ['Solución', o.solucion]] as const)
-    .map(([label, v]) => ({ label, text: str(v) })).filter((p): p is { label: 'Problema' | 'Insight' | 'Solución'; text: string } => !!p.text)
-  if (parts.length) return parts
-  const old = str(o.desarrollo) ? { label: 'Desarrollo', text: str(o.desarrollo)! } : str(o.guion) ? { label: 'Guion', text: str(o.guion)! } : null
-  return old ? [old] : []
+  const whole = str(o.guion) ?? str(o.desarrollo)
+  if (whole) return [{ label: '', text: whole }]
+  return ([['Problema', o.problema], ['Insight', o.insight], ['Solución', o.solucion]] as const)
+    .map(([label, v]) => ({ label: label as string, text: str(v) })).filter((p): p is { label: string; text: string } => !!p.text)
 }
 
 export const stripItemNumber = (t: string): string => t.replace(/^\s*(reel|v[ií]deo|anuncio|carrusel)\s*\d+\s*[-–—:·.]\s*/i, '').trim() || t
