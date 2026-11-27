@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Bot, Check, Clapperboard, Eye, Coins, Gem, Globe, Megaphone, Plus, Rocket, Smartphone, Trophy, UserCheck, type LucideIcon } from 'lucide-react'
 import { useGenerationCount, useProfile, useRoadmaps } from '@/hooks/useData'
-import { SECTIONS, completedCount, computeXp, isSectionDone, levelFor, stepNo } from '@/lib/gamification'
+import { PHASES, SECTIONS, completedCount, computeXp, isSectionDone, levelFor, phaseOf, phaseProgress, stepNo, type SectionId } from '@/lib/gamification'
 import { ProgressRing, Skeleton, Spinner, StatusBadge } from '@/components/ui/bits'
 import { loadSample } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
@@ -28,21 +28,26 @@ function Tile({ icon: Icon, label, value, hint }: { icon: LucideIcon; label: str
   )
 }
 
-/** Los pasos del proyecto como una ruta: hechos, el siguiente y los que faltan. */
+/** El avance del proyecto por fases (las mismas 4 de la barra del Mapa de Ruta); la fase del siguiente paso, destacada. */
 function PathStrip({ project, next }: { project: RoadmapSummary; next: number }) {
+  const current = phaseOf(next as SectionId).id
   return (
-    <ol className="mt-7 flex items-center overflow-x-auto pb-1" aria-label="Pasos del proyecto">
-      {SECTIONS.map((s, i) => {
-        const ok = isSectionDone(project, s.id)
-        const isNext = s.id === next
-        const Icon = s.icon
+    <ol className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Fases del proyecto">
+      {PHASES.map((ph, i) => {
+        const { done, total } = phaseProgress(project, ph)
+        const complete = done === total
+        const on = ph.id === current && !complete
         return (
-          <li key={s.id} className="flex flex-none items-center">
-            <Link to={`/roadmap/${project.id}`} title={`${stepNo(s.id)}. ${s.title}`} aria-label={`${stepNo(s.id)}. ${s.title}${ok ? ' (hecho)' : isNext ? ' (siguiente)' : ''}`}
-              className={`grid h-10 w-10 place-items-center rounded-full border-2 transition hover:scale-110 ${ok ? 'border-accent-hi bg-accent-hi text-bg' : isNext ? 'animate-ping-soft border-accent-hi bg-accent text-white' : 'border-white/20 text-muted'}`}>
-              {ok ? <Check className="h-4 w-4" strokeWidth={3.5} /> : <Icon className="h-4 w-4" strokeWidth={1.75} />}
+          <li key={ph.id}>
+            <Link to={`/roadmap/${project.id}`} aria-label={`${ph.title}: ${done} de ${total}${on ? ' (estás aquí)' : ''}`}
+              className={`card-lift block rounded-xl border p-3.5 ${on ? 'border-accent-hi/60 bg-accent/[0.12]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <span className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[11px] text-muted">0{i + 1}</span>
+                <span className={`flex items-center gap-1 font-mono text-[11px] ${complete ? 'text-accent-glow' : 'text-muted'}`}>{complete && <Check className="h-3 w-3" strokeWidth={3.5} />}{done}/{total}</span>
+              </span>
+              <span className="mt-1 block font-semibold text-white">{ph.title}</span>
+              <span aria-hidden className="mt-2.5 block h-1 overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full bg-gradient-to-r from-accent to-accent-glow" style={{ width: `${(done / total) * 100}%` }} /></span>
             </Link>
-            {i < SECTIONS.length - 1 && <span className={`h-0.5 w-5 sm:w-8 ${ok ? 'bg-accent-hi' : 'bg-white/10'}`} />}
           </li>
         )
       })}
@@ -115,7 +120,7 @@ export default function Dashboard() {
             {roadmaps.slice(0, 4).map((r) => {
               const done = completedCount(r)
               return (
-                <Link key={r.id} to={`/roadmap/${r.id}`} className="card card-lift flex items-center gap-4 p-4">
+                <Link key={r.id} to={`/roadmap/${r.id}`} className="card card-lift flex min-w-0 items-center gap-4 p-4">
                   <ProgressRing value={done / SECTIONS.length} size={56} stroke={6}><span className="text-[11px] font-bold text-white">{done}/{SECTIONS.length}</span></ProgressRing>
                   <div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{r.project_name}</p><p className="truncate text-sm text-muted">{r.selected_nichos[0] ?? 'Sin nicho'}</p></div>
                   <StatusBadge status={r.status} />

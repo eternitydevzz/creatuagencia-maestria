@@ -29,7 +29,7 @@ export default function Projects() {
           {roadmaps.map((r) => {
             const done = completedCount(r)
             return (
-              <div key={r.id} className="card card-lift flex items-center gap-4 p-4">
+              <div key={r.id} className="card card-lift flex min-w-0 items-center gap-4 p-4">
                 <Link to={`/roadmap/${r.id}`} className="flex min-w-0 flex-1 items-center gap-4">
                   <ProgressRing value={done / SECTIONS.length} size={64} stroke={6}><span className="text-xs font-bold text-white">{done}/{SECTIONS.length}</span></ProgressRing>
                   <div className="min-w-0"><p className="truncate text-lg font-bold text-white">{r.project_name}</p><p className="truncate text-sm text-muted">{r.agency_name ? `${r.agency_name} · ` : ''}{r.selected_nichos[0] ?? 'Sin nicho'}</p><p className="text-xs text-muted">Actualizado {new Date(r.updated_at).toLocaleDateString('es-ES')}</p></div>
