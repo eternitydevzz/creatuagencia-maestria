@@ -32,12 +32,13 @@ export function AiButton({ onClick, busy, cost, children, disabled, className = 
 
 export function SectionHeader({ icon: Icon, title, subtitle, eyebrow }: { icon: LucideIcon; title: ReactNode; subtitle?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="hero-panel mb-6 flex items-start gap-4 rounded-2xl border border-white/10 p-5">
-      <span className="tile-hero mt-0.5 hidden sm:grid"><Icon className="h-6 w-6" strokeWidth={1.75} /></span>
-      <div>
-        {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
+    // Cabecera ligera, sin caja: el contenido del paso es lo protagonista
+    <div className="mb-5 flex items-start gap-3.5">
+      <span className="tile-hero !h-10 !w-10 !rounded-xl hidden sm:grid"><Icon className="h-5 w-5" strokeWidth={1.75} /></span>
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h2 className="text-xl font-bold sm:text-2xl">{title}</h2>
-        {subtitle && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">{subtitle}</p>}
+        {subtitle && <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">{subtitle}</p>}
       </div>
     </div>
   )
