@@ -24,6 +24,18 @@ export const SECTIONS = [
 
 export type SectionId = (typeof SECTIONS)[number]['id']
 
+/** Los 13 pasos agrupados en 4 fases para la barra de arriba (diseño 2026-11-27-rediseno-ui, 4.1). Mismo orden que SECTIONS. */
+export type PhaseId = 'estrategia' | 'oferta' | 'captacion' | 'agente'
+export interface Phase { id: PhaseId; title: string; steps: SectionId[] }
+export const PHASES: ReadonlyArray<Phase> = [
+  { id: 'estrategia', title: 'Estrategia', steps: [1, 11, 2, 3] },
+  { id: 'oferta', title: 'Tu oferta', steps: [4, 5] },
+  { id: 'captacion', title: 'Captación', steps: [6, 12, 13] },
+  { id: 'agente', title: 'Agente', steps: [7, 8, 9, 10] },
+]
+/** Fase a la que pertenece un paso. */
+export const phaseOf = (id: SectionId): Phase => PHASES.find((f) => f.steps.includes(id)) ?? PHASES[0]
+
 /** Número de paso que ve el alumno (posición en la lista). El `id` es estable para no tocar datos ya guardados; el orden lo manda la lista. */
 export const stepNo = (id: number) => SECTIONS.findIndex((s) => s.id === id) + 1
 
@@ -55,6 +67,9 @@ export function isSectionDone(p: Progress, id: number): boolean {
     default: return false
   }
 }
+
+/** Cuántos pasos de una fase están hechos. */
+export const phaseProgress = (p: Progress, phase: Phase) => ({ done: phase.steps.filter((id) => isSectionDone(p, id)).length, total: phase.steps.length })
 
 export const completedCount = (p: Progress) => SECTIONS.filter((s) => isSectionDone(p, s.id)).length
 
