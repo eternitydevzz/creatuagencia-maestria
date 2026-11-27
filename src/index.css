@@ -67,11 +67,7 @@
   /* El tamaño lo pone cada uso (h-10/h-11), igual que en .tile-hero */
   .tile-icon { @apply grid flex-none place-items-center rounded-xl border border-white/10 bg-white/5 text-accent-hi; }
 
-  /* Ruta de pasos: línea vertical que une los nodos (hecho · activo · pendiente). En móvil, fila con scroll. */
-  .step-list { @apply flex list-none gap-1 overflow-x-auto p-0 pb-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:pb-0; margin: 0; }
-  .step-item { @apply relative flex-none; }
-  .step-item:not(:last-child)::after { content: ''; position: absolute; left: 21px; top: 38px; height: 20px; width: 2px; border-radius: 2px; background: rgba(255,255,255,.1); @apply hidden lg:block; }
-  .step-item[data-done='true']:not(:last-child)::after { background: #4da3ff; }
+  /* Pasos (hecho · activo · pendiente): los usa la barra de fases del Mapa de Ruta */
   .step { @apply relative flex w-full items-center gap-3 whitespace-nowrap rounded-xl border border-transparent py-2.5 pl-2 pr-3 text-left text-sm font-medium text-muted transition; }
   .step:hover { @apply bg-white/5 text-white; }
   .step[aria-current='step'] { @apply border-accent/40 bg-accent/15 font-semibold text-white; }
