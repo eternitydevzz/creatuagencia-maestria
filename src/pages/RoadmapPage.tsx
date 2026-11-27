@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Plus } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { play } from '@/lib/sound'
 import { useRoadmap, useRoadmaps } from '@/hooks/useData'
 import type { SectionProps } from '@/hooks/useGenerate'
-import { SECTIONS, completedCount, isSectionDone, progressOf, stepNo, type SectionId } from '@/lib/gamification'
+import { SECTIONS, completedCount, progressOf, stepNo, type SectionId } from '@/lib/gamification'
 import { SectionHeader, Spinner } from '@/components/ui/bits'
 import NewProjectModal from '@/components/NewProjectModal'
+import PhaseBar from '@/components/PhaseBar'
 import S1Problems from '@/components/sections/S1Problems'
 import S2Niche from '@/components/sections/S2Niche'
 import S3Numbers from '@/components/sections/S3Numbers'
@@ -108,34 +109,16 @@ function Editor({ id, onMissing }: { id: string; onMissing: () => void }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <nav aria-label="Pasos del roadmap" className="lg:sticky lg:top-28 lg:w-64 lg:flex-none">
-          <p className="eyebrow mb-3 hidden px-3 lg:block">Tu ruta</p>
-          <ol className="step-list">
-            {SECTIONS.map((s) => {
-              const active = s.id === current.id
-              const ok = isSectionDone(progress, s.id)
-              return (
-                <li key={s.id} className="step-item" data-done={ok}>
-                  <button type="button" onClick={() => go(s.id)} aria-current={active ? 'step' : undefined} data-state={active ? 'active' : ok ? 'done' : 'todo'} className="step">
-                    <span className="step-node" aria-hidden>{ok ? <Check className="h-3.5 w-3.5" strokeWidth={3.5} /> : stepNo(s.id)}</span>
-                    <span>{s.title}{ok && <span className="sr-only"> (completada)</span>}</span>
-                  </button>
-                </li>
-              )
-            })}
-          </ol>
-        </nav>
+      <PhaseBar progress={progress} current={current.id} onGo={go} />
 
-        <div className="min-w-0 flex-1">
-          <div key={current.id} className="section-shell animate-step-in">
-            <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} eyebrow={`Paso ${stepNo(current.id)} de ${SECTIONS.length}`} />
-            <View {...props} />
-          </div>
-          <div className="mt-6 flex justify-between gap-3">
-            <button className="btn-ghost" onClick={() => go(SECTIONS[pos - 1].id)} disabled={pos === 0}><ArrowLeft className="h-4 w-4" />Anterior</button>
-            {pos < SECTIONS.length - 1 ? <button className="btn" onClick={() => go(SECTIONS[pos + 1].id)}>Siguiente: {SECTIONS[pos + 1].title}<ArrowRight className="h-4 w-4" /></button> : <span className="pill">{done === SECTIONS.length ? 'Has completado el mapa 🎉' : 'Último paso del mapa'}</span>}
-          </div>
+      <div className="min-w-0">
+        <div key={current.id} className="section-shell animate-step-in">
+          <SectionHeader icon={current.icon} title={current.heading} subtitle={current.description} eyebrow={`Paso ${stepNo(current.id)} de ${SECTIONS.length}`} />
+          <View {...props} />
+        </div>
+        <div className="mt-6 flex justify-between gap-3">
+          <button className="btn-ghost" onClick={() => go(SECTIONS[pos - 1].id)} disabled={pos === 0}><ArrowLeft className="h-4 w-4" />Anterior</button>
+          {pos < SECTIONS.length - 1 ? <button className="btn" onClick={() => go(SECTIONS[pos + 1].id)}>Siguiente: {SECTIONS[pos + 1].title}<ArrowRight className="h-4 w-4" /></button> : <span className="pill">{done === SECTIONS.length ? 'Has completado el mapa 🎉' : 'Último paso del mapa'}</span>}
         </div>
       </div>
     </div>
