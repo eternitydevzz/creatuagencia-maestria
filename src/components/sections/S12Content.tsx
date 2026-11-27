@@ -1,6 +1,7 @@
 import { Clapperboard, Download, Images, UserRound } from 'lucide-react'
 import { CopyButton } from '@/components/ui/bits'
 import Deliverable from '@/components/Deliverable'
+import Tabs from '@/components/ui/Tabs'
 import { useGenerate, type SectionProps } from '@/hooks/useGenerate'
 import { saveFile, slug } from '@/lib/files'
 import { stepNo } from '@/lib/gamification'
@@ -36,61 +37,70 @@ export default function S12Content({ roadmap, refresh }: SectionProps) {
         <CopyButton text={treeToText(content)} label="Copiar todo" />
         <button type="button" className="btn-ghost" onClick={() => saveFile(`${slug(agency)}-contenido.md`, treeToText(content), 'text/markdown;charset=utf-8')}><Download className="h-4 w-4" />Descargar .md</button>
       </>}>
-      <div className="stagger space-y-6">
-        {str(content.bio) && (
-          <article className="card p-5">
-            <div className="flex items-center justify-between gap-3">
-              <p className="eyebrow flex items-center gap-2"><UserRound className="h-3.5 w-3.5" />Tu bio de Instagram</p>
-              <CopyButton text={str(content.bio) ?? ''} />
-            </div>
-            <p className="mt-3 text-[15px] leading-relaxed text-white">{str(content.bio)}</p>
-          </article>
-        )}
-
-        {reels.length > 0 && (
-          <section className="space-y-3">
-            <h3 className="eyebrow flex items-center gap-2"><Clapperboard className="h-3.5 w-3.5" />5 guiones de reel</h3>
-            <div className="grid gap-3 lg:grid-cols-2">
+      <Tabs tabs={[
+        {
+          id: 'reels', label: `Reels (${reels.length})`, content: reels.length > 0 && (
+            // Tarjetas compactas: lo que engancha a la vista, el guion entero al desplegar
+            <div className="stagger grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {reels.map((r, i) => (
-                <article key={`${r.titulo}-${i}`} className="card space-y-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-muted">Reel {i + 1}{str(r.formato) ? <span className="pill ml-2">{r.formato}</span> : null} · {stripItemNumber(String(r.titulo ?? ''))}</p>
+                <article key={`${r.titulo}-${i}`} className="flex flex-col rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted"><Clapperboard className="h-3.5 w-3.5 flex-none text-accent-hi" />Reel {i + 1}{str(r.formato) && <span className="truncate rounded-full bg-accent/20 px-2 py-0.5 text-[11px] text-accent-glow">{r.formato}</span>}</p>
                     <CopyButton text={reelText(r)} />
                   </div>
-                  <p className="text-lg font-bold leading-snug text-white">“{r.gancho}”</p>
-                  {storyParts(r).map((p) => <p key={p.label || 'guion'} className="whitespace-pre-line text-sm leading-relaxed text-text">{p.label && <b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>}{p.text}</p>)}
-                  <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{r.cierre}</p>
-                  {texts(r.texto_pantalla).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">{texts(r.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>
-                  )}
-                  <p className="text-xs leading-relaxed text-muted"><b className="text-text">Caption:</b> {r.caption}</p>
-                  {str(r.palabra_clave) && <p className="text-xs text-muted">Palabra clave: <b className="text-accent-glow">{r.palabra_clave}</b></p>}
+                  <p className="mt-2 text-sm font-semibold text-muted">{stripItemNumber(String(r.titulo ?? ''))}</p>
+                  <p className="mt-2 text-lg font-bold leading-snug text-white">“{r.gancho}”</p>
+                  {str(r.palabra_clave) && <p className="mt-3 text-xs text-muted">Palabra clave <span className="ml-1 rounded-md bg-accent/15 px-2 py-0.5 font-mono font-bold text-accent-glow">{r.palabra_clave}</span></p>}
+                  <details className="group mt-auto pt-3">
+                    <summary className="cursor-pointer list-none text-xs font-semibold text-accent-glow hover:text-white">Ver guion completo ↓</summary>
+                    <div className="mt-3 space-y-3">
+                      {storyParts(r).map((p) => <p key={p.label || 'guion'} className="whitespace-pre-line text-sm leading-relaxed text-text">{p.label && <b className="text-xs font-semibold uppercase tracking-wide text-muted">{p.label} · </b>}{p.text}</p>)}
+                      <p className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-white">{r.cierre}</p>
+                      {texts(r.texto_pantalla).length > 0 && <div className="flex flex-wrap gap-1.5">{texts(r.texto_pantalla).map((t) => <span key={t} className="pill">{t}</span>)}</div>}
+                      <p className="text-xs leading-relaxed text-muted"><b className="text-text">Caption:</b> {r.caption}</p>
+                    </div>
+                  </details>
                 </article>
               ))}
             </div>
-          </section>
-        )}
-
-        {carousels.length > 0 && (
-          <section className="space-y-3">
-            <h3 className="eyebrow flex items-center gap-2"><Images className="h-3.5 w-3.5" />3 carruseles</h3>
-            <div className="grid gap-3 lg:grid-cols-3">
+          ),
+        },
+        {
+          id: 'carruseles', label: `Carruseles (${carousels.length})`, content: carousels.length > 0 && (
+            // Cada carrusel como una tira de diapositivas que se desliza
+            <div className="space-y-5">
               {carousels.map((c, i) => (
-                <article key={`${c.titulo}-${i}`} className="card space-y-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold text-white">{c.titulo}</p>
+                <article key={`${c.titulo}-${i}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="flex items-center gap-2 font-semibold text-white"><Images className="h-4 w-4 text-accent-hi" />{c.titulo}</p>
                     <CopyButton text={carouselText(c)} />
                   </div>
-                  <ol className="space-y-1.5 text-sm text-text">
-                    {texts(c.diapositivas).map((d, k) => <li key={`${k}-${d}`} className="flex gap-2"><span className="w-5 flex-none text-right text-muted">{k + 1}.</span>{d}</li>)}
+                  <ol className="mt-3 flex snap-x gap-3 overflow-x-auto pb-2">
+                    {texts(c.diapositivas).map((d, k) => (
+                      <li key={`${k}-${d}`} className={`flex aspect-[4/5] w-44 flex-none snap-start flex-col justify-between rounded-xl border p-3 ${k === 0 ? 'border-accent/50 bg-accent/15' : 'border-white/10 bg-white/[0.03]'}`}>
+                        <span className="font-mono text-[11px] text-muted">{k + 1}/{texts(c.diapositivas).length}</span>
+                        <p className={`text-sm leading-snug ${k === 0 ? 'font-bold text-white' : 'text-text'}`}>{d}</p>
+                      </li>
+                    ))}
                   </ol>
-                  <p className="text-xs leading-relaxed text-muted"><b className="text-text">Caption:</b> {c.caption}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted"><b className="text-text">Caption:</b> {c.caption}</p>
                 </article>
               ))}
             </div>
-          </section>
-        )}
-      </div>
+          ),
+        },
+        {
+          id: 'bio', label: 'Bio de Instagram', content: str(content.bio) && (
+            <div className="flex max-w-xl items-start gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-5">
+              <span className="grid h-14 w-14 flex-none place-items-center rounded-full bg-gradient-to-br from-accent-glow to-accent text-white"><UserRound className="h-6 w-6" /></span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3"><p className="font-semibold text-white">{agency}</p><CopyButton text={str(content.bio) ?? ''} /></div>
+                <p className="mt-2 text-[15px] leading-relaxed text-white">{str(content.bio)}</p>
+              </div>
+            </div>
+          ),
+        },
+      ]} />
     </Deliverable>
   )
 }
