@@ -3,6 +3,10 @@
 > **Para quien lo ejecute:** se trabaja en el chat principal, sin agentes (regla de Jose), tarea a tarea y en orden.
 > Pasos con casillas (`- [ ]`). Puntos de control marcados con **PARAR**: no se sigue sin el OK de Jose.
 
+**Estado (2026-11-27):** Fase 0 y Fase 1 hechas en `rediseno-ui` (commits 37ec6dc..55efb60, tag `antes-del-rediseno`
+= 00aa290). Punto de control 1: Jose dice "sigue con el resto de pantallas". En curso: Fase 2 (tarea 9).
+Ver en local: Vite con `VITE_SUPABASE_URL`/anon de producción por variable de entorno y la cuenta prueba-agencia-real.
+
 **Objetivo:** que cada paso del Mapa de Ruta deje de leerse como una lista y se vea como un panel: barra de fases arriba,
 cabecera compacta, lo importante grande y el detalle en pestañas.
 
