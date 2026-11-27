@@ -17,7 +17,7 @@ export default function Pending({ profile }: { profile: Profile }) {
         <span className="tile-hero mx-auto !h-14 !w-14"><Hourglass className="h-7 w-7" /></span>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">{first ? `${first}, tu cuenta está en revisión` : 'Tu cuenta está en revisión'}</h1>
-          <p className="text-sm text-muted">Ya confirmaste tu email. Ahora el equipo de MaestrIA tiene que aprobar tu acceso: cuando lo haga, entrarás directamente a tu Mapa de Ruta con tus créditos de IA.</p>
+          <p className="text-sm text-muted">Recibimos tu solicitud. Ahora el equipo de MaestrIA tiene que aprobar tu acceso: cuando lo haga, entrarás directamente a tu Mapa de Ruta con tus créditos de IA.</p>
           {profile.phone && <p className="text-sm text-muted">El equipo puede escribirte por WhatsApp al <b className="font-mono text-white">{profile.phone}</b>.</p>}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">

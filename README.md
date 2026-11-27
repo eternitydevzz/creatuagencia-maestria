@@ -110,8 +110,8 @@ Para usar Claude de verdad, quita `ANTHROPIC_BASE_URL` de `supabase/.env.local`.
 
 1. **Supabase**: crea un proyecto en supabase.com → `supabase link --project-ref <ref>` → `supabase db push`.
    En *Authentication → URL configuration*: Site URL = tu dominio y añade `https://tu-dominio/reset-password` a Redirect URLs.
-   En *Authentication → Providers → Email*: deja activo el email, **"Allow new users to sign up"** activo y **"Confirm email"** activo (lo aplica también `deploy/supabase-prod-auth`).
-   Hoy en producción el registro público está **cerrado** (`[auth] enable_signup = false` en `deploy/supabase-prod-auth`): solo entran las altas que hace un admin.
+   En *Authentication → Providers → Email*: deja activo el email, **"Allow new users to sign up"** activo y **"Confirm email"** apagado (lo aplica también `deploy/supabase-prod-auth`).
+   Hoy en producción el registro público está **abierto sin confirmar el email**: cualquiera solicita acceso en `/registro`, entra directamente "en revisión" (sin créditos ni proyectos) y un admin lo aprueba o lo rechaza (se borra la cuenta) en **Alumnos → Pendientes**.
    Configura un SMTP propio (Resend, Postmark…) para que lleguen las invitaciones.
 2. **Clave de IA**: en el panel de Supabase (*Edge Functions → Secrets*) crea `ANTHROPIC_API_KEY` y `ALLOWED_ORIGIN=https://tu-dominio` (mejor desde el panel que desde la terminal: la clave no queda en el historial). Después despliega: `supabase functions deploy generate && supabase functions deploy agent-chat (y, si usas WhatsApp real, `wa-connect` y `wa-webhook`)`.
    La función responde con un latido mientras Claude trabaja y se corta a los `GENERATION_TIMEOUT_SECONDS` (140 por defecto; el límite de la función es 150 s en Free y 400 s en Pro). Si la IA tarda más, el alumno ve un error y se le devuelven los créditos.

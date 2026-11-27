@@ -5,8 +5,9 @@ import { supabase } from '@/lib/supabase'
 import { MIN_PASSWORD_LENGTH, useAuth } from '@/hooks/useAuth'
 import { Spinner } from '@/components/ui/bits'
 
-/** Registro abierto: la cuenta se crea, el alumno confirma su email y queda en revisión hasta que un administrador la aprueba
- *  (sin créditos ni acceso al mapa mientras tanto). Nombre y WhatsApp viajan en los metadatos del alta y los copia el servidor. */
+/** Registro abierto sin confirmar el email: la cuenta se crea y entra directamente "en revisión" (App muestra Pending) hasta que
+ *  un administrador la aprueba desde Alumnos (sin créditos ni acceso al mapa mientras tanto). El filtro es esa aprobación.
+ *  Nombre y WhatsApp viajan en los metadatos del alta y los copia el servidor. */
 export default function Register() {
   const { session } = useAuth()
   const [name, setName] = useState('')
@@ -27,18 +28,20 @@ export default function Register() {
     if (!accepted) return setError('Para crear la cuenta tienes que aceptar los términos y la política de privacidad.')
     setBusy(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(), password,
         options: { emailRedirectTo: `${window.location.origin}/`, data: { full_name: name.trim(), phone: phone.trim() } },
       })
       if (error) {
+        if (/already registered|already exists/i.test(error.message)) throw new Error('Ya hay una cuenta con ese email. Entra con tu contraseña (o recupérala desde Entrar).')
         if (/signups? not allowed|disabled/i.test(error.message)) throw new Error('El registro está cerrado por ahora. Escríbenos para pedir acceso.')
         if (/password/i.test(error.message)) throw new Error(`La contraseña no es válida: usa al menos ${MIN_PASSWORD_LENGTH} caracteres.`)
         if (/rate|too many|security purposes/i.test(error.message)) throw new Error('Demasiados intentos seguidos. Espera un minuto y vuelve a probar.')
         throw new Error('No se pudo crear la cuenta. Revisa los datos e inténtalo de nuevo.')
       }
-      // Si el email ya tenía cuenta, Supabase responde igual (para no revelar quién está registrado): mostramos lo mismo.
-      setSentTo(email.trim().toLowerCase())
+      // Con sesión, la app pasa sola a la pantalla "en revisión". Sin sesión (si alguna vez se vuelve a pedir confirmar el
+      // email), se queda el aviso de solicitud enviada.
+      if (!data.session) setSentTo(email.trim().toLowerCase())
     } catch (err) { setError(err instanceof Error ? err.message : 'Algo ha fallado') } finally { setBusy(false) }
   }
 
@@ -50,14 +53,13 @@ export default function Register() {
         {sentTo ? (
           <div className="space-y-4 p-6 text-center">
             <span className="tile-hero mx-auto !h-14 !w-14"><MailCheck className="h-7 w-7" /></span>
-            <h1 className="text-2xl font-bold">Revisa tu email</h1>
-            <p className="text-sm text-muted">Te enviamos un enlace a <b className="text-white">{sentTo}</b> para confirmar tu cuenta.</p>
-            <p className="text-sm text-muted">Después, el equipo de MaestrIA revisará tu solicitud y te daremos acceso.</p>
-            <p className="text-xs text-muted">¿No llega? Mira en spam o promociones. Desde <Link to="/login" className="underline hover:text-white">Entrar</Link> puedes pedir que te lo reenviemos.</p>
+            <h1 className="text-2xl font-bold">Solicitud enviada</h1>
+            <p className="text-sm text-muted">Recibimos tu solicitud con <b className="text-white">{sentTo}</b>. El equipo de MaestrIA la revisará y te daremos acceso.</p>
+            <p className="text-xs text-muted">Si te llega un email para confirmar la cuenta, ábrelo. Después podrás <Link to="/login" className="underline hover:text-white">entrar</Link> para ver si ya está aprobada.</p>
           </div>
         ) : (
           <div className="space-y-5 p-6">
-            <div className="text-center"><h1 className="text-2xl font-bold">Crea tu cuenta</h1><p className="mt-1 text-sm text-muted">Confirma tu email y el equipo de MaestrIA aprobará tu acceso.</p></div>
+            <div className="text-center"><h1 className="text-2xl font-bold">Crea tu cuenta</h1><p className="mt-1 text-sm text-muted">Solicita tu acceso: el equipo de MaestrIA lo revisará y te lo aprobará.</p></div>
             <form onSubmit={submit} className="space-y-4">
               <label className="block text-sm font-semibold">Nombre y apellido<input required autoComplete="name" maxLength={80} className="field mt-1.5 font-normal" value={name} onChange={(e) => setName(e.target.value)} /></label>
               <label className="block text-sm font-semibold">Correo electrónico<input type="email" required autoComplete="email" className="field mt-1.5 font-normal" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
