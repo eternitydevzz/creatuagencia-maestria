@@ -38,10 +38,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
           <Link to="/" aria-label="MaestrIA · inicio"><img src="/brand/logo-horizontal.png" alt="MaestrIA" className="h-9 w-auto" /></Link>
-          <nav className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1 md:overflow-visible" aria-label="Principal">
+          <nav className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:min-w-0 md:flex-1 md:overflow-x-auto" aria-label="Principal">
             {[...links, ...(profile?.role === 'admin' ? [{ to: '/admin', label: 'Alumnos', icon: Users, end: false, badge: pendingCount }] : [])].map(({ to, label, icon: Icon, end, badge }: { to: string; label: string; icon: typeof Users; end?: boolean; badge?: number }) => (
               <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-none items-center gap-2 rounded-xl px-2.5 py-2 lg:px-3 text-sm font-semibold transition ${isActive ? 'border border-accent/40 bg-accent/15 text-white' : 'border border-transparent text-muted hover:text-white'}`}>
-                <Icon className="hidden h-4 w-4 min-[1500px]:block" />{label}{badge ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8b93a] px-1.5 font-mono text-[11px] font-bold text-bg" aria-label={`${badge} pendientes`}>{badge}</span> : null}
+                <Icon className={`hidden h-4 w-4 ${profile?.role === 'admin' ? '' : 'min-[1500px]:block'}`} />{label}{badge ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8b93a] px-1.5 font-mono text-[11px] font-bold text-bg" aria-label={`${badge} pendientes`}>{badge}</span> : null}
               </NavLink>
             ))}
           </nav>
