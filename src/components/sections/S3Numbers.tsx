@@ -46,10 +46,12 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
   const n = (x: number) => formatMoney(x, currency)
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+    // En pantallas grandes, dos columnas: los números a la izquierda (fijos al bajar) y los precios a la derecha
+    <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)] xl:items-start">
+      <div className="space-y-4 xl:sticky xl:top-24">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between xl:flex-col xl:items-stretch">
         <p className="max-w-xl text-muted">Cuántas consultas le llegan a un negocio típico de tu nicho, cuánto invierte en anuncios y cuánto vale un cliente. Con eso, el precio sale solo.</p>
-        <div className="card w-full flex-none p-3 lg:w-[360px]">
+        <div className="card w-full flex-none p-3 lg:w-[360px] xl:w-full">
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/30 p-1" role="radiogroup" aria-label="Moneda">
             {CURRENCIES.map((c) => (
               <button key={c} type="button" role="radio" aria-checked={currency === c} onClick={() => update({ pricing_settings: withCurrency(roadmap.pricing_settings, c) })}
@@ -74,22 +76,24 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
         <SliderCard label="Consultas nuevas por mes" value={v.leads} min={LIMITS.leads[0]} max={LIMITS.leads[1]} step={10} format={(x) => String(Math.round(x))} onChange={(x) => set({ leads: x })} minLabel={String(LIMITS.leads[0])} maxLabel={String(LIMITS.leads[1])} />
         <SliderCard label="Inversión mensual en anuncios" value={v.adSpend} min={LIMITS.adSpend[0]} max={LIMITS.adSpend[1]} step={50} format={n} onChange={(x) => set({ ad_spend: x })} minLabel={n(LIMITS.adSpend[0])} maxLabel={n(LIMITS.adSpend[1])} />
         <SliderCard label="Ticket promedio del cliente" value={v.ticket} min={LIMITS.ticket[0]} max={LIMITS.ticket[1]} step={10} format={n} onChange={(x) => set({ ticket: x })} minLabel={n(LIMITS.ticket[0])} maxLabel={n(LIMITS.ticket[1])} />
       </div>
-      <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-6">
+      <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-6 xl:flex-col xl:items-stretch xl:gap-3">
         <div className="sm:w-64"><p className="text-sm text-muted">De cada 100 consultas, hoy compran</p><p className="text-2xl font-bold text-white"><AnimatedNumber value={v.conversion} format={(x) => `${Math.round(x)} de 100`} ms={200} /></p></div>
         <div className="flex-1"><input type="range" className="range" min={LIMITS.conversion[0]} max={LIMITS.conversion[1]} step={1} value={v.conversion} aria-label="Consultas que acaban comprando" style={{ '--pct': `${((v.conversion - LIMITS.conversion[0]) / (LIMITS.conversion[1] - LIMITS.conversion[0])) * 100}%` } as React.CSSProperties} onChange={(e) => set({ conversion: Number(e.target.value) })} /></div>
       </div>
 
+      </div>
+      <div className="min-w-0 space-y-6">
       <section aria-labelledby="prices">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div><p className="eyebrow">Tu tabla de precios</p><h3 id="prices" className="text-2xl font-bold">Esto es lo que puedes cobrar</h3></div>
           <p className="text-xs text-muted">Guía de mercado calculada con estos números, en {marketOf(currency).name}.</p>
         </div>
-        <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 md:grid-cols-2">
           {table.lines.map((l) => {
             const Icon = ICONS[l.id] ?? Sparkles
             return (
@@ -131,6 +135,7 @@ export default function S3Numbers({ roadmap, update }: SectionProps) {
           <Stat label="Lo que se le escapa" value={`${n(imp.extra)}/mes`} hi />
         </div>
         <p className="text-xs text-muted">Estimación conservadora: +{imp.uplift} puntos de conversión por contestar al momento y hacer seguimiento. Este es el argumento central de tu oferta.</p>
+      </div>
       </div>
     </div>
   )

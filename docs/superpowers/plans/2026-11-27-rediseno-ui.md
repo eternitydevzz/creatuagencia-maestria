@@ -4,7 +4,7 @@
 > Pasos con casillas (`- [ ]`). Puntos de control marcados con **PARAR**: no se sigue sin el OK de Jose.
 
 **Estado (2026-11-27):** Fase 0 y Fase 1 hechas en `rediseno-ui` (commits 37ec6dc..55efb60, tag `antes-del-rediseno`
-= 00aa290). Punto de control 1: Jose dice "sigue con el resto de pantallas". Hechas: tarea 9 (cliente ideal) y 10 (contenido en pestañas; anuncios ya encajaban). En curso: tarea 11.
+= 00aa290). Punto de control 1: Jose dice "sigue con el resto de pantallas". Hechas: tarea 9 (cliente ideal) y 10 (contenido en pestañas; anuncios ya encajaban). Tarea 11: agente generado en la cuenta de prueba; las 4 pantallas del Agente ya encajaban (900-1.275 px). Tarea 12: Precios a dos columnas (2.073 → 1.801 px); el resto de Estrategia ya encajaba. Siguiente: PUNTO DE CONTROL 2.
 Ver en local: Vite con `VITE_SUPABASE_URL`/anon de producción por variable de entorno y la cuenta prueba-agencia-real.
 
 **Objetivo:** que cada paso del Mapa de Ruta deje de leerse como una lista y se vea como un panel: barra de fases arriba,
