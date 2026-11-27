@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Coins, Hourglass, KeyRound, MailWarning, MessageCircle, Plus, Search, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
+import { Check, Coins, Hourglass, KeyRound, MessageCircle, Plus, Search, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react'
 import { Avatar, CopyButton, Empty, Skeleton, Spinner } from '@/components/ui/bits'
 import { useProfile } from '@/hooks/useData'
 import { useToast } from '@/hooks/useToast'
@@ -84,7 +84,7 @@ function Panel() {
         <section aria-labelledby="pendientes" className="space-y-3 rounded-2xl border border-[#e8b93a]/40 bg-[#e8b93a]/[0.06] p-5">
           <div>
             <h2 id="pendientes" className="flex items-center gap-2 text-lg font-bold text-white"><Hourglass className="h-5 w-5 text-[#f5d27a]" />Pendientes de aprobar · {pending.length}</h2>
-            <p className="text-sm text-muted">Se registraron solos. Hasta que los apruebes no tienen créditos ni pueden usar la plataforma. Los que no confirman su email en 7 días se borran solos.</p>
+            <p className="text-sm text-muted">Se registraron solos. Hasta que los apruebes no tienen créditos ni pueden usar la plataforma. Si rechazas a alguien, se borra su cuenta.</p>
           </div>
           <ul className="space-y-2.5">{pending.map((s) => <PendingRow key={s.id} s={s} busy={busy === s.id} onApprove={approve} onReject={reject} />)}</ul>
         </section>
@@ -142,10 +142,9 @@ function Panel() {
   )
 }
 
-/** Un registro pendiente: datos de contacto, si confirmó el email, créditos con los que entra y aprobar/rechazar. */
+/** Un registro pendiente: datos de contacto, créditos con los que entra y aprobar/rechazar (rechazar borra la cuenta). */
 function PendingRow({ s, busy, onApprove, onReject }: { s: Student; busy: boolean; onApprove: (s: Student, credits: number) => void; onReject: (s: Student) => void }) {
   const [credits, setCredits] = useState(30)
-  const confirmed = !!s.email_confirmed_at
   const wa = s.phone ? s.phone.replace(/[^0-9]/g, '') : ''
   return (
     <li className="card flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
@@ -154,8 +153,6 @@ function PendingRow({ s, busy, onApprove, onReject }: { s: Student; busy: boolea
         <p className="truncate font-semibold text-white">{s.full_name ?? s.email.split('@')[0]}</p>
         <p className="truncate text-sm text-muted">{s.email}</p>
         <div className="mt-1.5 flex flex-wrap gap-2 text-xs">
-          {confirmed ? <span className="pill !border-[#00a884]/50 !text-[#7fe7cd]"><Check className="h-3.5 w-3.5" />Email confirmado</span>
-            : <span className="pill !border-[#e8b93a]/50 !text-[#f5d27a]"><MailWarning className="h-3.5 w-3.5" />Falta confirmar el email</span>}
           {wa && <a className="pill hover:!text-white" href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-3.5 w-3.5" />{s.phone}</a>}
           <span className="pill !text-muted">se registró {ago(s.created_at)}</span>
         </div>
@@ -163,7 +160,7 @@ function PendingRow({ s, busy, onApprove, onReject }: { s: Student; busy: boolea
       <div className="flex items-center gap-2">
         <label className="relative w-24" title="Créditos con los que entra"><Coins className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input className="field !py-2 !pl-9" type="number" min={0} max={1000} value={credits} onChange={(e) => setCredits(Number(e.target.value))} aria-label={`Créditos para ${s.email}`} /></label>
-        <button type="button" className="btn !px-4 !py-2" disabled={busy || !confirmed} onClick={() => onApprove(s, credits)} title={confirmed ? 'Darle acceso' : 'Podrás aprobarlo cuando confirme su email'}>
+        <button type="button" className="btn !px-4 !py-2" disabled={busy} onClick={() => onApprove(s, credits)} title="Darle acceso">
           {busy ? <Spinner /> : <UserCheck className="h-4 w-4" />}Aprobar</button>
         <button type="button" className="btn-ghost !px-3 !py-2 hover:!border-[#ff8f8f] hover:!text-[#ff8f8f]" disabled={busy} onClick={() => onReject(s)} title="Rechazar (borra la cuenta)" aria-label={`Rechazar a ${s.email}`}><X className="h-4 w-4" /></button>
       </div>
